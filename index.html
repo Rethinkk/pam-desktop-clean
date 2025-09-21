@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>PAM (no-bundler)</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell; margin: 24px; }
+      .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+      .tabs button { padding: 8px 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; background: #fff; }
+      .tabs button.active { background: #f0f7ff; border-color: #9ec5fe; }
+      .card { border: 1px solid #e6e6e6; border-radius: 12px; padding: 16px; margin: 12px 0; }
+      .grid { display: grid; gap: 8px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .grid input, .grid textarea, .grid select { padding: 8px; border: 1px solid #ddd; border-radius: 8px; width: 100%; }
+      .list li { padding: 8px 0; border-bottom: 1px solid #f0f0f0; display:flex; justify-content:space-between; gap: 12px; }
+      .muted { color:#666 }
+      .actions { display:flex; gap:6px; }
+      .pill { font-size: 12px; padding: 2px 8px; border:1px solid #ddd; border-radius:999px; }
+      .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+      .inbox { display:grid; grid-template-columns: 320px 1fr; gap:16px; }
+      .thumb { width: 100%; max-height: 240px; object-fit: contain; border:1px solid #eee; border-radius:8px; }
+      .docbox { padding:16px; border:1px dashed #aaa; border-radius:8px; }
+      .tiny { font-size:12px; }
+      .inline { display:inline-block; }
+      .nowrap { white-space:nowrap; }
+    </style>
+  </head>
+  <body>
+    <h1>PAM — no-bundler modus</h1>
+    <div class="tabs">
+      <button id="tab-assets" class="active">Assets</button>
+      <button id="tab-docs">Documenten</button>
+      <button id="tab-about">Over</button>
+    </div>
+
+    <!-- ASSETS -->
+    <div id="view-assets">
+      <div class="card">
+        <h2>Nieuw asset</h2>
+        <div class="grid">
+          <input id="a-id" placeholder="Identificatie (bv. IBAN / kenteken / kadastraal nr.)"/>
+          <select id="a-category">
+            <option value="">-- Kies categorie --</option>
+            <option value="Bankrekening">Bankrekening</option>
+            <option value="Verzekering">Verzekering</option>
+            <option value="Vastgoed">Vastgoed</option>
+            <option value="Auto">Auto</option>
+            <option value="Kunst">Kunst</option>
+            <option value="Juwelen">Juwelen</option>
+            <option value="Abonnement">Abonnement</option>
+            <option value="Domein">Domein</option>
+            <option value="Licentie">Licentie</option>
+            <option value="Collectors Item">Collectors Item</option>
+            <option value="Overig">Overig</option>
+          </select>
+          <input id="a-name" placeholder="Naam (bv. ING spaarrekening)"/>
+          <input id="a-value" placeholder="Waarde (optioneel, numeriek)"/>
+          <textarea id="a-notes" placeholder="Notities (optioneel)"></textarea>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <button id="btn-add">Toevoegen</button>
+          <span class="muted">Data wordt lokaal opgeslagen (localStorage).</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Assets</h2>
+        <div class="row">
+          <input id="search" placeholder="Zoek op naam/categorie/id…" style="flex:1;"/>
+          <select id="sort">
+            <option value="name">Sort: Naam</option>
+            <option value="category">Sort: Categorie</option>
+            <option value="value">Sort: Waarde</option>
+          </select>
+        </div>
+        <ul id="list" class="list"></ul>
+        <div class="row">
+          <button id="btn-export">Export JSON</button>
+          <input type="file" id="file-import" accept="application/json" />
+          <button id="btn-import">Importeren</button>
+          <span class="muted">Export bevat assets en bijlagenkoppelingen.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTEN -->
+    <div id="view-docs" style="display:none">
+      <div class="card">
+        <h2>Swipe-inbox</h2>
+        <div class="row">
+          <input type="file" id="files" multiple />
+          <label> Koppel aan asset:&nbsp;
+            <select id="asset-select"></select>
+          </label>
+          <button id="btn-clear-arch">Archiveer alles</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="inbox">
+          <div>
+            <div id="preview-box"></div>
+          </div>
+          <div>
+            <div id="doc-meta" class="tiny muted"></div>
+            <div class="row" style="margin-top:8px;">
+              <button id="btn-archive">⟵ Archiveer</button>
+              <button id="btn-link">Koppel aan asset ⟶</button>
+            </div>
+            <div style="margin-top:16px">
+              <strong>Inbox</strong>
+              <ul id="inbox-list" class="list"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="tiny muted" style="margin-top:6px;">Afbeeldingen worden inline getoond; andere bestanden alleen als versleutelde blob in localStorage (hier plain demo).</div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div id="view-about" style="display:none">
+      <div class="card">
+        <h2>Over deze build</h2>
+        <p>Minimale UI zonder bundler/dev-server. Volgende uitbreidingen die we zo kunnen toevoegen:</p>
+        <ul>
+          <li>Personen/organisaties en koppelingen aan assets</li>
+          <li>Validatie (owner % = 100, begunstigden voor polissen)</li>
+          <li>Event export (alive/ziek/overlijden/scheiding)</li>
+          <li>Encryptie + exportpakket (voor notaris/executeur)</li>
+        </ul>
+      </div>
+    </div>
+
+    <script src="js/app.js"></script>
+  </body>
+</html>
