@@ -7,3 +7,5 @@ src-tauri/.cargo
 *.log
 backups/
 *.zip
+backups/
+*.zip
