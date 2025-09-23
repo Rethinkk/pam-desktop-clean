@@ -1,0 +1,13 @@
+{
+  "package": { "productName": "pam-desktop", "version": "0.1.0" },
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "npm run build",
+    "devPath": "../dist",
+    "distDir": "../dist"
+  },
+  "tauri": {
+    "windows": [{ "title": "pam-desktop", "width": 1200, "height": 800, "center": true, "visible": true }],
+    "security": { "csp": null }
+  }
+}
