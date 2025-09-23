@@ -1,5 +1,5 @@
 cargo:rustc-link-lib=framework=Carbon
-OUT_DIR = Some(/Users/andrekievit/Downloads/pam-desktop-mojave/src-tauri/target/debug/build/tao-696e7330ccf57703/out)
+OUT_DIR = Some(/Volumes/LaCie/PAM development/pam-desktop-mojave/src-tauri/target/debug/build/tao-696e7330ccf57703/out)
 OPT_LEVEL = Some(0)
 TARGET = Some(x86_64-apple-darwin)
 HOST = Some(x86_64-apple-darwin)
@@ -44,4 +44,4 @@ ARFLAGS_x86_64_apple_darwin = None
 cargo:rerun-if-env-changed=ARFLAGS_x86_64-apple-darwin
 ARFLAGS_x86_64-apple-darwin = None
 cargo:rustc-link-lib=static=carbon_hotkey_binding.a
-cargo:rustc-link-search=native=/Users/andrekievit/Downloads/pam-desktop-mojave/src-tauri/target/debug/build/tao-696e7330ccf57703/out
+cargo:rustc-link-search=native=/Volumes/LaCie/PAM development/pam-desktop-mojave/src-tauri/target/debug/build/tao-696e7330ccf57703/out
