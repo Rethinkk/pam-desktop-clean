@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.tauri.app/config/1",
+  "package": { "productName": "PAM", "version": "0.1.0" },
+  "build": {
+    "distDir": "../",
+    "devPath": "../"
+  },
+  "tauri": {
+    "windows": [{ "title": "PAM", "width": 1000, "height": 800 }],
+    "bundle": { "active": true, "targets": ["dmg"], "identifier": "com.pam.desktop" }
+  }
+}
