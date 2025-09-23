@@ -1,0 +1,9 @@
+.DS_Store
+node_modules/
+npm-debug.log*
+*.log
+dist/
+.vercel/
+backups/
+src-tauri/target/
+target/
