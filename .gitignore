@@ -5,3 +5,5 @@ target
 src-tauri/target
 src-tauri/.cargo
 *.log
+backups/
+*.zip
