@@ -1,9 +1,9 @@
+node_modules
+dist
 .DS_Store
-node_modules/
-npm-debug.log*
+target
+src-tauri/target
+src-tauri/.cargo
 *.log
-dist/
-.vercel/
 backups/
-src-tauri/target/
-target/
+*.zip

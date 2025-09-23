@@ -1,0 +1,7 @@
+fn main() {
+<<<<<<< HEAD
+  tauri_build::build()
+=======
+    tauri_build::build();
+>>>>>>> 7a546e7 (working snapshot: assets+docs+dropdown (no-bundler,Mojave))
+}

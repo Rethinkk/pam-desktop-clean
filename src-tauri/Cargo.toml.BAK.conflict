@@ -1,0 +1,47 @@
+[package]
+<<<<<<< HEAD
+name = "app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+license = ""
+repository = ""
+default-run = "app"
+edition = "2021"
+rust-version = "1.60"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "1.5.5" }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "1.8.1" }
+
+[features]
+# this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
+# If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.
+# DO NOT REMOVE!!
+custom-protocol = [ "tauri/custom-protocol" ]
+=======
+name = "pam-desktop"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "1", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rand = "0.8"
+argon2 = "0.5"
+chacha20poly1305 = { version = "0.10", features = ["rand_core"] }
+zeroize = "1"
+base64 = "0.22"
+thiserror = "1"
+uuid = { version = "1", features = ["v4"] }
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+>>>>>>> 7a546e7 (working snapshot: assets+docs+dropdown (no-bundler,Mojave))

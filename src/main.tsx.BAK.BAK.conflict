@@ -1,0 +1,24 @@
+<<<<<<< HEAD
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+
+const Root = () => (
+  <div style={{padding:24,fontFamily:'sans-serif'}}>
+    <h1>Hello Tauri 👋</h1>
+    <p>Als je dit ziet, werkt je build en runtime.</p>
+  </div>
+)
+
+const el = document.getElementById('root')!
+ReactDOM.createRoot(el).render(<Root />)
+=======
+import React from "react"
+import { createRoot } from "react-dom/client"
+const root = createRoot(document.getElementById("root")!)
+root.render(
+  <div>
+    <h1>PAM — Mojave build</h1>
+    <p>Statische build modus ✔️ (geen dev-server)</p>
+  </div>
+)
+>>>>>>> 7a546e7 (working snapshot: assets+docs+dropdown (no-bundler,Mojave))

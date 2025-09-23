@@ -1,0 +1,32 @@
+{
+  "name": "pam-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+<<<<<<< HEAD
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+=======
+    "dev": "vite",
+>>>>>>> 7a546e7 (working snapshot: assets+docs+dropdown (no-bundler,Mojave))
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.5.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.9",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+<<<<<<< HEAD
+    "@vitejs/plugin-react": "^5.0.3",
+=======
+>>>>>>> 7a546e7 (working snapshot: assets+docs+dropdown (no-bundler,Mojave))
+    "typescript": "^4.9.5",
+    "vite": "^7.1.6"
+  }
+}
