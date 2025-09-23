@@ -1,0 +1,11 @@
+node_modules
+dist
+.DS_Store
+target
+src-tauri/target
+src-tauri/.cargo
+*.log
+backups/
+*.zip
+backups/
+*.zip
