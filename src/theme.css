@@ -1,0 +1,19 @@
+/* --- PAM kleuren --- */
+:root{
+  --pam-bg: #0B1F3B;      /* donkerblauw (header) */
+  --pam-primary: #0E7C86; /* teal (primair) */
+  --pam-accent: #F2B705;  /* geel (accent) */
+  --pam-text: #111827;    /* tekst */
+  --pam-surface: #F5F7FA; /* app-achtergrond */
+  --pam-border: #E5E7EB;  /* randen */
+}
+
+/* Basis */
+html, body { margin:0; background:var(--pam-surface); color:var(--pam-text); }
+a { color: var(--pam-primary); }
+button { background: var(--pam-primary); color:#fff; border:none; padding:.6rem 1rem; border-radius:.5rem; }
+input, select, textarea { border:1px solid var(--pam-border); border-radius:.5rem; padding:.5rem .75rem; }
+
+/* (optioneel) topbar donkerblauw; haal weg als je eigen header-styling hebt */
+header, nav, [role="banner"], .topbar, .navbar, .app-header { background: var(--pam-bg); color:#fff; }
+header a, nav a, .topbar a, .navbar a, .app-header a { color:#fff; }

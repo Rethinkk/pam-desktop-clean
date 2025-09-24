@@ -32,3 +32,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </Suspense>
   </ErrorBoundary>
 )
+
+import "./theme.css";
