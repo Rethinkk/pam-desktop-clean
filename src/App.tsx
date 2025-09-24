@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
+import CategorySelect from "./components/CategorySelect";
+
 type Asset = {
   id: string
   category: string
@@ -10,6 +12,7 @@ type Asset = {
 }
 
 const LS_KEY = 'pam-assets-v1'
+
 
 export default function App() {
   const [tab, setTab] = useState<'assets' | 'docs' | 'about'>('assets')
@@ -94,11 +97,12 @@ export default function App() {
           <section style={card()}>
             <h2 style={h2()}>Nieuw asset</h2>
             <form onSubmit={addAsset} style={{ display: 'grid', gap: 12, maxWidth: 640 }}>
-              <label style={label()}><span>Identificatie (bv. IBAN / kenteken / kadastraal nr.)</span>
-                <input value={category} onChange={e => setCategory(e.target.value)} placeholder="-- Kies categorie --" style={input()} />
-              </label>
               <label style={label()}><span>Naam (bv. ING spaarrekening)</span>
                 <input value={name} onChange={e => setName(e.target.value)} required placeholder="Naam" style={input()} />
+              </label>
+              <label style={label()}><span>Category</span>
+                <CategorySelect value={category} onChange={setCategory} required 
+placeholder="Naam" style={input()} />
               </label>
               <label style={label()}><span>Waarde (optioneel, numeriek)</span>
                 <input value={value} onChange={e => setValue(e.target.value)} placeholder="0" inputMode="decimal" style={input()} />
