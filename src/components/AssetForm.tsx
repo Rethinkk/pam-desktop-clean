@@ -11,6 +11,9 @@ export default function AssetForm({ onCreated }: Props) {
   const [typeCode, setTypeCode] = useState(ASSET_SCHEMAS[0]?.code ?? "");
   const schema = useMemo(() => SCHEMA_BY_CODE[typeCode], [typeCode]);
   const [formData, setFormData] = useState<Record<string, any>>({});
+const id = (typeof crypto !== "undefined" && crypto.randomUUID)
+  ? crypto.randomUUID()
+  : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   function setField(key: string, value: any) {
     setFormData(prev => ({ ...prev, [key]: value }));

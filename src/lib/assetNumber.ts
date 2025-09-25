@@ -21,6 +21,16 @@ export function saveRegister(reg: AssetRegister) {
   localStorage.setItem(LS_KEY, JSON.stringify(reg));
 }
 
+export function deleteAssetAt(index: number) {
+  const { assets } = loadRegister();
+  if (!Array.isArray(assets)) return;
+  if (index < 0 || index >= assets.length) return;
+  const next = assets.slice();
+  next.splice(index, 1);
+  saveRegister(next);
+}
+
+
 function todayYmd(): string {
   const d = new Date();
   const yyyy = d.getFullYear();
