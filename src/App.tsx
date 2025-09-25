@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import FrontPage from "./components/FrontPage";
 import AssetsPanel from "./components/AssetsPanel";
-import DocumentsPanel from "./components/DocumentsPanel"; // <-- naam = bestandsnaam
+import DocumentsPanel from "./components/DocumentsPanel";
 
-export default function App() {
+// Dit is je bestaande tab-UI, nu als aparte component voor route /assets
+function AssetShell() {
   const [tab, setTab] = useState<'assets' | 'docs' | 'about'>('assets');
 
   return (
@@ -16,12 +19,12 @@ export default function App() {
       {tab === 'assets' ? (
         <section className="stack">
           <h1>Assets</h1>
-          {/* … jouw asset UI … */}<AssetsPanel />
+          <AssetsPanel />
         </section>
       ) : tab === 'docs' ? (
         <section className="stack">
           <h1>Documenten</h1>
-          <DocumentsPanel /> {/* <-- hier rendert het witte venster-inhoud */}
+          <DocumentsPanel />
         </section>
       ) : (
         <section className="stack">
@@ -30,5 +33,18 @@ export default function App() {
         </section>
       )}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Frontpage op root */}
+        <Route path="/" element={<FrontPage />} />
+        {/* Jouw bestaande UI onder /assets */}
+        <Route path="/assets" element={<AssetShell />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
