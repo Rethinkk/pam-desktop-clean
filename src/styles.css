@@ -1,10 +1,264 @@
-:root { --radius:12px; }
-* { box-sizing: border-box; }
-body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; }
-.card { border:1px solid #e5e7eb; border-radius: var(--radius); padding:12px; background:#fff; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
-.label { display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; }
-.input { width:100%; border:1px solid #d1d5db; border-radius:10px; padding:8px 10px; }
-.btn { border:1px solid #111; border-radius:10px; padding:8px 12px; background:#fff; cursor:pointer; }
-.btn.primary { background:#111; color:#fff; }
-.grid-2 { display:grid; gap:16px; }
-@media (min-width: 768px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+:root {
+  --pam-blue: #1E3A5F;
+  --pam-white: #ffffff;
+  --pam-light: #f7f9fb;
+  --pam-accent: #24508c;
+  --pam-border: #e3e6eb;
+  --pam-muted: #5a739b;
+
+  --radius: 12px;
+  --shadow-1: 0 1px 4px rgba(0,0,0,0.10);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ---- Reset / Base ---- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--pam-blue);       /* Blauwe omgeving */
+  color: var(--pam-white);            /* Witte tekst in blauwe omgeving */
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: 40px;
+}
+
+/* ---- Page Container (wit venster) ---- */
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  background: var(--pam-white);       /* Witte kaart */
+  color: var(--pam-blue);             /* Blauwe tekst in witte vensters */
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  padding: 28px;
+}
+
+/* ---- Headings ---- */
+.container h1 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: var(--pam-blue);
+}
+
+.container h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 22px 0 12px;
+  color: var(--pam-blue);
+}
+
+/* ---- Tabs (assets | docs | about) ---- */
+.tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--pam-blue);
+  color: var(--pam-white);
+  padding: 8px;
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-1);
+}
+.tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--pam-white);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab[aria-selected="true"],
+.tab.active {
+  background: var(--pam-white);
+  color: var(--pam-blue);
+}
+.tab:hover { outline: 2px solid rgba(255,255,255,0.18); }
+
+/* ---- Layout helpers ---- */
+.stack { display: grid; gap: 18px; }
+.row { display: flex; gap: 14px; flex-wrap: wrap; }
+.grow { flex: 1 1 240px; }
+
+/* ---- Cards / Sections ---- */
+.card {
+  background: var(--pam-white);
+  color: var(--pam-blue);
+  border: 1px solid var(--pam-border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow-1);
+}
+.section-muted {
+  background: var(--pam-light);
+  border: 1px solid var(--pam-border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+/* ---- Forms ---- */
+form { display: grid; gap: 16px; }
+
+fieldset { border: 0; padding: 0; margin: 0; }
+
+legend {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--pam-blue);
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--pam-blue);
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccd3db;
+  border-radius: 10px;
+  font-size: 0.98rem;
+  background: var(--pam-white);
+  color: var(--pam-blue);           /* Tekst in inputs blauw */
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+input::placeholder, textarea::placeholder { color: var(--pam-muted); }
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--pam-accent);
+  box-shadow: 0 0 0 3px rgba(36,80,140,0.18);
+}
+
+/* Compacte inline inputs in een rij */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+}
+.col-12 { grid-column: span 12; }
+.col-6  { grid-column: span 6; }
+.col-4  { grid-column: span 4; }
+.col-3  { grid-column: span 3; }
+@media (max-width: 720px) {
+  .col-6, .col-4, .col-3 { grid-column: span 12; }
+}
+
+/* ---- Buttons ---- */
+button, .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--pam-blue);   /* Blauwe knop */
+  color: var(--pam-white);       /* Witte tekst op blauw */
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform .02s ease, background .15s ease, box-shadow .15s ease;
+  box-shadow: var(--shadow-1);
+}
+button:hover, .btn:hover { background: var(--pam-accent); }
+button:active, .btn:active { transform: translateY(1px); }
+
+.btn-secondary {
+  background: var(--pam-white);
+  color: var(--pam-blue);
+  border: 1px solid var(--pam-border);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--pam-blue);
+  border: 1px solid transparent;
+}
+.btn-ghost:hover { background: rgba(30,58,95,0.06); }
+
+/* ---- Register list ---- */
+.register {
+  background: var(--pam-light);
+  border: 1px solid var(--pam-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-1);
+  color: var(--pam-blue);
+}
+.register h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+  color: var(--pam-blue);
+}
+.register ul { list-style: none; margin-top: 10px; }
+.register li {
+  background: var(--pam-white);
+  border: 1px solid var(--pam-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+/* ---- Tables (optioneel) ---- */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--pam-white);
+  color: var(--pam-blue);
+  border: 1px solid var(--pam-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.table th, .table td { padding: 12px 14px; text-align: left; }
+.table thead th {
+  background: var(--pam-light);
+  border-bottom: 1px solid var(--pam-border);
+  font-weight: 700;
+}
+.table tbody tr + tr td { border-top: 1px solid var(--pam-border); }
+
+/* ---- Alerts (optioneel) ---- */
+.alert {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--pam-border);
+  background: var(--pam-light);
+  color: var(--pam-blue);
+}
+.alert.success { border-color: #95d5b2; background: #edf9f1; }
+.alert.warn    { border-color: #ffd166; background: #fff8e7; }
+.alert.error   { border-color: #f4978e; background: #fff0f0; }
+
+/* ---- Links ---- */
+a { color: var(--pam-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- Small utilities ---- */
+.mt-0{margin-top:0}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-24{margin-bottom:24px}
+.p-0{padding:0}.p-8{padding:8px}.p-12{padding:12px}.p-16{padding:16px}.p-20{padding:20px}
+
+.hidden { display: none !important; }
+
+/* ---- Focus visibility for keyboard users ---- */
+:focus-visible {
+  outline: 3px solid rgba(36,80,140,0.35);
+  outline-offset: 2px;
+}
+
+/* ---- Responsive container padding ---- */
+@media (max-width: 640px) {
+  body { padding: 18px; }
+  .container { padding: 18px; }
+}

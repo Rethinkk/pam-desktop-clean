@@ -4,24 +4,35 @@ import { loadRegister } from "../lib/assetNumber";
 import { Asset } from "../types";
 
 export default function AssetsPanel() {
-  const [assets, setAssets] = useState<Asset[]>(() => loadRegister().assets);
-  const refresh = () => setAssets(loadRegister().assets);
+  
+//Veiliger als loadRegister() (tijdelijk) niets teruggeeft:
+  const [assets, setAssets] = useState<Asset[]>(
+    () => (loadRegister()?.assets ?? [])
+  );
+  const refresh = () => setAssets(loadRegister()?.assets ?? []);
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
-      <AssetForm onCreated={refresh} />
-      <div>
-        <h2 className="font-semibold mb-2">Register</h2>
-        <ul className="space-y-2">
-          {assets.slice().reverse().map(a => (
-            <li key={a.id} className="border rounded p-2">
-              <div className="text-sm text-gray-600">{a.assetNumber}</div>
-              <div className="font-medium">{a.name}</div>
-              <div className="text-xs">{a.type}</div>
-            </li>
-          ))}
-        </ul>
+    <div className="stack">{/* onze layout helper */}
+      <div className="card">{/* wit venster voor formulier */}
+        <AssetForm onCreated={refresh} />
+      </div>
+
+      <div className="register">{/* wit/licht registerblok */}
+        <h2>Register</h2>
+        {assets.length === 0 ? (
+          <p className="mt-8">Nog geen assets in het register.</p>
+        ) : (
+          <ul>
+            {[...assets].reverse().map(a => (
+              <li key={a.id}>
+                <strong>{a.assetNumber}</strong>
+                <span>{a.name}</span>
+                <span>Type: {a.type}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
-}
+ }
