@@ -1,9 +1,11 @@
-import React from "react"
-import { createRoot } from "react-dom/client"
-const root = createRoot(document.getElementById("root")!)
-root.render(
-  <div>
-    <h1>PAM — Mojave build</h1>
-    <p>Statische build modus ✔️ (geen dev-server)</p>
-  </div>
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 )
+
+import './styles.css'
