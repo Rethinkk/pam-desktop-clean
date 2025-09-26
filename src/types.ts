@@ -40,4 +40,19 @@ export type AssetRegister = {
   version: 1;
   assets: Asset[];
   counters: Record<string, number>; // per <type:date> sequence
+};// -- Documenten gekoppeld aan assets --
+
+export type DocumentItem = {
+  id: string;
+  filename: string;
+  mime: string;
+  size: number;
+  dataUrl: string;           // base64 data URL voor lokaal opslaan
+  uploadedAt: string;        // ISO string
+  uploadedBy?: string;       // bv. naam/email van uploader
+  recipients?: string[];     // wie het moet ontvangen
+  assetNumbers: string[];    // gekoppelde assets (assetNumber)
+  notes?: string;
 };
+
+

@@ -2,7 +2,7 @@ export type DocumentItem = {
   id: string;
   docNumber: string;      // PAM-DOC-YYYYMMDD-XXXX
   title: string;
-  fileName: string;
+  fileName?: string;
   fileSize: number;
   mimeType: string;
   fileDataUrl: string;    // DataURL <= ~4MB
@@ -12,10 +12,14 @@ export type DocumentItem = {
   personEmail?: string;
   createdAt: string;
   updatedAt: string;
+uploadedAt: string;
+assetNumbers?: string[];
+uploadedBy?: string;
+recipient?: string;
 };
 
 export type DocumentsRegister = {
-  version: 1;
+  version: number;
   documents: DocumentItem[];
   counters: Record<string, number>; // per dag-sequence
 };
