@@ -136,3 +136,10 @@ npm run dev
 # of desktop:
 npm run tauri:dev
 
+Workflow:
+- Werk op feature/* branches
+- Voor push: npm run typecheck && npm run build (pre-push hook aanwezig)
+- ‘Stable’ = laatst geteste staat
+- ‘Golden’ tags: golden-YYYYMMDD-<kort-label>
+
+

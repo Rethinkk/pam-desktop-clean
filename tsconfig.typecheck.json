@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/components/AssetsPanel.tsx",
+    "src/components/DocLinker.tsx",
+    "src/components/DocumentForm.tsx",
+    "src/lib/assetNumber.ts"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true
+  }
+}

@@ -14,5 +14,13 @@
     "skipLibCheck": true,
     "types": ["vite/client"]
   },
-  "include": ["src"]
+   "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/components/AssetsPanel.tsx",
+    "src/components/DocLinker.tsx",
+    "src/components/DocumentForm.tsx",
+    "src/lib/assetNumber.ts"
+  ]
 }

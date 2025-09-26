@@ -31,6 +31,9 @@ export type Asset = {
   assetNumber: string;       // PAM-<CODE>-YYYYMMDD-XXXX
   name: string;              // asset benoeming
   type: string;              // schema.code
+category: string;
+value?: number;
+notes?: string;
   createdAt: string;
   updatedAt: string;
   data: AssetPayload;

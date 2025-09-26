@@ -1,4 +1,4 @@
-import { DocumentItem } from "../types";
+import type { DocumentItem } from "../types";
 
 const LS_KEY = "pam-docs-v1";
 

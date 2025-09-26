@@ -1,3 +1,4 @@
+/* eslint-env browser */
 // ---------- Storage ----------
 const KEY_ASSETS = 'pam.assets.v1';
 const KEY_DOCS   = 'pam.docs.v1'; // attachments/inbox

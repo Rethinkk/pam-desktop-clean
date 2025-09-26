@@ -1,8 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { ASSET_SCHEMAS, SCHEMA_BY_CODE } from "../assetSchemas";
-import { Asset, AssetRegister } from "../types";
-import { generateAssetNumber, loadRegister, saveRegister } from "../lib/assetNumber";
+import type  { Asset} from "../types";
+import { nextAssetNumber, loadRegister, saveRegister } from "../lib/assetNumber";
 import { v4 as uuid } from "uuid";
+
+const ASSET_PREFIX = "PAM-ITM";
+          
 
 type Props = { onCreated?: (asset: Asset) => void };
 
@@ -36,23 +39,28 @@ const id = (typeof crypto !== "undefined" && crypto.randomUUID)
   }
 
   function persist(asset: Asset) {
-    const reg: AssetRegister = loadRegister();
+    const reg = loadRegister();
     reg.assets.push(asset);
-    saveRegister(reg);
+    saveRegister(reg.assets);
   }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errors = validate();
     if (errors.length) { alert(errors.join("\n")); return; }
+
+const code = schema?.code ?? "GEN";
+    const prefix = code.startsWith("PAM-") ? code : `${ASSET_PREFIX}-${code}`;
+
     const asset: Asset = {
-      id: uuid(),
-      assetNumber: generateAssetNumber(schema.code),
-      name: name.trim(),
-      type: schema.code,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      data: formData,
+  id,
+  assetNumber: nextAssetNumber(prefix),
+  name,
+type: code,
+  category: code,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  data: formData,
     };
     persist(asset);
     onCreated?.(asset);

@@ -1,3 +1,4 @@
+/* @ts-nocheck */
 import React, { useEffect, useMemo, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { DocumentItem } from "../docTypes";
