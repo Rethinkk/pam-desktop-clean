@@ -2,9 +2,18 @@
 import React, { useMemo, useState } from "react";
 import AssetForm from "./AssetForm";
 import { loadRegister, saveRegister } from "../lib/assetNumber";
-import { linkDocToAsset, unlinkDocFromAsset, docsForAsset } from "../lib/docsStore";
+import {
+  loadDocs, // optioneel, alleen voor fallback
+  linkDocToAsset as linkDocToAssetMaybe,
+  unlinkDocFromAsset as unlinkDocFromAssetMaybe,
+  docsForAsset as docsForAssetMaybe,
+  // legacy helpers (aanwezig in nieuwe store voor backward compat)
+  linkDocToAssetNumber as linkDocToAssetNumberMaybe,
+  unlinkDocFromAssetNumber as unlinkDocFromAssetNumberMaybe,
+} from "../lib/docsStore";
 import type { Asset } from "../types";
 import { ENV, DEBUG, API_URL, STORAGE_KEY } from "../lib/config";
+import { getPerson } from "../lib/peopleStore";
 
 // --- Helpers ---------------------------------------------------------------
 
@@ -14,7 +23,9 @@ function getAllDocsFromStorage(): Array<any> {
     const raw = localStorage.getItem("pam-docs-v1");
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed?.docs) ? parsed.docs : [];
+    // dek varianten af: {docs:[...]} of [...]
+    const docs = Array.isArray(parsed?.docs) ? parsed.docs : Array.isArray(parsed) ? parsed : [];
+    return docs;
   } catch {
     return [];
   }
@@ -36,24 +47,65 @@ function persistAssets(nextAssets: Asset[]) {
     // saveRegister verwacht mogelijk direct de array
     (saveRegister as any)(nextAssets as any);
   } catch {
-    // Laat falen stil vallen; UI blijft in ieder geval up-to-date in state
+    // zwijg — UI blijft in ieder geval up-to-date in state
   }
+}
+
+/** Veilig docsForAsset (accepteert assetNumber in legacy of assetId in nieuw) */
+function docsForAssetSafe(assetKey: string) {
+  try {
+    if (typeof docsForAssetMaybe === "function") {
+      return docsForAssetMaybe(assetKey);
+    }
+  } catch {}
+  // fallback: filter lokaal
+  const all = getAllDocsFromStorage();
+  return all.filter((d: any) =>
+    (Array.isArray(d.assetIds) && d.assetIds.includes(assetKey)) ||
+    (Array.isArray(d.assetNumbers) && d.assetNumbers.includes(assetKey))
+  );
+}
+
+/** Koppel doc aan asset (probeer eerst legacy number helper, anders id) */
+function linkDocToAssetSafe(docId: string, assetNumber: string, assets: Asset[]) {
+  // 1) legacy pad met number
+  if (typeof linkDocToAssetNumberMaybe === "function") {
+    try { linkDocToAssetNumberMaybe(docId, assetNumber); return; } catch {}
+  }
+  // 2) nieuw pad met id
+  const a = assets.find(x => x.assetNumber === assetNumber);
+  const assetId = a?.id ?? assetNumber; // laatste redmiddel
+  if (typeof linkDocToAssetMaybe === "function") {
+    try { linkDocToAssetMaybe(docId, assetId); return; } catch {}
+  }
+  // 3) als alles faalt, niets doen
+}
+
+/** Ontkoppel doc van asset (probeer eerst legacy number helper, anders id) */
+function unlinkDocFromAssetSafe(docId: string, assetNumber: string, assets: Asset[]) {
+  if (typeof unlinkDocFromAssetNumberMaybe === "function") {
+    try { unlinkDocFromAssetNumberMaybe(docId, assetNumber); return; } catch {}
+  }
+  const a = assets.find(x => x.assetNumber === assetNumber);
+  const assetId = a?.id ?? assetNumber;
+  if (typeof unlinkDocFromAssetMaybe === "function") {
+    try { unlinkDocFromAssetMaybe(docId, assetId); return; } catch {}
+  }
+  // anders: noop
 }
 
 // --------------------------------------------------------------------------
 
 export default function AssetsPanel() {
-  const [assets, setAssets] = useState<Asset[]>(()  => {
+  const [assets, setAssets] = useState<Asset[]>(() => {
     try {
- const reg: any = loadRegister();
-return Array.isArray(reg?.assets) ? (reg.assets as Asset[])  :  [];
-} catch {
-return [];
- }
+      const reg: any = loadRegister();
+      return Array.isArray(reg?.assets) ? (reg.assets as Asset[]) : [];
+    } catch {
+      return [];
+    }
   });
-  const [docs, setDocs] = useState<any[]>(
-    () => getAllDocsFromStorage()
-  );
+  const [docs, setDocs] = useState<any[]>(() => getAllDocsFromStorage());
   const [selectedDocByAsset, setSelectedDocByAsset] = useState<Record<string, string>>({});
 
   const refreshAssets = () => setAssets(loadRegister()?.assets ?? []);
@@ -78,13 +130,13 @@ return [];
       alert("Kies eerst een document.");
       return;
     }
-    linkDocToAsset(docId, assetNumber);
+    linkDocToAssetSafe(docId, assetNumber, assets);
     setSelectedDocByAsset(prev => ({ ...prev, [assetNumber]: "" }));
     refreshDocs();
   };
 
   const handleUnlinkDoc = (assetNumber: string, docId: string) => {
-    unlinkDocFromAsset(docId, assetNumber);
+    unlinkDocFromAssetSafe(docId, assetNumber, assets);
     refreshDocs();
   };
 
@@ -110,8 +162,8 @@ return [];
         ) : (
           <ul className="space-y-3">
             {display.map(({ a, originalIndex }, idx) => {
-              // Gekoppelde documenten (uit store-functie, leest localStorage)
-              const linkedDocs = (docsForAsset as (n: string) => any[])(a.assetNumber);
+              // Gekoppelde documenten (via store-functie; accepteert zowel id als number)
+              const linkedDocs = docsForAssetSafe(a.assetNumber);
 
               return (
                 <li
@@ -128,6 +180,24 @@ return [];
                           Type: {a.type}
                         </div>
                       )}
+
+                      {/* BADGES: personen (owners & watchers) */}
+                      <div className="text-xs text-gray-700 mt-2 flex flex-wrap gap-2">
+                        {(a.ownerIds ?? []).map(pid => (
+                          <span key={`owner-${pid}`} className="px-2 py-0.5 rounded-full border">
+                            owner: {getPerson(pid)?.fullName ?? "—"}
+                          </span>
+                        ))}
+                        {(a.watcherIds ?? []).map(pid => (
+                          <span key={`watch-${pid}`} className="px-2 py-0.5 rounded-full border">
+                            watch: {getPerson(pid)?.fullName ?? "—"}
+                          </span>
+                        ))}
+                        {(!a.ownerIds || a.ownerIds.length === 0) &&
+                         (!a.watcherIds || a.watcherIds.length === 0) && (
+                          <span className="text-gray-500">Nog geen personen gekoppeld.</span>
+                        )}
+                      </div>
 
                       {/* Lijst gekoppelde documenten (namen) */}
                       <div className="mt-2 text-sm">
