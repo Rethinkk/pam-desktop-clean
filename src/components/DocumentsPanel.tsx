@@ -56,40 +56,24 @@ export default function DocumentsPanel() {
                 </div>
 
                 <div className="text-xs text-gray-600 mt-2 flex flex-wrap gap-2">
-                  {uploader && (
-                    <span className="px-2 py-0.5 rounded-full border">
-                      uploader: {uploader.fullName}
-                    </span>
-                  )}
+                  {uploader && <span className="px-2 py-0.5 rounded-full border">uploader: {uploader.fullName}</span>}
                   {(doc.recipientIds ?? []).map(pid => {
                     const p = getPerson(pid);
-                    return (
-                      <span key={pid} className="px-2 py-0.5 rounded-full border">
-                        naar: {p?.fullName ?? "—"}
-                      </span>
-                    );
+                    return <span key={pid} className="px-2 py-0.5 rounded-full border">naar: {p?.fullName ?? "—"}</span>;
                   })}
                   {(doc.assetIds ?? []).map(aid => {
                     const a = assetsById[aid];
                     const label = a ? `${a.assetNumber ?? "—"} — ${a.name ?? "—"}` : aid;
-                    return (
-                      <span key={aid} className="px-2 py-0.5 rounded-full border">
-                        asset: {label}
-                      </span>
-                    );
+                    return <span key={aid} className="px-2 py-0.5 rounded-full border">asset: {label}</span>;
                   })}
                 </div>
 
-                {doc.docNumber && (
-                  <div className="text-[11px] text-gray-500 mt-1">#{doc.docNumber}</div>
-                )}
+                {doc.docNumber && <div className="text-[11px] text-gray-500 mt-1">#{doc.docNumber}</div>}
               </li>
             );
           })}
 
-          {docs.length === 0 && (
-            <li className="text-sm text-gray-500">Nog geen documenten in het register.</li>
-          )}
+          {docs.length === 0 && <li className="text-sm text-gray-500">Nog geen documenten in het register.</li>}
         </ul>
       </div>
     </div>

@@ -2,20 +2,10 @@
 import React, { useMemo, useState } from "react";
 import AssetForm from "./AssetForm";
 import { loadRegister, saveRegister } from "../lib/assetNumber";
-import {
-  loadDocs, // optioneel, alleen voor fallback
-  linkDocToAsset as linkDocToAssetMaybe,
-  unlinkDocFromAsset as unlinkDocFromAssetMaybe,
-  docsForAsset as docsForAssetMaybe,
-  // legacy helpers (aanwezig in nieuwe store voor backward compat)
-  linkDocToAssetNumber as linkDocToAssetNumberMaybe,
-  unlinkDocFromAssetNumber as unlinkDocFromAssetNumberMaybe,
-} from "../lib/docsStore";
+import { docsForAsset, linkDocToAsset, unlinkDocFromAsset } from "../lib/docsStore";
 import type { Asset } from "../types";
 import { ENV, DEBUG, API_URL, STORAGE_KEY } from "../lib/config";
 import { getPerson } from "../lib/peopleStore";
-
-// --- Helpers ---------------------------------------------------------------
 
 /** Lees alle documenten rechtstreeks uit localStorage (veilig, geen import-gedoe). */
 function getAllDocsFromStorage(): Array<any> {
@@ -23,8 +13,7 @@ function getAllDocsFromStorage(): Array<any> {
     const raw = localStorage.getItem("pam-docs-v1");
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    // dek varianten af: {docs:[...]} of [...]
-    const docs = Array.isArray(parsed?.docs) ? parsed.docs : Array.isArray(parsed) ? parsed : [];
+    const docs = Array.isArray(parsed?.docs) ? parsed.docs : (Array.isArray(parsed) ? parsed : []);
     return docs;
   } catch {
     return [];
@@ -36,68 +25,17 @@ function persistAssets(nextAssets: Asset[]) {
   try {
     const current = loadRegister() as any;
     if (current && typeof current === "object" && "assets" in current) {
-      // saveRegister verwacht waarschijnlijk een object met { assets }
       try {
         (saveRegister as any)({ ...current, assets: nextAssets });
         return;
-      } catch {
-        // val terug op array-signature
-      }
+      } catch {}
     }
-    // saveRegister verwacht mogelijk direct de array
     (saveRegister as any)(nextAssets as any);
-  } catch {
-    // zwijg — UI blijft in ieder geval up-to-date in state
-  }
-}
-
-/** Veilig docsForAsset (accepteert assetNumber in legacy of assetId in nieuw) */
-function docsForAssetSafe(assetKey: string) {
-  try {
-    if (typeof docsForAssetMaybe === "function") {
-      return docsForAssetMaybe(assetKey);
-    }
   } catch {}
-  // fallback: filter lokaal
-  const all = getAllDocsFromStorage();
-  return all.filter((d: any) =>
-    (Array.isArray(d.assetIds) && d.assetIds.includes(assetKey)) ||
-    (Array.isArray(d.assetNumbers) && d.assetNumbers.includes(assetKey))
-  );
 }
-
-/** Koppel doc aan asset (probeer eerst legacy number helper, anders id) */
-function linkDocToAssetSafe(docId: string, assetNumber: string, assets: Asset[]) {
-  // 1) legacy pad met number
-  if (typeof linkDocToAssetNumberMaybe === "function") {
-    try { linkDocToAssetNumberMaybe(docId, assetNumber); return; } catch {}
-  }
-  // 2) nieuw pad met id
-  const a = assets.find(x => x.assetNumber === assetNumber);
-  const assetId = a?.id ?? assetNumber; // laatste redmiddel
-  if (typeof linkDocToAssetMaybe === "function") {
-    try { linkDocToAssetMaybe(docId, assetId); return; } catch {}
-  }
-  // 3) als alles faalt, niets doen
-}
-
-/** Ontkoppel doc van asset (probeer eerst legacy number helper, anders id) */
-function unlinkDocFromAssetSafe(docId: string, assetNumber: string, assets: Asset[]) {
-  if (typeof unlinkDocFromAssetNumberMaybe === "function") {
-    try { unlinkDocFromAssetNumberMaybe(docId, assetNumber); return; } catch {}
-  }
-  const a = assets.find(x => x.assetNumber === assetNumber);
-  const assetId = a?.id ?? assetNumber;
-  if (typeof unlinkDocFromAssetMaybe === "function") {
-    try { unlinkDocFromAssetMaybe(docId, assetId); return; } catch {}
-  }
-  // anders: noop
-}
-
-// --------------------------------------------------------------------------
 
 export default function AssetsPanel() {
-  const [assets, setAssets] = useState<Asset[]>(() => {
+  const [assets, setAssets] = useState<Asset[]>(()  => {
     try {
       const reg: any = loadRegister();
       return Array.isArray(reg?.assets) ? (reg.assets as Asset[]) : [];
@@ -111,7 +49,6 @@ export default function AssetsPanel() {
   const refreshAssets = () => setAssets(loadRegister()?.assets ?? []);
   const refreshDocs = () => setDocs(getAllDocsFromStorage());
 
-  // Verwijder op originele index en schrijf meteen weg (robust tegen reverse-weergave)
   const removeAt = (originalIndex: number) => {
     const next = assets.slice();
     next.splice(originalIndex, 1);
@@ -126,21 +63,19 @@ export default function AssetsPanel() {
 
   const handleLinkDoc = (assetNumber: string) => {
     const docId = selectedDocByAsset[assetNumber];
-    if (!docId) {
-      alert("Kies eerst een document.");
-      return;
-    }
-    linkDocToAssetSafe(docId, assetNumber, assets);
+    if (!docId) { alert("Kies eerst een document."); return; }
+    // docsStore wrapper koppelt zowel via number als via id (compat)
+    linkDocToAsset(docId, assetNumber);
     setSelectedDocByAsset(prev => ({ ...prev, [assetNumber]: "" }));
     refreshDocs();
   };
 
   const handleUnlinkDoc = (assetNumber: string, docId: string) => {
-    unlinkDocFromAssetSafe(docId, assetNumber, assets);
+    unlinkDocFromAsset(docId, assetNumber);
     refreshDocs();
   };
 
-  // Maak display-lijst met originele index vastgeklikt (we tonen nieuw → oud)
+  // display-lijst met originele index (nieuw -> oud)
   const display = useMemo<{ a: Asset; originalIndex: number }[]>(
     () => assets.map((a, i) => ({ a, originalIndex: i })).slice().reverse(),
     [assets]
@@ -162,26 +97,17 @@ export default function AssetsPanel() {
         ) : (
           <ul className="space-y-3">
             {display.map(({ a, originalIndex }, idx) => {
-              // Gekoppelde documenten (via store-functie; accepteert zowel id als number)
-              const linkedDocs = docsForAssetSafe(a.assetNumber);
+              const linkedDocs = docsForAsset(a.assetNumber); // compat: werkt op number/id
 
               return (
-                <li
-                  key={(a.id || `${a.assetNumber}-${originalIndex}` || idx).toString()}
-                  className="border rounded p-3"
-                >
+                <li key={(a.id || `${a.assetNumber}-${originalIndex}` || idx).toString()} className="border rounded p-3">
                   <div className="flex items-start justify-between gap-4">
-                    {/* Linkerblok: asset meta */}
                     <div className="min-w-0">
                       <div className="text-sm text-gray-600 truncate">{a.assetNumber}</div>
                       <div className="font-medium truncate">{a.name || a.category}</div>
-                      {a.type && (
-                        <div className="text-xs text-gray-500">
-                          Type: {a.type}
-                        </div>
-                      )}
+                      {a.type && <div className="text-xs text-gray-500">Type: {a.type}</div>}
 
-                      {/* BADGES: personen (owners & watchers) */}
+                      {/* BADGES: personen */}
                       <div className="text-xs text-gray-700 mt-2 flex flex-wrap gap-2">
                         {(a.ownerIds ?? []).map(pid => (
                           <span key={`owner-${pid}`} className="px-2 py-0.5 rounded-full border">
@@ -199,15 +125,14 @@ export default function AssetsPanel() {
                         )}
                       </div>
 
-                      {/* Lijst gekoppelde documenten (namen) */}
+                      {/* Gekoppelde documenten */}
                       <div className="mt-2 text-sm">
                         <span className="text-gray-500">Documenten:</span>{" "}
                         {Array.isArray(linkedDocs) && linkedDocs.length > 0
-                          ? linkedDocs.map(d => (d.title || d.filename || "document")).join(", ")
+                          ? linkedDocs.map(d => (d.title || d.fileName || d.filename || "document")).join(", ")
                           : "geen"}
                       </div>
 
-                      {/* Ontkoppel knoppen per document */}
                       {Array.isArray(linkedDocs) && linkedDocs.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {linkedDocs.map(d => (
@@ -216,14 +141,13 @@ export default function AssetsPanel() {
                               className="text-red-600 hover:text-red-800 text-xs underline"
                               onClick={() => handleUnlinkDoc(a.assetNumber, d.id)}
                             >
-                              Ontkoppel “{d.title || d.filename || "document"}”
+                              Ontkoppel “{d.title || d.fileName || d.filename || "document"}”
                             </button>
                           ))}
                         </div>
                       )}
                     </div>
 
-                    {/* Rechterblok: acties */}
                     <div className="shrink-0 flex flex-col items-end gap-2">
                       <button
                         onClick={() => handleDelete(originalIndex)}
@@ -241,17 +165,14 @@ export default function AssetsPanel() {
                       className="border rounded px-2 py-1"
                       value={selectedDocByAsset[a.assetNumber] ?? ""}
                       onChange={e =>
-                        setSelectedDocByAsset(prev => ({
-                          ...prev,
-                          [a.assetNumber]: e.target.value,
-                        }))
+                        setSelectedDocByAsset(prev => ({ ...prev, [a.assetNumber]: e.target.value }))
                       }
                     >
                       <option value="">— Kies document —</option>
                       {docs.map(d => (
                         <option key={d.id} value={d.id}>
-                          {(d.title || d.filename || "document") +
-                            (d.filename && d.title ? ` (${d.filename})` : "")}
+                          {(d.title || d.fileName || d.filename || "document") +
+                            (d.fileName && d.title ? ` (${d.fileName})` : "")}
                         </option>
                       ))}
                     </select>
