@@ -1,4 +1,4 @@
-export type DocumentItem = {
+export type {DocumentItem, Asset } from "./types";
   id: string;
   docNumber: string;      // PAM-DOC-YYYYMMDD-XXXX
   title: string;
