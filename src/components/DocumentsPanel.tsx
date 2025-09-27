@@ -48,32 +48,53 @@ export default function DocumentsPanel() {
         <ul className="space-y-2">
           {docs.slice().reverse().map((doc) => {
             const uploader = doc.uploadedById ? getPerson(doc.uploadedById) : undefined;
+
             return (
               <li key={doc.id} className="border rounded-xl p-3">
                 <div className="font-medium">{doc.title}</div>
                 <div className="text-sm text-gray-600">
-                  {doc.fileName} {doc.fileSize ? `· ${(doc.fileSize/1024).toFixed(0)} KB` : ""} {doc.mimeType ? `· ${doc.mimeType}` : ""}
+                  {doc.fileName}
+                  {doc.fileSize ? ` · ${(doc.fileSize / 1024).toFixed(0)} KB` : ""}
+                  {doc.mimeType ? ` · ${doc.mimeType}` : ""}
                 </div>
 
                 <div className="text-xs text-gray-600 mt-2 flex flex-wrap gap-2">
-                  {uploader && <span className="px-2 py-0.5 rounded-full border">uploader: {uploader.fullName}</span>}
-                  {(doc.recipientIds ?? []).map(pid => {
-                    const p = getPerson(pid);
-                    return <span key={pid} className="px-2 py-0.5 rounded-full border">naar: {p?.fullName ?? "—"}</span>;
+                  {uploader && (
+                    <span className="px-2 py-0.5 rounded-full border">
+                      uploader: {uploader.fullName}
+                    </span>
+                  )}
+
+                  {(doc.recipientIds ?? []).map((personId: string) => {
+                    const p = getPerson(personId);
+                    return (
+                      <span key={personId} className="px-2 py-0.5 rounded-full border">
+                        naar: {p?.fullName ?? "—"}
+                      </span>
+                    );
                   })}
-                  {(doc.assetIds ?? []).map(aid => {
-                    const a = assetsById[aid];
-                    const label = a ? `${a.assetNumber ?? "—"} — ${a.name ?? "—"}` : aid;
-                    return <span key={aid} className="px-2 py-0.5 rounded-full border">asset: {label}</span>;
+
+                  {(doc.assetIds ?? []).map((assetId: string) => {
+                    const a = assetsById[assetId];
+                    const label = a ? `${a.assetNumber ?? "—"} — ${a.name ?? "—"}` : assetId;
+                    return (
+                      <span key={assetId} className="px-2 py-0.5 rounded-full border">
+                        asset: {label}
+                      </span>
+                    );
                   })}
                 </div>
 
-                {doc.docNumber && <div className="text-[11px] text-gray-500 mt-1">#{doc.docNumber}</div>}
+                {doc.docNumber && (
+                  <div className="text-[11px] text-gray-500 mt-1">#{doc.docNumber}</div>
+                )}
               </li>
             );
           })}
 
-          {docs.length === 0 && <li className="text-sm text-gray-500">Nog geen documenten in het register.</li>}
+          {docs.length === 0 && (
+            <li className="text-sm text-gray-500">Nog geen documenten in het register.</li>
+          )}
         </ul>
       </div>
     </div>

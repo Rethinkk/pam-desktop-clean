@@ -52,22 +52,42 @@ export type AssetRegister = {
 
 export type DocumentItem = {
   id: string;
-docNumber?: string;
-title: string
+
+  // display/meta
+  docNumber?: string;
+  title: string;
+
+  // bestand (canonieke namen)
   fileName: string;
-  mimeType: string;
   fileSize: number;
-AssetIds?: string [];
-  fileDataUrl?: string;           // base64 data URL voor lokaal opslaan
-  uploadedAt: string;        // ISO string
-  uploadedBy?: string;       // bv. naam/email van uploader
-  recipientsIds?: string[];     // wie het moet ontvangen
-  assetNumbers: string[];     // gekoppelde assets (assetNumber)
+  mimeType: string;
+  fileDataUrl?: string;
+
+  // koppelingen (canon)
+  assetIds?: string[];
+  uploadedById?: string;
+  recipientIds?: string[];
+
+  // timestamps
   createdAt: string;
-  updatedAt?: string;    
+  updatedAt?: string;
+
+  // optioneel
   notes?: string;
 
+  /* -------- Legacy aliases (houden we aan boord voor compat) -------- */
+  // oude bestandsnamen (UI gebruikt soms nog deze)
+  filename?: string;
+  mime?: string;
+  size?: number;
+
+  // oude koppelingen/velden
+  uploadedBy?: string;      // oude naam van uploadedById
+  recipients?: string[];    // oude naam van recipientIds
+  assetNumbers?: string[];  // oude asset-koppeling op nummer
 };
+
+
 export type PersonRole =
   | "hoofdgebruiker"
   | "partner"
