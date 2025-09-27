@@ -37,7 +37,12 @@ notes?: string;
   createdAt: string;
   updatedAt: string;
   data: AssetPayload;
+
+// NIEUW: koppelingen met personen
+  ownerIds?: string[];   // eigenaren/verantwoordelijken
+  watcherIds?: string[]; // meelezers/notificaties
 };
+
 
 export type AssetRegister = {
   version: 1;
@@ -56,6 +61,33 @@ export type DocumentItem = {
   recipients?: string[];     // wie het moet ontvangen
   assetNumbers: string[];    // gekoppelde assets (assetNumber)
   notes?: string;
+
+// Bestaand bij jou:
+  assetIds?: string[];
+
+  // NIEUW: koppelingen met personen
+  uploadedById?: string;   // wie heeft geüpload
+  recipientIds?: string[]; // naar wie is/wordt gestuurd
+
+
+};
+export type PersonRole =
+  | "hoofdgebruiker"
+  | "partner"
+  | "kind"
+  | "gemachtigde"
+  | "serviceprovider"
+  | "overig";
+
+export type Person = {
+  id: string;
+  fullName: string;
+  role: PersonRole;
+  email?: string;
+  phone?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
 };
 
 
