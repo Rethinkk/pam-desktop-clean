@@ -124,6 +124,25 @@ export default function AssetsPanel() {
                           <span className="text-gray-500">Nog geen personen gekoppeld.</span>
                         )}
                       </div>
+                      {/* Personen-badges bij dit asset */}
+{(a.ownerIds?.length || a.watcherIds?.length) ? (
+  <div className="mt-2 text-xs text-gray-700 flex flex-wrap gap-2">
+    {(a.ownerIds ?? []).map((pid) => (
+      <span key={`owner-${pid}`} className="px-2 py-0.5 rounded-full border">
+        owner: {getPerson(pid)?.fullName ?? "—"}
+      </span>
+    ))}
+    {(a.watcherIds ?? []).map((pid) => (
+      <span key={`watch-${pid}`} className="px-2 py-0.5 rounded-full border">
+        watcher: {getPerson(pid)?.fullName ?? "—"}
+      </span>
+    ))}
+  </div>
+) : (
+  <div className="mt-2 text-xs text-gray-500">
+    Nog geen personen gekoppeld.
+  </div>
+)}
 
                       {/* Gekoppelde documenten */}
                       <div className="mt-2 text-sm">
