@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export type FieldKind =
   | 'text'
   | 'number'
@@ -27,6 +29,7 @@ export type AssetTypeSchema = {
 export type AssetPayload = Record<string, any>;
 
 export type Asset = {
+  typeCode: ReactNode;
   id: string;
   assetNumber: string;       // PAM-<CODE>-YYYYMMDD-XXXX
   name?: string;              // asset benoeming
@@ -40,6 +43,8 @@ notes?: string;
   updatedAt: string;
   data: AssetPayload;
 
+/** NIEUW: gekoppelde personen (ids) */
+personIds?: string[];
 
 };
 
@@ -97,6 +102,7 @@ export type PersonRole =
   | "overig";
 
 export type Person = {
+  name: string;
   id: string;
   fullName: string;
   role: PersonRole;

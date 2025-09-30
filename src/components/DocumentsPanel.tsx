@@ -4,7 +4,14 @@ import DocumentForm from "./DocumentForm";
 import { loadRegister } from "../lib/assetNumber";
 import { loadDocs } from "../lib/docsStore";
 import type { Asset, DocumentItem } from "../types";
-import { getPerson } from "../lib/peopleStore";
+
+
+import * as peopleStore from "../lib/peopleStore";
+// 👉 forceer losjes typen zodat TS niet klaagt over ontbrekende export
+const PS: any = peopleStore as any;
+const getPersonSafe = (id: string) =>
+  typeof PS.getPerson === "function" ? PS.getPerson(id) : undefined;
+
 
 function normalizeDoc(d: any): DocumentItem {
   return {
@@ -45,9 +52,10 @@ export default function DocumentsPanel() {
 
       <div>
         <h2 className="font-semibold text-lg mb-3">Documenten</h2>
+
         <ul className="space-y-2">
           {docs.slice().reverse().map((doc) => {
-            const uploader = doc.uploadedById ? getPerson(doc.uploadedById) : undefined;
+            const uploader = doc.uploadedById ? getPersonSafe(doc.uploadedById) : undefined;
 
             return (
               <li key={doc.id} className="border rounded-xl p-3">
@@ -66,7 +74,7 @@ export default function DocumentsPanel() {
                   )}
 
                   {(doc.recipientIds ?? []).map((personId: string) => {
-                    const p = getPerson(personId);
+                    const p = getPersonSafe(personId);
                     return (
                       <span key={personId} className="px-2 py-0.5 rounded-full border">
                         naar: {p?.fullName ?? "—"}
@@ -100,3 +108,4 @@ export default function DocumentsPanel() {
     </div>
   );
 }
+

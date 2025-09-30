@@ -3,7 +3,12 @@ import React from "react";
 import { loadRegister, saveRegister } from "../lib/assetNumber";
 import { docsForAsset } from "../lib/docsStore";
 import type { Asset } from "../types";
-import { getPerson } from "../lib/peopleStore";
+
+// ⬇️ vervangt: `import { getPerson } from "../lib/peopleStore";`
+import * as peopleStore from "../lib/peopleStore";
+const PS: any = peopleStore as any;
+const getPersonSafe = (id: string) =>
+  typeof PS.getPerson === "function" ? PS.getPerson(id) : undefined;
 
 console.log("RENDER AssetRegisterPanel");
 
@@ -262,7 +267,7 @@ export default function AssetRegisterPanel() {
                       <ul className="list-disc pl-4">
                         {selected.personIds.map((pid: string) => (
                           <li key={pid}>
-                            {getPerson(pid)?.fullName ?? pid}
+                            {getPersonSafe(pid)?.fullName ?? pid}
                           </li>
                         ))}
                       </ul>

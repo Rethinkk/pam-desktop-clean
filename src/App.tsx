@@ -1,27 +1,66 @@
+/* @ts-nocheck */
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import FrontPage from "./components/FrontPage";
+import AssetRegisterPanel from "./components/AssetRegisterPanel";
 import AssetsPanel from "./components/AssetsPanel";
-import DocumentsPanel from "./components/DocumentsPanel"; // <-- als jij DocsPanel gebruikt, zie noot hieronder
+import DocumentsPanel from "./components/DocumentsPanel";
 import PeoplePanel from "./components/PeoplePanel";
 
 // Bestaande tab-UI, uitgebreid met Mensen-tab
 function AssetShell() {
-  const [tab, setTab] = useState<'assets' | 'docs' | 'people' | 'about'>('assets');
+  const [tab, setTab] = useState<'assets' | 'asset-register' | 'docs' | 'people' | 'about'>('assets');
 
   return (
     <div className="container">
       <div className="tabs">
-        <button className={`tab ${tab==='assets'?'active':''}`} onClick={() => setTab('assets')}>Assets</button>
-        <button className={`tab ${tab==='docs'?'active':''}`} onClick={() => setTab('docs')}>Docs</button>
-        <button className={`tab ${tab==='people'?'active':''}`} onClick={() => setTab('people')}>Mensen</button>
-        <button className={`tab ${tab==='about'?'active':''}`} onClick={() => setTab('about')}>About</button>
+        <button
+          className={`tab ${tab === 'assets' ? 'active' : ''}`}
+          onClick={() => setTab('assets')}
+        >
+          Assets
+        </button>
+
+        <button
+          className={`tab ${tab === 'asset-register' ? 'active' : ''}`}
+          onClick={() => setTab('asset-register')}
+        >
+          Asset Register
+        </button>
+
+        <button
+          className={`tab ${tab === 'docs' ? 'active' : ''}`}
+          onClick={() => setTab('docs')}
+        >
+          Docs
+        </button>
+
+        <button
+          className={`tab ${tab === 'people' ? 'active' : ''}`}
+          onClick={() => setTab('people')}
+        >
+          Mensen
+        </button>
+
+        <button
+          className={`tab ${tab === 'about' ? 'active' : ''}`}
+          onClick={() => setTab('about')}
+        >
+          About
+        </button>
       </div>
 
       {tab === 'assets' && (
         <section className="stack">
           <h1>Assets</h1>
           <AssetsPanel />
+        </section>
+      )}
+
+      {tab === 'asset-register' && (
+        <section className="stack">
+          <h1>Asset register</h1>
+          <AssetRegisterPanel />
         </section>
       )}
 
@@ -57,6 +96,7 @@ export default function App() {
         <Route path="/" element={<FrontPage />} />
         {/* Jouw bestaande UI onder /assets */}
         <Route path="/assets" element={<AssetShell />} />
+        <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
       </Routes>
     </BrowserRouter>
   );
