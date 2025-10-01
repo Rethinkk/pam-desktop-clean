@@ -72,13 +72,14 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
     const now = new Date().toISOString();
     const person: Person = {
       id: editingId ?? (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
-      fullName: fullName.trim().replace(/\s+/g, " "),
+      name: fullName.trim().replace(/\s+/g, " "),
       role: role as PersonRole,
       email: email.trim() || undefined,
       phone: phone.trim() || undefined,
       notes: notes.trim() || undefined,
       createdAt: editing?.createdAt ?? now,
       updatedAt: now,
+      fullName: ""
     };
 
     // upsert (store vervangt bestaande of voegt toe)

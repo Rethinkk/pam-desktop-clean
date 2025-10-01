@@ -1,0 +1,66 @@
+:root{
+  --gutter: clamp(16px, 4vw, 40px);
+  --content-max: 1100px;   /* overal dezelfde lijnbreedte */
+  --radius: 12px;
+  --border: #e5e7eb;
+  --muted: #6b7280;
+}
+
+/* 1) Altijd dezelfde linker “lijn” */
+.page{
+  padding: 24px 16px;
+  padding-left: var(--gutter);
+  max-width: calc(var(--content-max) + var(--gutter)); /* linker pad 
+gelijk */
+}
+
+/* 2) Header met titel links en acties rechts  */
+.page__header{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.page__titles{ min-width: 0; }
+.page__title{
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+.page__subtitle{
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* 3) Body houdt dezelfde linkerlijn + nette sectie spacing */
+.page__body{
+  display: grid;
+  gap: 16px;
+}
+
+/* 4) Standaard “panel”-stijl voor secties (opt-in class) */
+.panel{
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: #fff;
+}
+.panel h3{
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+/* 5) Knoppen wat consistenter (optioneel) */
+button{
+  border-radius: 9999px;
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+}
+button:hover{ filter: brightness(0.98); }
+button:active{ transform: translateY(1px); }
+

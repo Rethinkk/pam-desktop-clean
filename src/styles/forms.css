@@ -1,0 +1,49 @@
+/* Form grid: labels in kolom 1, velden in kolom 2 */
+.form-grid {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 12px;
+  align-items: center;
+}
+
+/* Basis label & veld */
+.form-label {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #0f172a;
+}
+.form-field {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+  color: #0f172a;
+  padding: 10px 12px;
+  height: 44px;
+  box-sizing: border-box;
+}
+.form-field:focus {
+  outline: none;
+  border-color: #64748b;
+  box-shadow: 0 0 0 2px #e2e8f0;
+}
+
+/* Helpers */
+.form-full { grid-column: 1 / -1; }
+.form-h2   { font-size: 18px; font-weight: 700; margin: 16px 0 4px; }
+.form-tip  { color: #475569; font-size: 14px; }
+.form-multi { min-height: 160px; height: auto; }
+
+/* Textarea */
+textarea.form-field { min-height: 120px; height: auto; resize: vertical; }
+
+/* Mobiel: stapel labels boven velden */
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-label { margin-bottom: 4px; white-space: normal; }
+}
+
+/* tijdelijk visueel checkje */
+.form-grid { outline: 1px solid magenta; }
+

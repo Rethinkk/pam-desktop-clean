@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 
 export default function FrontPage() {
   const navigate = useNavigate();
-
-  // Blauw zoals eerder gebruikt
   const blue = "#003366";
 
   return (
@@ -22,7 +20,6 @@ export default function FrontPage() {
       }}
     >
       <main>
-        {/* PAM */}
         <h1
           style={{
             fontWeight: 800,
@@ -35,7 +32,6 @@ export default function FrontPage() {
           PAM
         </h1>
 
-        {/* Tagline */}
         <p
           style={{
             marginTop: "8px",
@@ -50,7 +46,6 @@ export default function FrontPage() {
           your Personal Asset Manager
         </p>
 
-        {/* COMING SOON */}
         <p
           style={{
             fontWeight: 900,
@@ -62,7 +57,6 @@ export default function FrontPage() {
           COMING SOON!
         </p>
 
-        {/* Ronde witte knop naar assets */}
         <button
           onClick={() => navigate("/assets")}
           style={{
@@ -83,7 +77,6 @@ export default function FrontPage() {
         </button>
       </main>
 
-      {/* Footer */}
       <footer
         style={{
           position: "absolute",
@@ -101,3 +94,4 @@ export default function FrontPage() {
     </div>
   );
 }
+
