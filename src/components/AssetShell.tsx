@@ -10,6 +10,7 @@ import PeoplePanel from "./PeoplePanel";
 import AssetRegisterPanel from "./AssetRegisterPanel";
 import DocumentRegisterPanel from "./DocumentRegisterPanel";
 
+
 export default function AssetShell() {
   // GEEN object; gewoon een string-union
   const [tab, setTab] = useState<'assets' | 'asset-register' | 'docs' | 'doc-register' |'people' | 'about'>('assets');
@@ -37,7 +38,7 @@ export default function AssetShell() {
       )}
 
       {tab === 'asset-register' && (
-        <section className="stack">
+        <section className="stack areg">
           <h1>Asset register</h1>
           <AssetRegisterPanel />
         </section>

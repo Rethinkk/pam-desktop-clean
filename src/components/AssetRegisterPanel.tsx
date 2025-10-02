@@ -75,6 +75,7 @@ export default function AssetRegisterPanel() {
     if (!window.confirm("Weet je zeker dat je dit asset wilt verwijderen?")) return;
     const reg = loadRegister();
     const next = (reg.assets ?? []).filter((a: any) => a?.id !== id);
+    // saveRegister is nog in gebruik elders; laten staan
     saveRegister({ assets: next });
     setAssets(normalizeAssets(next));
     if (selectedId === id) closeDetails();
@@ -113,7 +114,7 @@ export default function AssetRegisterPanel() {
     try { return new Date(d).toLocaleString(); } catch { return d; }
   }
 
-  // detail-weergave helper: toon alle data-velden die in het formulier zijn ingevuld
+  // detail-weergave helper
   function DataRows({ data }: { data: Record<string, any> | undefined }) {
     if (!data || typeof data !== "object") return <em className="text-gray-500">Geen aanvullende velden.</em>;
     const entries = Object.entries(data).filter(([k]) => k !== "__docIds");
@@ -137,7 +138,7 @@ export default function AssetRegisterPanel() {
     );
   }
 
-  // documenten bij asset: via docsStore op assetNumber
+  // documenten bij asset
   function DocsList({ assetNumber, inline }: { assetNumber?: string; inline?: boolean }) {
     const docs = React.useMemo(() => (assetNumber ? docsForAsset(assetNumber) : []), [assetNumber]);
     if (!docs || docs.length === 0) return <span className="text-gray-500">{inline ? "geen" : "Geen documenten"}</span>;
@@ -151,27 +152,126 @@ export default function AssetRegisterPanel() {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold" style={{ color: "blue" }}>
-          Asset REGISTER — OVERZICHT
-        </h2>
+    <div className="areg space-y-4">
+      {/* --- SCOPED STYLES: uitsluitend voor dit panel --- */}
+      <style>{`
+        .areg {
+          background:#fff !important;
+          border-radius:12px !important;
+          padding:20px !important;
+          box-shadow:0 1px 2px rgba(0,0,0,.03) !important;
+        }
+
+        /* Titel in blauw */
+        .areg h2{
+          margin:0 0 8px !important;
+          font-size:22px !important;
+          font-weight:700 !important;
+          color:#0F2C6E!important; /* blauw */
+        }
+
+        /* Zoekveld rustiger (werkt voor text/search) */
+        .areg input[type="text"], .areg input[type="search"]{
+          width:100% !important;
+          padding:10px 12px 10px 36px !important;
+          border:1px solid #cbd5e1 !important;
+          border-radius:10px !important;
+          background:#f8fafc !important;
+          outline:none !important;
+          transition:border-color .15s, box-shadow .15s, background .15s !important;
+          background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="%23475569"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>') !important;
+          background-repeat:no-repeat !important;
+          background-position:10px 50% !important;
+          max-width:420px !important;
+        }
+        .areg input[type="text"]:focus, .areg input[type="search"]:focus{
+          border-color:#94a3b8 !important;
+          background:#fff !important;
+          box-shadow:0 0 0 3px rgba(30,58,138,.12) !important;
+        }
+
+        /* Header-rij en meta */
+        .areg .header-row{
+          display:flex !important;
+          align-items:center !important;
+          justify-content:space-between !important;
+          gap:12px !important;
+        }
+        .areg .meta{
+          color:#64748b !important;
+          font-size:12px !important;
+        }
+
+        /* Ronde hoeken om de tabel */
+        .areg .table-wrap{
+          border:1px solid #e2e8f0 !important;
+          border-radius:12px !important;
+          overflow:hidden !important;
+          background:#fff !important;
+        }
+
+        .areg table{
+          width:100% !important;
+          border-collapse:separate !important;
+          border-spacing:0 !important;
+          margin-top:0 !important; /* binnen de wrap geen extra marge */
+        }
+        .areg thead th{
+          text-align:left !important;
+          font-size:12px !important;
+          text-transform:uppercase !important;
+          letter-spacing:.04em !important;
+          color:#475569 !important;
+          background:#f8fafc !important;
+          padding:10px 12px !important;
+          border-bottom:1px solid #e2e8f0 !important;
+        }
+        .areg tbody td{
+          padding:12px !important;
+          border-bottom:1px solid #e2e8f0 !important;
+          vertical-align:middle !important;
+          color:#0f172a !important;
+        }
+        .areg tbody tr:hover{ background:#f8fafc !important; }
+
+        /* Acties rechts; knop blauw met witte letters */
+        .areg td:last-child, .areg .col-actions{ text-align:right !important; white-space:nowrap !important; }
+        .areg td:last-child button, .areg .col-actions button{
+          background:#0F2C6E !important;     /* blauw */
+          border:1px solid #1e40af !important;
+          color:#ffffff !important;          /* witte letters */
+          border-radius:9999px !important;   /* pill */
+          padding:8px 12px !important;
+          font-weight:600 !important;
+          line-height:1 !important;
+          cursor:pointer !important;
+          transition:background .15s, border-color .15s, color .15s !important;
+        }
+        .areg td:last-child button:hover, .areg .col-actions button:hover{
+          background:#0F2C6E !important;     /* iets donkerder */
+          border-color:#1e3a8a !important;
+        }
+      `}</style>
+
+      <div className="header-row">
+        <h2>Asset Register — Overzicht</h2>
         <input
           className="border rounded px-2 py-1 w-64"
           placeholder="Zoek op nummer/naam/type…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          type="search"
         />
       </div>
 
-      <div className="text-xs text-gray-500">
+      <div className="meta">
         Totaal: <strong>{filtered.length}</strong> {filtered.length === 1 ? "item" : "items"}
       </div>
 
       {filtered.length === 0 ? (
         <p className="text-sm text-gray-500">Nog geen assets in het register.</p>
       ) : (
-        <div className="overflow-auto">
+        <div className="table-wrap overflow-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="text-left border-b">
