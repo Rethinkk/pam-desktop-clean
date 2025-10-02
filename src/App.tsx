@@ -55,12 +55,8 @@ function LegacyAssetShell() {
         </section>
       )}
 
-      {tab === 'people' && (
-        <section className="stack">
-          <h1>Mensen</h1>
-          <PeoplePanel />
-        </section>
-      )}
+      {tab === "people" && <PeoplePanel />}
+        
 
       {tab === 'about' && (
         <section className="stack">

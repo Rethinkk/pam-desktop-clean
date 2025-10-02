@@ -77,61 +77,39 @@ export default function AssetForm({ onCreated }: Props) {
     // of gebruik centraal oplopend:
     // const assetNumber = nextAssetNumber(ASSET_PREFIX);
 
-    // 👇 replace your current newAsset object with this:
-const newAsset: Asset = {
-  id,
-  assetNumber,
-  name,
-  // keep your own fields
-  type: code,
-  category: code,
-  // ✅ add this field to satisfy Asset.type requirements
-  typeCode: code as any, // if your Asset.typeCode is typed oddly (ReactNode), ts-nocheck will allow this
+    const newAsset: Asset = {
+      id,
+      assetNumber,
+      name,
+      type: code,
+      category: code,
+      typeCode: code as any,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      data: { ...formData, __docIds: docIds },
+      ...(personId ? { personIds: [personId] } : {}),
+    };
 
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-
-  // your form payload + linked docs
-  data: { ...formData, __docIds: docIds },
-
-  // ✅ store people as an array per your model
-  ...(personId ? { personIds: [personId] } : {}),
-};
-
-
-    // Schrijf naar het centrale register
-    const reg = loadRegister();                    // { assets: Asset[] }
+    // Schrijf naar register
+    const reg = loadRegister();
     const nextAssets = [...reg.assets, newAsset];
-    saveRegister({ assets: nextAssets });          // dispatcht 'pam-assets-updated'
+    saveRegister({ assets: nextAssets });
 
-    // (optioneel) extra tik voor andere listeners
     try {
       localStorage.setItem("pam-assets-tick", String(Date.now()));
       window.dispatchEvent(new CustomEvent("pam-assets-updated"));
     } catch {}
 
-    // Koppelingen (best-effort, niet blocking)
+    // Koppelingen (best-effort)
     try {
-      if (personId) {
-        // let op: (assetNumber, personId)
-        linkPersonToAsset(newAsset.assetNumber, personId);
-      }
-      if (docIds && docIds.length) {
-        for (const d of docIds) {
-          // docs: (docId, assetNumber)
-          linkDocToAsset(d, newAsset.assetNumber);
-        }
-      }
+      if (personId) linkPersonToAsset(newAsset.assetNumber, personId);
+      if (docIds?.length) for (const d of docIds) linkDocToAsset(d, newAsset.assetNumber);
     } catch (err) {
       console.warn("linking error:", err);
     }
 
-    // callback + reset
     onCreated?.(newAsset);
-    setName("");
-    setFormData({});
-    setPersonId("");
-    setDocIds([]);
+    setName(""); setFormData({}); setPersonId(""); setDocIds([]);
   }
 
   function renderField(f: any) {
@@ -169,9 +147,12 @@ const newAsset: Asset = {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 max-w-2xl">
-      <div>
-        <label className="block text-sm font-medium mb-1">Assetnaam / Benoeming *</label>
+
+      {/* Bovenste velden (zelfde methodiek: label links, veld rechts) */}
+      <div className="field">
+        <label htmlFor="assetName" className="text-sm font-medium">Assetnaam / Benoeming *</label>
         <input
+          id="assetName"
           className="border rounded px-2 py-1 w-full"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -179,9 +160,10 @@ const newAsset: Asset = {
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Assettype *</label>
+      <div className="field">
+        <label htmlFor="typeCode" className="text-sm font-medium">Assettype *</label>
         <select
+          id="typeCode"
           className="border rounded px-2 py-1 w-full"
           value={typeCode}
           onChange={(e) => setTypeCode(e.target.value)}
@@ -193,9 +175,10 @@ const newAsset: Asset = {
       </div>
 
       {/* Persoon */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Koppel aan persoon (optioneel)</label>
+      <div className="field">
+        <label htmlFor="person" className="text-sm font-medium">Koppel aan persoon (optioneel)</label>
         <select
+          id="person"
           className="border rounded px-2 py-1 w-full"
           value={personId}
           onChange={(e) => setPersonId(e.target.value)}
@@ -208,9 +191,10 @@ const newAsset: Asset = {
       </div>
 
       {/* Documenten */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Koppel documenten (optioneel)</label>
+      <div className="field">
+        <label htmlFor="docs" className="text-sm font-medium">Koppel documenten (optioneel)</label>
         <select
+          id="docs"
           multiple
           className="border rounded px-2 py-1 w-full h-36"
           value={docIds}
@@ -222,29 +206,31 @@ const newAsset: Asset = {
             return <option key={d.id} value={d.id}>{label}</option>;
           })}
         </select>
-        <p className="text-xs text-gray-500 mt-1">Tip: houd ⌘/Ctrl ingedrukt om meerdere documenten te selecteren.</p>
       </div>
+      <p className="text-xs text-gray-500 tip">Tip: houd ⌘/Ctrl ingedrukt om meerdere documenten te selecteren.</p>
 
+      {/* Verplicht */}
       <fieldset className="border rounded p-3">
         <legend className="text-sm font-semibold">Verplicht</legend>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-2">
           {schema.required.map((f: any) => (
-            <label key={f.key} className="text-sm">
-              <span className="block mb-1">{f.label} *</span>
+            <div className="field" key={f.key}>
+              <label htmlFor={f.key} className="text-sm">{f.label} *</label>
               {renderField(f)}
-            </label>
+            </div>
           ))}
         </div>
       </fieldset>
 
+      {/* Optioneel —zelfde methodologie als Verplicht */}
       <fieldset className="border rounded p-3">
         <legend className="text-sm font-semibold">Optioneel</legend>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-2">
           {schema.optional.map((f: any) => (
-            <label key={f.key} className="text-sm">
-              <span className="block mb-1">{f.label}</span>
+            <div className="field" key={f.key}>
+              <label htmlFor={f.key} className="text-sm">{f.label}</label>
               {renderField(f)}
-            </label>
+            </div>
           ))}
         </div>
       </fieldset>

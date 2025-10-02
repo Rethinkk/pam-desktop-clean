@@ -1,5 +1,5 @@
 /* @ts-nocheck */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { Person, PersonRole } from "../types";
 import { allPeople, upsertPerson } from "../lib/peopleStore";
 
@@ -26,40 +26,50 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
 
-  // laad bestaande personen voor uniciteitscheck
-  const people = useMemo(() => allPeople(), []);
-  const editingId = editing?.id;
-
+  // 🔁 Gebruik een live people-lijst voor uniciteitschecks
+  const [people, setPeople] = useState<Person[]>(() => allPeople());
   useEffect(() => {
-    if (!editing) return;
-    setFullName(editing.fullName ?? "");
+    const handler = () => setPeople(allPeople());
+    window.addEventListener("pam-people-updated", handler);
+    return () => window.removeEventListener("pam-people-updated", handler);
+  }, []);
+
+  const editingId = editing?.id ?? null;
+
+  // Prefill bij bewerken
+  useEffect(() => {
+    if (!editing) {
+      setFullName(""); setRole(""); setEmail(""); setPhone(""); setNotes(""); setErrors([]);
+      return;
+    }
+    const initialName = (editing.name || editing.fullName || "").trim();
+    setFullName(initialName);
     setRole((editing.role as any) ?? "");
     setEmail(editing.email ?? "");
     setPhone(editing.phone ?? "");
     setNotes(editing.notes ?? "");
+    setErrors([]);
   }, [editing]);
 
   function validate(): string[] {
     const errs: string[] = [];
-    const name = fullName.trim().replace(/\s+/g, " ");
+    const nameNorm = fullName.trim().replace(/\s+/g, " ");
     const emailNorm = email.trim().toLowerCase();
     const phoneTrim = phone.trim();
 
-    if (!name || name.length < 2) errs.push("Naam is verplicht (min. 2 tekens).");
+    if (!nameNorm || nameNorm.length < 2) errs.push("Naam is verplicht (min. 2 tekens).");
     if (!role) errs.push("Rol is verplicht.");
 
     if (emailNorm) {
-      const ok = /.+@.+\..+/.test(emailNorm);
-      if (!ok) errs.push("E-mail is ongeldig.");
+      if (!/.+@.+\..+/.test(emailNorm)) errs.push("E-mail is ongeldig.");
       const clash = people.find(
         (p) => (p.id !== editingId) && (p.email || "").trim().toLowerCase() === emailNorm
       );
       if (clash) errs.push("E-mail is al in gebruik.");
     }
 
-    if (phoneTrim) {
-      const ok = /^\+?[0-9\s\-()]{8,20}$/.test(phoneTrim);
-      if (!ok) errs.push("Telefoonnummer is ongeldig.");
+    if (phoneTrim && !/^\+?[0-9\s\-()]{8,20}$/.test(phoneTrim)) {
+      errs.push("Telefoonnummer is ongeldig.");
     }
     return errs;
   }
@@ -70,19 +80,20 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
     if (v.length) { setErrors(v); return; }
 
     const now = new Date().toISOString();
+    const normalized = fullName.trim().replace(/\s+/g, " ");
+
     const person: Person = {
       id: editingId ?? (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
-      name: fullName.trim().replace(/\s+/g, " "),
+      name: normalized,            // ✅ hoofdveld
+      fullName: normalized,        // ✅ mag blijven als alias; kan ook weggelaten worden
       role: role as PersonRole,
       email: email.trim() || undefined,
       phone: phone.trim() || undefined,
       notes: notes.trim() || undefined,
       createdAt: editing?.createdAt ?? now,
       updatedAt: now,
-      fullName: ""
     };
 
-    // upsert (store vervangt bestaande of voegt toe)
     upsertPerson(person);
     setErrors([]);
     onSaved?.(person);
@@ -185,3 +196,4 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
     </form>
   );
 }
+

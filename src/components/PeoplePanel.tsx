@@ -1,10 +1,10 @@
 /* @ts-nocheck */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { nanoid } from "nanoid";
 import { allPeople, upsertPerson, removePerson } from "../lib/peopleStore";
 import type { Person, PersonRole } from "../types";
 
-const roleOptions: {value: PersonRole; label: string}[] = [
+const roleOptions: { value: PersonRole; label: string }[] = [
   { value: "hoofdgebruiker", label: "Hoofdgebruiker" },
   { value: "partner",        label: "Partner" },
   { value: "kind",           label: "Kind" },
@@ -18,8 +18,8 @@ export default function PeoplePanel() {
   const refresh = () => setPeople(allPeople());
 
   // form state
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<PersonRole>("overig");
+  const [name, setName]   = useState("");
+  const [role, setRole]   = useState<PersonRole>("overig");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
@@ -27,13 +27,23 @@ export default function PeoplePanel() {
   // bewerken
   const [editing, setEditing] = useState<Person | null>(null);
 
+  // helpers
+  const normalizeName  = (raw: string) => (raw || "").trim().replace(/\s+/g, " ");
+  const getDisplayName = (p: Partial<Person>) => normalizeName(String(p.name ?? p.fullName ?? ""));
+
+  useEffect(() => {
+    const handler = () => refresh();
+    window.addEventListener("pam-people-updated", handler);
+    return () => window.removeEventListener("pam-people-updated", handler);
+  }, []);
+
   function validate(isEdit: boolean): string[] {
     const errs: string[] = [];
-    const name = (fullName || "").trim().replace(/\s+/g, " ");
+    const nameNorm  = normalizeName(name);
     const emailNorm = (email || "").trim().toLowerCase();
     const phoneTrim = (phone || "").trim();
 
-    if (!name || name.length < 2) errs.push("Naam is verplicht (min. 2 tekens).");
+    if (!nameNorm || nameNorm.length < 2) errs.push("Naam is verplicht (min. 2 tekens).");
 
     if (emailNorm) {
       if (!/.+@.+\..+/.test(emailNorm)) errs.push("E-mail is ongeldig.");
@@ -51,7 +61,7 @@ export default function PeoplePanel() {
   }
 
   function resetForm() {
-    setFullName("");
+    setName("");
     setRole("overig");
     setEmail("");
     setPhone("");
@@ -60,10 +70,10 @@ export default function PeoplePanel() {
 
   function startEdit(p: Person) {
     setEditing(p);
-    setFullName(p.fullName || "");
+    setName(getDisplayName(p));
     setRole((p.role as PersonRole) || "overig");
-    setEmail(p.email || "");
-    setPhone(p.phone || "");
+    setEmail((p.email || "").trim());
+    setPhone((p.phone || "").trim());
     setErrors([]);
   }
 
@@ -78,136 +88,145 @@ export default function PeoplePanel() {
     if (v.length) { setErrors(v); return; }
 
     const now = new Date().toISOString();
+    const safeName = normalizeName(name);
 
     if (editing) {
-      // bijwerken
-      upsertPerson({
+      const updated: Person = {
         ...editing,
-        fullName: fullName.trim().replace(/\s+/g, " "),
+        name: safeName,
+        fullName: safeName,
         role,
         email: email.trim() || undefined,
         phone: phone.trim() || undefined,
         updatedAt: now,
-      });
+      };
+      try { upsertPerson(updated); } catch {}
+      refresh();
       setEditing(null);
-    } else {
-      // nieuw
-      upsertPerson({
-        id: nanoid(),
-        fullName: fullName.trim().replace(/\s+/g, " "),
-        role,
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
-        createdAt: now,
-        updatedAt: now,
-      });
+      resetForm();
+      return;
     }
 
+    const created: Person = {
+      id: nanoid(),
+      name: safeName,
+      fullName: safeName,
+      role,
+      email: email.trim() || undefined,
+      phone: phone.trim() || undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
+    try { upsertPerson(created); } catch {}
     refresh();
     resetForm();
   }
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
-      <form onSubmit={handleSubmit} className="border rounded-2xl p-4 shadow-sm">
-        <h2 className="font-semibold text-lg mb-3">
-          {editing ? "Persoon bewerken" : "Nieuwe persoon"}
-        </h2>
+    <div className="stack">
+      <form onSubmit={handleSubmit} className="card">
+        <h2 className="section-title">Nieuwe persoon</h2>
 
-        <label className="block text-sm mb-1">Naam</label>
-        <input
-          value={fullName}
-          onChange={e=>setFullName(e.target.value)}
-          required
-          className="w-full border rounded p-2 mb-3"
-        />
+        <div className="field">
+          <label>Naam</label>
+          <input
+            className="input"
+            value={name}
+            onChange={e=>setName(e.target.value)}
+            required
+          />
+        </div>
 
-        <label className="block text-sm mb-1">Rol</label>
-        <select
-          value={role}
-          onChange={e=>setRole(e.target.value as PersonRole)}
-          className="w-full border rounded p-2 mb-3"
-        >
-          {roleOptions.map(o=> <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
+        <div className="field">
+          <label>Rol</label>
+          <select
+            className="input"
+            value={role}
+            onChange={e=>setRole(e.target.value as PersonRole)}
+          >
+            {roleOptions.map(o=> <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm mb-1">E-mail</label>
+        <div className="inline-controls">
+          <div className="field" style={{flex:1}}>
+            <label>E-mail</label>
             <input
+              className="input"
               type="email"
               value={email}
               onChange={e=>setEmail(e.target.value)}
-              className="w-full border rounded p-2"
             />
           </div>
-          <div>
-            <label className="block text-sm mb-1">Telefoon</label>
+          <div className="field" style={{flex:1}}>
+            <label>Telefoon</label>
             <input
+              className="input"
               value={phone}
               onChange={e=>setPhone(e.target.value)}
-              pattern="^\+?[0-9\s\-()]{8,20}$"
+              pattern="^\+?[0-9\\s\\-()]{8,20}$"
               title="Gebruik alleen cijfers, spaties, - ( ) en optioneel +; 8–20 tekens"
-              className="w-full border rounded p-2"
             />
           </div>
         </div>
 
         {errors.length > 0 && (
-          <div className="text-red-600 text-sm mt-3 space-y-1">
+          <div className="tip" style={{color:"#b91c1c"}}>
             {errors.map(err => <div key={err}>• {err}</div>)}
           </div>
         )}
 
-        <div className="mt-4 flex items-center gap-2">
-          <button className="px-4 py-2 rounded-xl border shadow-sm">
+        <div className="actions">
+          <button type="submit" className="btn primary">
             {editing ? "Bijwerken" : "Opslaan"}
           </button>
           {editing && (
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="px-4 py-2 rounded-xl border shadow-sm"
-            >
+            <button type="button" className="btn" onClick={cancelEdit}>
               Annuleren
             </button>
           )}
         </div>
       </form>
 
-      <div>
-        <h2 className="font-semibold text-lg mb-3">Mensen</h2>
-        <ul className="space-y-2">
-          {people.slice().reverse().map(p => (
-            <li key={p.id} className="border rounded-xl p-3 flex items-start justify-between">
-              <div>
-                <div className="font-medium">{p.fullName}</div>
-                <div className="text-sm text-gray-600 capitalize">{p.role}</div>
-                {(p.email || p.phone) && (
-                  <div className="text-sm mt-1 text-gray-700">
-                    {p.email && <span>{p.email}</span>} {p.email && p.phone && "· "} {p.phone}
+      <div className="stack">
+        <h2 className="section-title">Mensen</h2>
+        {people.length === 0 ? (
+          <div className="card">Nog geen personen toegevoegd.</div>
+        ) : (
+          <ul className="stack">
+            {people.slice().reverse().map(p => {
+              const display = getDisplayName(p);
+              return (
+                <li key={p.id} className="card" style={{padding:"12px"}}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-medium">{display}</div>
+                      <div className="text-sm capitalize">{p.role}</div>
+                      {(p.email || p.phone) && (
+                        <div className="text-sm" style={{marginTop:4}}>
+                          {p.email && <span>{p.email}</span>} {p.email && p.phone && "· "} {p.phone}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" className="btn" onClick={() => startEdit(p)}>Bewerken</button>
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => { try { removePerson(p.id); } catch {}; refresh(); }}
+                      >
+                        Verwijderen
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => startEdit(p)}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  Bewerken
-                </button>
-                <button
-                  onClick={()=>{ removePerson(p.id); refresh(); }}
-                  className="text-sm text-red-600 hover:underline"
-                >
-                  Verwijderen
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );
 }
+
 
