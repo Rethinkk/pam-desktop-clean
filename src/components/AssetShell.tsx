@@ -1,3 +1,4 @@
+
 /* @ts-nocheck */
 import React, { useState } from "react";
 
@@ -7,10 +8,13 @@ import AssetsPanel from "./AssetsPanel";
 import DocumentsPanel from "./DocumentsPanel";
 import PeoplePanel from "./PeoplePanel";
 import AssetRegisterPanel from "./AssetRegisterPanel";
+import DocumentRegisterPanel from "./DocumentRegisterPanel";
 
 export default function AssetShell() {
   // GEEN object; gewoon een string-union
-  const [tab, setTab] = useState<'assets' | 'asset-register' | 'docs' | 'people' | 'about'>('assets');
+  const [tab, setTab] = useState<'assets' | 'asset-register' | 'docs' | 'doc-register' |'people' | 'about'>('assets');
+
+  
 
   return (
     <div className="container">
@@ -18,9 +22,11 @@ export default function AssetShell() {
         <button className={`tab ${tab==='assets'?'active':''}`} onClick={() => setTab('assets')}>Assets</button>
         <button className={`tab ${tab==='asset-register'?'active':''}`} onClick={() => setTab('asset-register')}>Asset Register</button>
         <button className={`tab ${tab==='docs'?'active':''}`} onClick={() => setTab('docs')}>Docs</button>
+        <button className={tab === 'doc-register' ? 'tab active' : 'tab'} onClick={() => setTab('doc-register')}>Document Register</button>
         <button className={`tab ${tab==='people'?'active':''}`} onClick={() => setTab('people')}>Mensen</button>
         <button className={`tab ${tab==='about'?'active':''}`} onClick={() => setTab('about')}>About</button>
       </div>
+
 
       {tab === 'assets' && (
         <section className="stack">
@@ -43,6 +49,9 @@ export default function AssetShell() {
           <DocumentsPanel />
         </section>
       )}
+
+{tab === 'doc-register' && <DocumentRegisterPanel />}
+
 
       {tab === 'people' && (
         <section className="stack">

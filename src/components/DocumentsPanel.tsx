@@ -1,111 +1,142 @@
 /* @ts-nocheck */
-import React, { useEffect, useMemo, useState } from "react";
-import DocumentForm from "./DocumentForm";
-import { loadRegister } from "../lib/assetNumber";
-import { loadDocs } from "../lib/docsStore";
-import type { Asset, DocumentItem } from "../types";
+import React from "react";
 
+const STORAGE_KEY = "pam-docs-v1";
 
-import * as peopleStore from "../lib/peopleStore";
-// 👉 forceer losjes typen zodat TS niet klaagt over ontbrekende export
-const PS: any = peopleStore as any;
-const getPersonSafe = (id: string) =>
-  typeof PS.getPerson === "function" ? PS.getPerson(id) : undefined;
+/** Lees docs, ondersteunt zowel [] als {docs: []} (back-compat) */
+function readDocs(): any[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed?.docs)) return parsed.docs;
+    return [];
+  } catch {
+    return [];
+  }
+}
 
-
-function normalizeDoc(d: any): DocumentItem {
-  return {
-    ...d,
-    fileName: d.fileName ?? d.filename ?? "",
-    fileSize: d.fileSize ?? d.size ?? 0,
-    mimeType: d.mimeType ?? d.mime ?? "application/octet-stream",
-    assetIds: Array.isArray(d.assetIds) ? d.assetIds : [],
-    recipientIds: Array.isArray(d.recipientIds) ? d.recipientIds : [],
-  };
+/** Sla docs op in {docs: []} en zend update-event uit */
+function saveDocs(nextDocs: any[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ docs: nextDocs }));
+  // Laat andere panels (zoals DocumentRegisterPanel) live verversen
+  window.dispatchEvent(new Event("pam-docs-updated"));
 }
 
 export default function DocumentsPanel() {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [docs, setDocs] = useState<DocumentItem[]>([]);
+  const [title, setTitle] = React.useState("");
+  const [filename, setFilename] = React.useState("");
+  const [notes, setNotes] = React.useState("");
+  const [savedId, setSavedId] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
-  useEffect(() => {
-    const reg = loadRegister();
-    setAssets(Array.isArray(reg?.assets) ? reg.assets : []);
-    refreshDocs();
-  }, []);
+  const makeId = () =>
+    (crypto?.randomUUID ? crypto.randomUUID() : `doc_${Date.now()}`);
 
-  function refreshDocs() {
-    const raw = loadDocs();
-    const arr = Array.isArray(raw) ? raw : Array.isArray(raw?.docs) ? raw.docs : [];
-    setDocs(arr.map(normalizeDoc));
-  }
+  const handleSave = (goToRegisterAfter = false) => {
+    setError(null);
+    const t = title.trim();
+    if (!t) {
+      setError("Titel is verplicht.");
+      return;
+    }
+    const now = new Date().toISOString();
+    const newDoc = {
+      id: makeId(),
+      title: t,
+      filename: filename.trim() || undefined,
+      notes: notes.trim() || undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-  const assetsById = useMemo(() => {
-    const m: Record<string, Asset> = {};
-    for (const a of assets) m[a.id] = a;
-    return m;
-  }, [assets]);
+    const docs = readDocs();
+    docs.unshift(newDoc); // nieuw bovenaan
+    saveDocs(docs);
+    setSavedId(newDoc.id);
+
+    // formulier leegmaken
+    setTitle("");
+    setFilename("");
+    setNotes("");
+
+    if (goToRegisterAfter) {
+      // laat de shell naar de Document Register-tab springen
+      const ev = new CustomEvent("pam-nav", { detail: "doc-register" });
+      window.dispatchEvent(ev);
+    }
+  };
+
+  const goToRegister = () => {
+    const ev = new CustomEvent("pam-nav", { detail: "doc-register" });
+    window.dispatchEvent(ev);
+  };
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
-      <DocumentForm onCreated={refreshDocs} />
+    <div className="p-4 space-y-4">
+      <h2 className="text-xl font-semibold">Documenten</h2>
 
-      <div>
-        <h2 className="font-semibold text-lg mb-3">Documenten</h2>
+      <p className="text-sm opacity-80">
+        Hier maak je <strong>nieuwe documenten</strong> aan. Het overzicht van alle documenten staat in de tab{" "}
+        <strong>Document Register</strong>.
+      </p>
 
-        <ul className="space-y-2">
-          {docs.slice().reverse().map((doc) => {
-            const uploader = doc.uploadedById ? getPersonSafe(doc.uploadedById) : undefined;
+      <div className="rounded-lg border p-4 space-y-3">
+        <div>
+          <label className="block text-sm font-medium mb-1">Titel *</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full border rounded px-2 py-1"
+            placeholder="Bijv. Factuur 2025-001"
+          />
+        </div>
 
-            return (
-              <li key={doc.id} className="border rounded-xl p-3">
-                <div className="font-medium">{doc.title}</div>
-                <div className="text-sm text-gray-600">
-                  {doc.fileName}
-                  {doc.fileSize ? ` · ${(doc.fileSize / 1024).toFixed(0)} KB` : ""}
-                  {doc.mimeType ? ` · ${doc.mimeType}` : ""}
-                </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Bestandsnaam / URL</label>
+          <input
+            value={filename}
+            onChange={(e) => setFilename(e.target.value)}
+            className="w-full border rounded px-2 py-1"
+            placeholder="Bijv. factuur-2025-001.pdf of https://…"
+          />
+        </div>
 
-                <div className="text-xs text-gray-600 mt-2 flex flex-wrap gap-2">
-                  {uploader && (
-                    <span className="px-2 py-0.5 rounded-full border">
-                      uploader: {uploader.fullName}
-                    </span>
-                  )}
+        <div>
+          <label className="block text-sm font-medium mb-1">Notities</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full border rounded px-2 py-1"
+            rows={3}
+            placeholder="Optioneel"
+          />
+        </div>
 
-                  {(doc.recipientIds ?? []).map((personId: string) => {
-                    const p = getPersonSafe(personId);
-                    return (
-                      <span key={personId} className="px-2 py-0.5 rounded-full border">
-                        naar: {p?.fullName ?? "—"}
-                      </span>
-                    );
-                  })}
+        {error && <div className="text-red-700 text-sm">{error}</div>}
+        {savedId && (
+          <div className="text-green-700 text-sm">
+            Document opgeslagen (ID: {savedId}). Je vindt ‘m in <button className="underline" onClick={goToRegister}>Document Register</button>.
+          </div>
+        )}
 
-                  {(doc.assetIds ?? []).map((assetId: string) => {
-                    const a = assetsById[assetId];
-                    const label = a ? `${a.assetNumber ?? "—"} — ${a.name ?? "—"}` : assetId;
-                    return (
-                      <span key={assetId} className="px-2 py-0.5 rounded-full border">
-                        asset: {label}
-                      </span>
-                    );
-                  })}
-                </div>
+        <div className="flex gap-8 pt-2">
+          <button className="btn" onClick={() => handleSave(false)}>
+            Opslaan
+          </button>
+          <button className="btn" onClick={() => handleSave(true)}>
+            Opslaan & naar Document Register
+          </button>
+        </div>
+      </div>
 
-                {doc.docNumber && (
-                  <div className="text-[11px] text-gray-500 mt-1">#{doc.docNumber}</div>
-                )}
-              </li>
-            );
-          })}
-
-          {docs.length === 0 && (
-            <li className="text-sm text-gray-500">Nog geen documenten in het register.</li>
-          )}
-        </ul>
+      <div className="rounded-lg border p-3 text-sm opacity-70">
+        (Later kun je hier extra tools zetten — viewer/annotate/koppelen — maar het registeroverzicht blijft
+        exclusief in <em>Document Register</em>.)
       </div>
     </div>
   );
 }
+
 
