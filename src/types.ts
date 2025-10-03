@@ -34,7 +34,7 @@ export type Asset = {
   assetNumber: string;       // PAM-<CODE>-YYYYMMDD-XXXX
   name?: string;              // asset benoeming
   type?: string;              // schema.code
-category?: string;
+category?: import ("./constants/assetCategories").AssetCategory;
 ownerIds?: string [];
 watcherIds?: string[];
 value?: number;

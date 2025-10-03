@@ -6,10 +6,11 @@ import DocumentsPanel from "./DocumentsPanel";
 import PeoplePanel from "./PeoplePanel";
 import AssetRegisterPanel from "./AssetRegisterPanel";
 import DocumentRegisterPanel from "./DocumentRegisterPanel";
+import ReportingPanel from "./ReportingPanel";
 
 export default function AssetShell() {
   const [tab, setTab] = useState<
-    "assets" | "asset-register" | "docs" | "doc-register" | "people" | "about"
+    "assets" | "asset-register" | "docs" | "doc-register" | "people" | "reporting" | "about"
   >("assets");
 
   // --- HOTFIX: normaliseer pam-docs-v1 zodat Document Register altijd kan lezen
@@ -66,6 +67,13 @@ export default function AssetShell() {
         <button className={`tab ${tab === "people" ? "active" : ""}`} onClick={() => setTab("people")}>
           Mensen
         </button>
+        <button
+  className={`tab ${tab === "reporting" ? "active" : ""}`}
+  onClick={() => setTab("reporting")}
+>
+  Reporting
+</button>
+
         <button className={`tab ${tab === "about" ? "active" : ""}`} onClick={() => setTab("about")}>
           About
         </button>
@@ -153,7 +161,7 @@ export default function AssetShell() {
               .form-scope form label + * :is(input,select,textarea,.input,.control){ width:100% !important; }
               .form-scope form .field{ display:flex !important; align-items:center !important; gap:12px !important; margin-bottom:12px !important; }
               .form-scope form .field > label{ width:240px !important; margin:0 !important; white-space:nowrap !important; display:inline-block !important; }
-              .form-scope form .field > :not<label){ flex:1 1 auto !important; }
+              .form-scope form .field > :not(label){ flex:1 1 auto !important; }
               .form-scope form .inline, .form-scope form .inline-controls{ display:flex !important; gap:12px !important; }
               .form-scope form h2, .form-scope form h3, .form-scope form .section-title, .form-scope form .tip, .form-scope form hr{
                 display:block !important; width:100% !important;
@@ -170,7 +178,7 @@ export default function AssetShell() {
         </section>
       )}
 
-     {/* ===== Mensen-tab ===== */}
+{/* ===== Mensen-tab ===== */}
 {tab === "people" && (
   <section className="stack">
     <h1>Mensen</h1>
@@ -205,6 +213,14 @@ export default function AssetShell() {
     `}</style>
   </section>
 )}
+
+{/* ===== Reporting-tab ===== */}
+{tab === "reporting" && (
+  <section className="stack">
+    <ReportingPanel />
+  </section>
+)}
+
 {/* ===== About-tab ===== */}
 {tab === "about" && (
   <section className="stack">
@@ -240,7 +256,6 @@ export default function AssetShell() {
       </div>
     </div>
 
-    {/* Zelfde uitlijning als de andere tabs */}
     <style>{`
       .form-scope * { box-sizing: border-box; }
       @media (min-width: 760px) {
@@ -269,9 +284,6 @@ export default function AssetShell() {
   </section>
 )}
 
-
-      
-    </div>
-  );
-}
-
+</div>  
+);       {/* sluit return( ... ) */}
+}        {/* sluit function AssetShell */}

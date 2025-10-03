@@ -56,7 +56,6 @@ function LegacyAssetShell() {
       )}
 
       {tab === "people" && <PeoplePanel />}
-        
 
       {tab === 'about' && (
         <section className="stack">
@@ -69,6 +68,16 @@ function LegacyAssetShell() {
 }
 
 export default function App() {
+  // 🔹 Lees .env-variabelen (Vite: moeten met VITE_ beginnen)
+  const appName = import.meta.env.VITE_APP_NAME ?? "PAM";
+  const emailApi = import.meta.env.VITE_EMAIL_API_URL ?? "";
+
+  // Alleen in development wat extra logging (onzichtbaar voor eindgebruikers)
+  if (import.meta.env.DEV) {
+    console.log("[ENV] VITE_APP_NAME =", appName);
+    console.log("[ENV] VITE_EMAIL_API_URL =", emailApi || "(niet ingesteld)");
+  }
+
   return (
     <BrowserRouter>
       {/* ---- Alleen layout-fix, netjes binnen App ---- */}
@@ -114,6 +123,20 @@ export default function App() {
             margin-bottom: 12px; /* eigen regel afsluiten */
           }
         }
+
+        /* 🔹 Niet-intrusieve env-badge rechtsonder (alleen in DEV getoond via JSX) */
+        .env-badge {
+          position: fixed;
+          right: 10px;
+          bottom: 10px;
+          background: rgba(0,0,0,0.65);
+          color: #fff;
+          padding: 6px 10px;
+          border-radius: 10px;
+          font-size: 12px;
+          z-index: 9999;
+          pointer-events: none; /* nooit klikken blokkeren */
+        }
       `}</style>
 
       <Routes>
@@ -129,6 +152,13 @@ export default function App() {
         {/* Jouw debugroute blijft bestaan */}
         <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
       </Routes>
+
+      {/* 🔹 Toon de badge alleen in development; in productie is dit onzichtbaar */}
+      {import.meta.env.DEV && (
+        <div className="env-badge">
+          {appName} • {emailApi ? "mail API ✔︎" : "mail API ⨯"}
+        </div>
+      )}
     </BrowserRouter>
   );
 }

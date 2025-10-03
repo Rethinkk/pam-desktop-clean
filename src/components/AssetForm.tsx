@@ -3,9 +3,8 @@ import React, { useMemo, useState } from "react";
 import { allPeople } from "../lib/peopleStore";
 import { ASSET_SCHEMAS, SCHEMA_BY_CODE } from "../assetSchemas";
 import type { Asset } from "../types";
-import { linkPersonToAsset, loadRegister, saveRegister, nextAssetNumber } from "../lib/assetNumber";
+import { linkPersonToAsset, loadRegister, saveRegister } from "../lib/assetNumber";
 import { linkDocToAsset } from "../lib/docsStore";
-import { nanoid } from "nanoid";
 
 const ASSET_PREFIX = "PAM-ITM";
 
@@ -72,22 +71,20 @@ export default function AssetForm({ onCreated }: Props) {
     const date = new Date();
     const yyyymmdd = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,"0")}${String(date.getDate()).padStart(2,"0")}`;
 
-    // Nummering: kies jouw bestaande of de helper
+    // Nummering
     const assetNumber = `${ASSET_PREFIX}-${code}-${yyyymmdd}-${String(date.getTime()).slice(-4)}`;
-    // of gebruik centraal oplopend:
-    // const assetNumber = nextAssetNumber(ASSET_PREFIX);
 
     const newAsset: Asset = {
       id,
       assetNumber,
       name,
-      type: code,
-      category: code,
+      type: code,                 // <-- asset type centraal
       typeCode: code as any,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       data: { ...formData, __docIds: docIds },
       ...(personId ? { personIds: [personId] } : {}),
+      // category verwijderd (niet meer gebruikt)
     };
 
     // Schrijf naar register
@@ -147,8 +144,7 @@ export default function AssetForm({ onCreated }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 max-w-2xl">
-
-      {/* Bovenste velden (zelfde methodiek: label links, veld rechts) */}
+      {/* Naam */}
       <div className="field">
         <label htmlFor="assetName" className="text-sm font-medium">Assetnaam / Benoeming *</label>
         <input
@@ -160,6 +156,7 @@ export default function AssetForm({ onCreated }: Props) {
         />
       </div>
 
+      {/* Assettype */}
       <div className="field">
         <label htmlFor="typeCode" className="text-sm font-medium">Assettype *</label>
         <select
@@ -222,7 +219,7 @@ export default function AssetForm({ onCreated }: Props) {
         </div>
       </fieldset>
 
-      {/* Optioneel —zelfde methodologie als Verplicht */}
+      {/* Optioneel */}
       <fieldset className="border rounded p-3">
         <legend className="text-sm font-semibold">Optioneel</legend>
         <div className="space-y-2">
@@ -241,3 +238,4 @@ export default function AssetForm({ onCreated }: Props) {
     </form>
   );
 }
+
