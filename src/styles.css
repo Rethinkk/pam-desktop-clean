@@ -1,3 +1,8 @@
+/* ======================================================================
+   PAM — Global Styles (clean, mobile-first)
+   ====================================================================== */
+
+/* ---- CSS Variables ---- */
 :root {
   --pam-blue: #1E3A5F;
   --pam-white: #ffffff;
@@ -12,29 +17,45 @@
 }
 
 /* ---- Reset / Base ---- */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+* { margin: 0; padding: 0; }
 
 html, body { height: 100%; }
 
 body {
   font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: var(--pam-blue);       /* Blauwe omgeving */
-  color: var(--pam-white);            /* Witte tekst in blauwe omgeving */
+  background: var(--pam-blue);
+  color: var(--pam-white);
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  padding: 40px;
+
+  /* Mobile-first spacing + safe-area support */
+  padding-left: calc(20px + env(safe-area-inset-left));
+  padding-right: calc(20px + env(safe-area-inset-right));
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+
+  -webkit-text-size-adjust: 100%;
+  overflow-x: clip; /* voorkom horizontale scrollbars */
 }
+
+/* Media responsief */
+img, video, canvas, svg { max-width: 100%; height: auto; }
 
 /* ---- Page Container (wit venster) ---- */
 .container {
+  width: 100%;
   max-width: 980px;
   margin: 0 auto;
-  background: var(--pam-white);       /* Witte kaart */
-  color: var(--pam-blue);             /* Blauwe tekst in witte vensters */
+  background: var(--pam-white);
+  color: var(--pam-blue);
   border-radius: var(--radius);
   box-shadow: var(--shadow-2);
-  padding: 28px;
+  padding: 20px; /* comfortabel op mobiel */
 }
 
 /* ---- Headings ---- */
@@ -44,7 +65,6 @@ body {
   margin-bottom: 18px;
   color: var(--pam-blue);
 }
-
 .container h2 {
   font-size: 1.25rem;
   font-weight: 700;
@@ -52,9 +72,10 @@ body {
   color: var(--pam-blue);
 }
 
-/* ---- Tabs (assets | docs | about) ---- */
+/* ---- Tabs ---- */
 .tabs {
   display: flex;
+  align-items: center;
   gap: 6px;
   background: var(--pam-blue);
   color: var(--pam-white);
@@ -62,6 +83,10 @@ body {
   border-radius: var(--radius);
   margin-bottom: 18px;
   box-shadow: var(--shadow-1);
+
+  /* mobiel: horizontaal scrollen i.p.v. breken */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .tab {
   appearance: none;
@@ -72,6 +97,7 @@ body {
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
+  flex: 0 0 auto; /* blijft nette “chips” op 1 lijn */
 }
 .tab[aria-selected="true"],
 .tab.active {
@@ -126,13 +152,11 @@ input, select, textarea {
   border-radius: 10px;
   font-size: 0.98rem;
   background: var(--pam-white);
-  color: var(--pam-blue);           /* Tekst in inputs blauw */
+  color: var(--pam-blue);
   outline: none;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
-
 input::placeholder, textarea::placeholder { color: var(--pam-muted); }
-
 input:focus, select:focus, textarea:focus {
   border-color: var(--pam-accent);
   box-shadow: 0 0 0 3px rgba(36,80,140,0.18);
@@ -148,6 +172,7 @@ input:focus, select:focus, textarea:focus {
 .col-6  { grid-column: span 6; }
 .col-4  { grid-column: span 4; }
 .col-3  { grid-column: span 3; }
+
 @media (max-width: 720px) {
   .col-6, .col-4, .col-3 { grid-column: span 12; }
 }
@@ -158,8 +183,8 @@ button, .btn {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--pam-blue);   /* Blauwe knop */
-  color: var(--pam-white);       /* Witte tekst op blauw */
+  background: var(--pam-blue);
+  color: var(--pam-white);
   padding: 10px 18px;
   border: 0;
   border-radius: 10px;
@@ -184,7 +209,7 @@ button:active, .btn:active { transform: translateY(1px); }
 }
 .btn-ghost:hover { background: rgba(30,58,95,0.06); }
 
-/* ---- Register list ---- */
+/* ---- (Optioneel maar veilig) Register list minimal ---- */
 .register {
   background: var(--pam-light);
   border: 1px solid var(--pam-border);
@@ -209,46 +234,11 @@ button:active, .btn:active { transform: translateY(1px); }
   margin-bottom: 10px;
 }
 
-/* ---- Tables (optioneel) ---- */
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: var(--pam-white);
-  color: var(--pam-blue);
-  border: 1px solid var(--pam-border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.table th, .table td { padding: 12px 14px; text-align: left; }
-.table thead th {
-  background: var(--pam-light);
-  border-bottom: 1px solid var(--pam-border);
-  font-weight: 700;
-}
-.table tbody tr + tr td { border-top: 1px solid var(--pam-border); }
-
-/* ---- Alerts (optioneel) ---- */
-.alert {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--pam-border);
-  background: var(--pam-light);
-  color: var(--pam-blue);
-}
-.alert.success { border-color: #95d5b2; background: #edf9f1; }
-.alert.warn    { border-color: #ffd166; background: #fff8e7; }
-.alert.error   { border-color: #f4978e; background: #fff0f0; }
-
 /* ---- Links ---- */
 a { color: var(--pam-accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ---- Small utilities ---- */
-.mt-0{margin-top:0}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}
-.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-24{margin-bottom:24px}
-.p-0{padding:0}.p-8{padding:8px}.p-12{padding:12px}.p-16{padding:16px}.p-20{padding:20px}
-
+/* ---- Utilities ---- */
 .hidden { display: none !important; }
 
 /* ---- Focus visibility for keyboard users ---- */
@@ -257,8 +247,14 @@ a:hover { text-decoration: underline; }
   outline-offset: 2px;
 }
 
-/* ---- Responsive container padding ---- */
+/* ---- Responsive tweaks ---- */
 @media (max-width: 640px) {
-  body { padding: 18px; }
-  .container { padding: 18px; }
+  /* body padding iets compacter op heel smal scherm */
+  body {
+    padding-left: calc(12px + env(safe-area-inset-left));
+    padding-right: calc(12px + env(safe-area-inset-right));
+    padding-top: calc(12px + env(safe-area-inset-top));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  .container { padding: 16px; }
 }
