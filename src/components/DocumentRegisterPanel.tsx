@@ -106,6 +106,10 @@ export default function DocumentRegisterPanel() {
     if (!confirm("Weet je zeker dat je dit document wilt verwijderen?")) return;
     persistDelete(id);
     setRows((r) => r.filter((x) => x.id !== id));
+
+    // ✅ mini-bericht na verwijderen (nul dependencies)
+  alert("Document verwijderd");
+
   }
 
   const filtered = React.useMemo(() => {

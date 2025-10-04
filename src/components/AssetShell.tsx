@@ -7,6 +7,7 @@ import PeoplePanel from "./PeoplePanel";
 import ReportingPanel from "./ReportingPanel";
 import AssetRegisterPanel from "./AssetRegisterPanel";
 import DocumentRegisterPanel from "./DocumentRegisterPanel";
+import { Style as UIStyle, ToastHost } from "./ui/UI";
 
 type TabKey =
   | "assets"
@@ -30,8 +31,7 @@ function ReportingLook() {
         display:flex; align-items:baseline; gap:8px;
         margin: 0 0 24px; color:#fff; /* witte merktekst */
       }
-      /* SCHAALBARE varianten: deze moeten NA de brandbar komen
-         en er mag GEEN tweede set .brand-word/.brand-tag meer onder staan */
+
       .rp .brand-word {
         font-weight: 800;
         font-size: calc(16px * var(--brand-scale));
@@ -61,14 +61,23 @@ function ReportingLook() {
   );
 }
 
+/** Slaat de actieve tab op in localStorage (zonder toasts/side-effects) */
 function usePersistedTab(defaultTab: TabKey = "assets") {
   const [tab, setTab] = React.useState<TabKey>(() => {
-    const saved = localStorage.getItem(TAB_STORAGE_KEY);
-    return (saved as TabKey) || defaultTab;
+    try {
+      const saved = localStorage.getItem(TAB_STORAGE_KEY) as TabKey | null;
+      return saved ?? defaultTab;
+    } catch {
+      return defaultTab;
+    }
   });
+
   React.useEffect(() => {
-    localStorage.setItem(TAB_STORAGE_KEY, tab);
+    try {
+      localStorage.setItem(TAB_STORAGE_KEY, tab);
+    } catch {}
   }, [tab]);
+
   return [tab, setTab] as const;
 }
 
@@ -78,12 +87,15 @@ export default function AssetShell() {
   return (
     <div className="rp">
       <ReportingLook />
-{/* BRAND – above tabs, white on dark header */}
-<div className="brandbar" aria-label="Brand">
-  <span className="brand-word">PAM</span>
-  <span className="brand-sep">—</span>
-  <span className="brand-tag">Your Personal Asset Manager</span>
-</div>
+      <UIStyle />     {/* UI-stijlen activeren */}
+      <ToastHost />   {/* toast-meldingen zichtbaar maken (geen extra calls hier) */}
+
+      {/* Brand – above tabs, white on dark header */}
+      <div className="brandbar" aria-label="Brand">
+        <span className="brand-word">PAM</span>
+        <span className="brand-sep">—</span>
+        <span className="brand-tag">Your Personal Asset Manager</span>
+      </div>
 
       <div className="card" style={{ marginBottom: 8 }}>
         <div className="tabs">
@@ -108,10 +120,6 @@ export default function AssetShell() {
           <div className="tab-spacer" />
         </div>
       </div>
-
-
-      
-
 
       {/* Panels - zonder extra <h1> om dubbele titels te voorkomen */}
       {tab === "assets" && (
@@ -152,4 +160,7 @@ export default function AssetShell() {
     </div>
   );
 }
+
+
+
 
