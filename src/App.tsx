@@ -37,7 +37,7 @@ function LegacyAssetShell() {
         <section className="stack">
           <h1>Assets</h1>
           {/* Navigeer na aanmaken naar het register */}
-          <AssetsPanel onCreated={() => setTab('asset-register')} />
+          <AssetsPanel />
         </section>
       )}
 
