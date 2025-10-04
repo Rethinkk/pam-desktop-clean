@@ -1,244 +1,192 @@
 /* @ts-nocheck */
 import React from "react";
 
-const STORAGE_KEY = "pam-docs-v1";
+type DocRow = {
+  id: string;
+  title: string;
+  type?: string;
+  number?: string;
+  ownerName?: string;
+  issuedAt?: string;  // yyyy-mm-dd
+  expiresAt?: string; // yyyy-mm-dd
+};
 
-/** Robuust lezen: ondersteunt [] én {docs: []} */
-function readDocs(): any[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    if (Array.isArray(parsed?.docs)) return parsed.docs;
-    return [];
-  } catch {
-    return [];
-  }
+const DOCS_KEY = "pam-docs-v1";
+const ASSETS_KEY = "pam-assets-v1";
+
+function parseYMD(s?: string) {
+  if (!s) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return null;
+  const y = Number(m[1]), mo = Number(m[2]) - 1, d = Number(m[3]);
+  return new Date(y, mo, d);
 }
-
-/** Opslaan in {docs: []} + update-event */
-function saveDocs(nextDocs: any[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ docs: nextDocs }));
-  window.dispatchEvent(new Event("pam-docs-updated"));
+function daysUntil(exp?: string) {
+  const dt = parseYMD(exp);
+  if (!dt) return null;
+  const today = new Date();
+  const a = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const b = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  const diffMs = b.getTime() - a.getTime();
+  return Math.round(diffMs / 86400000);
+}
+function expiryStatus(expiresAt?: string) {
+  const d = daysUntil(expiresAt);
+  if (d === null) return { label: "—", cls: "ui-badge" };
+  if (d < 0) return { label: "Verlopen", cls: "ui-badge danger" };
+  if (d <= 30) return { label: `Binnen ${d} d`, cls: "ui-badge warn" };
+  return { label: "Actief", cls: "ui-badge ok" };
 }
 
 export default function DocumentRegisterPanel() {
-  const [docs, setDocs] = React.useState<any[]>(() => readDocs());
+  const [rows, setRows] = React.useState<DocRow[]>([]);
   const [q, setQ] = React.useState("");
+  const [sort, setSort] = React.useState<{ key: keyof DocRow | "status"; dir: "asc" | "desc" }>({
+    key: "title",
+    dir: "asc",
+  });
 
-  // live refresh
   React.useEffect(() => {
-    const handler = () => setDocs(readDocs());
-    window.addEventListener("pam-docs-updated", handler);
-    return () => window.removeEventListener("pam-docs-updated", handler);
+    load();
   }, []);
 
-  function fmtDate(d?: string) {
-    if (!d) return "—";
-    try { return new Date(d).toLocaleString(); } catch { return d; }
+  function load() {
+    try {
+      const raw = localStorage.getItem(DOCS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const docs: DocRow[] = Array.isArray(parsed?.docs) ? parsed.docs : Array.isArray(parsed) ? parsed : [];
+      const norm = docs.map((d: any) => ({
+        id: d.id ?? String(Math.random()),
+        title: d.title ?? d.name ?? "",
+        type: d.type ?? d.kind ?? "",
+        number: d.number ?? d.no ?? "",
+        ownerName: d.ownerName ?? d.personName ?? d.owner ?? "",
+        issuedAt: d.issuedAt ?? d.issueDate ?? "",
+        expiresAt: d.expiresAt ?? d.validUntil ?? d.expiryDate ?? "",
+      })) as DocRow[];
+      setRows(norm);
+    } catch {}
   }
 
-  function removeDoc(id?: string) {
-    if (!id) return;
-    if (!window.confirm("Weet je zeker dat je dit document wilt verwijderen?")) return;
-    const next = readDocs().filter((d: any) => d?.id !== id);
-    saveDocs(next);
-    setDocs(next);
+  function persistDelete(docId: string) {
+    // 1) Documenten opschonen
+    try {
+      const raw = localStorage.getItem(DOCS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const isContainer = parsed && Array.isArray(parsed.docs);
+        const arr: any[] = isContainer ? parsed.docs : Array.isArray(parsed) ? parsed : [];
+        const next = arr.filter((d) => d.id !== docId);
+        const out = isContainer ? { ...parsed, docs: next } : Array.isArray(parsed) ? next : { docs: next };
+        localStorage.setItem(DOCS_KEY, JSON.stringify(out));
+      }
+    } catch {}
+
+    // 2) Document-koppelingen bij assets verwijderen (documentIds[])
+    try {
+      const rawA = localStorage.getItem(ASSETS_KEY);
+      if (rawA) {
+        const parsedA = JSON.parse(rawA);
+        const isContainerA = parsedA && Array.isArray(parsedA.assets);
+        const arrA: any[] = isContainerA ? parsedA.assets : Array.isArray(parsedA) ? parsedA : [];
+        const nextA = arrA.map((a) => {
+          if (Array.isArray(a.documentIds)) {
+            return { ...a, documentIds: a.documentIds.filter((x: any) => x !== docId) };
+          }
+          return a;
+        });
+        const outA = isContainerA ? { ...parsedA, assets: nextA } : Array.isArray(parsedA) ? nextA : { assets: nextA };
+        localStorage.setItem(ASSETS_KEY, JSON.stringify(outA));
+      }
+    } catch {}
   }
 
-  // filter + sort (nieuwste eerst)
+  function handleDelete(id: string) {
+    if (!confirm("Weet je zeker dat je dit document wilt verwijderen?")) return;
+    persistDelete(id);
+    setRows((r) => r.filter((x) => x.id !== id));
+  }
+
   const filtered = React.useMemo(() => {
-    const s = q.trim().toLowerCase();
-    const list = Array.isArray(docs) ? docs.slice() : [];
-    const searched = s
-      ? list.filter((d: any) => {
-          const title = (d?.title || d?.name || "") + "";
-          const file  = (d?.filename || d?.fileName || "") + "";
-          const id    = (d?.id || "") + "";
-          return (
-            title.toLowerCase().includes(s) ||
-            file.toLowerCase().includes(s) ||
-            id.toLowerCase().includes(s)
-          );
-        })
-      : list;
+    const needle = q.trim().toLowerCase();
+    let out = !needle
+      ? rows
+      : rows.filter((r) =>
+          [r.title, r.type, r.number, r.ownerName].filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(needle))
+        );
 
-    searched.sort((a: any, b: any) => {
-      const da = Date.parse(a?.createdAt || "") || 0;
-      const db = Date.parse(b?.createdAt || "") || 0;
-      if (db !== da) return db - da;
-      return String((a?.title || a?.name || "")).localeCompare(String(b?.title || b?.name || ""));
+    out = [...out].sort((a, b) => {
+      if (sort.key === "status") {
+        const sa = expiryStatus(a.expiresAt).label;
+        const sb = expiryStatus(b.expiresAt).label;
+        return sort.dir === "asc" ? sa.localeCompare(sb) : sb.localeCompare(sa);
+      }
+      const ka = String(a[sort.key] ?? "");
+      const kb = String(b[sort.key] ?? "");
+      return sort.dir === "asc" ? ka.localeCompare(kb) : kb.localeCompare(ka);
     });
-    return searched;
-  }, [q, docs]);
+
+    return out;
+  }, [rows, q, sort]);
+
+  function toggleSort(key: keyof DocRow | "status") {
+    setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
+  }
 
   return (
-    <div className="dreg space-y-4">
-      {/* ---- SCOPED STYLES (zelfde stijl als Asset Register) ---- */}
-      <style>{`
-        .dreg {
-          background:#fff !important;
-          border-radius:12px !important;
-          padding:20px !important;
-          box-shadow:0 1px 2px rgba(0,0,0,.03) !important;
-        }
-        /* Kop in blauw (pas hex aan naar jouw merkblauw) */
-        .dreg h2{
-          margin:0 0 8px !important;
-          font-size:22px !important;
-          font-weight:700 !important;
-          color:#1e3a8a !important;
-        }
+    <div className="ui-page">
+      <div className="ui-section-title">Document register</div>
 
-        /* Header rij + meta */
-        .dreg .header-row{
-          display:flex !important;
-          align-items:center !important;
-          justify-content:space-between !important;
-          gap:12px !important;
-        }
-        .dreg .meta{
-          color:#64748b !important;
-          font-size:12px !important;
-        }
-
-        /* Zoekveld */
-        .dreg input[type="text"], .dreg input[type="search"]{
-          width:100% !important;
-          padding:10px 12px 10px 36px !important;
-          border:1px solid #cbd5e1 !important;
-          border-radius:10px !important;
-          background:#f8fafc !important;
-          outline:none !important;
-          transition:border-color .15s, box-shadow .15s, background .15s !important;
-          background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="%23475569"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>') !important;
-          background-repeat:no-repeat !important;
-          background-position:10px 50% !important;
-          max-width:420px !important;
-        }
-        .dreg input[type="text"]:focus, .dreg input[type="search"]:focus{
-          border-color:#94a3b8 !important;
-          background:#fff !important;
-          box-shadow:0 0 0 3px rgba(30,58,138,.12) !important;
-        }
-
-        /* Ronde hoeken rond tabel */
-        .dreg .table-wrap{
-          border:1px solid #e2e8f0 !important;
-          border-radius:12px !important;
-          overflow:hidden !important;
-          background:#fff !important;
-        }
-        .dreg table{
-          width:100% !important;
-          border-collapse:separate !important;
-          border-spacing:0 !important;
-        }
-        .dreg thead th{
-          text-align:left !important;
-          font-size:12px !important;
-          text-transform:uppercase !important;
-          letter-spacing:.04em !important;
-          color:#475569 !important;
-          background:#f8fafc !important;
-          padding:10px 12px !important;
-          border-bottom:1px solid #e2e8f0 !important;
-        }
-        .dreg tbody td{
-          padding:12px !important;
-          border-bottom:1px solid #e2e8f0 !important;
-          vertical-align:middle !important;
-          color:#0f172a !important;
-        }
-        .dreg tbody tr:hover{ background:#f8fafc !important; }
-
-        /* Acties rechts; knop blauw met witte letters */
-        .dreg td:last-child, .dreg .col-actions{ text-align:right !important; white-space:nowrap !important; }
-        .dreg td:last-child button, .dreg .col-actions button{
-          background:#1e40af !important;
-          border:1px solid #1e40af !important;
-          color:#ffffff !important;
-          border-radius:9999px !important;
-          padding:8px 12px !important;
-          font-weight:600 !important;
-          line-height:1 !important;
-          cursor:pointer !important;
-          transition:background .15s, border-color .15s, color .15s !important;
-        }
-        .dreg td:last-child button:hover, .dreg .col-actions button:hover{
-          background:#1e3a8a !important;
-          border-color:#1e3a8a !important;
-        }
-      `}</style>
-
-      <div className="header-row">
-        <h2>Document Register — Overzicht</h2>
-        <input
-          className="border rounded px-2 py-1 w-64"
-          placeholder="Zoek op titel/bestand/ID…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          type="search"
-        />
+      <div className="ui-toolbar">
+        <input placeholder="Zoeken…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <div className="spacer" />
+        <small>{filtered.length} resultaten</small>
       </div>
 
-      <div className="meta">
-        Totaal: <strong>{filtered.length}</strong> {filtered.length === 1 ? "document" : "documenten"}
-      </div>
-
-      {filtered.length === 0 ? (
-        <p className="text-sm text-gray-500">Nog geen documenten in het register.</p>
-      ) : (
-        <div className="table-wrap overflow-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left border-b">
-                <th className="py-2 pr-3">Titel</th>
-                <th className="py-2 pr-3 whitespace-nowrap">Bestand</th>
-                <th className="py-2 pr-3 whitespace-nowrap">Aangemaakt</th>
-                <th className="py-2 pr-3 whitespace-nowrap">ID</th>
-                <th className="py-2 pr-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((d: any) => (
-                <tr key={d?.id || d?.title} className="border-b last:border-0">
-                  <td className="py-2 pr-3">
-                    {d?.title || d?.name || "—"}
-                  </td>
-                  <td className="py-2 pr-3 whitespace-nowrap">
-                    {d?.filename || d?.fileName || "—"}
-                  </td>
-                  <td className="py-2 pr-3 whitespace-nowrap">
-                    {fmtDate(d?.createdAt)}
-                  </td>
-                  <td className="py-2 pr-3 whitespace-nowrap">
-                    {d?.id || "—"}
-                  </td>
-                  <td className="py-2 pr-3 text-right">
-                    {d?.id ? (
-                      <button
-                        className="border rounded px-2 py-1 text-xs"
-                        onClick={() => removeDoc(d.id)}
-                        title="Verwijder dit document"
-                      >
-                        Verwijderen
-                      </button>
-                    ) : (
-                      <span className="text-gray-400 text-xs">—</span>
-                    )}
+      <div className="ui-table-wrap">
+        <table className="ui-table">
+          <thead>
+            <tr>
+              <th onClick={() => toggleSort("title")}>Titel</th>
+              <th onClick={() => toggleSort("type")}>Type</th>
+              <th onClick={() => toggleSort("number")}>Nummer</th>
+              <th onClick={() => toggleSort("ownerName")}>Persoon</th>
+              <th onClick={() => toggleSort("issuedAt")}>Uitgegeven</th>
+              <th onClick={() => toggleSort("expiresAt")}>Geldig tot</th>
+              <th onClick={() => toggleSort("status")}>Status</th>
+              <th>Acties</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((r) => {
+              const st = expiryStatus(r.expiresAt);
+              return (
+                <tr key={r.id}>
+                  <td>{r.title}</td>
+                  <td>{r.type || ""}</td>
+                  <td>{r.number || ""}</td>
+                  <td>{r.ownerName || ""}</td>
+                  <td>{r.issuedAt || ""}</td>
+                  <td>{r.expiresAt || ""}</td>
+                  <td><span className={st.cls}>{st.label}</span></td>
+                  <td>
+                    <button className="ui-btn ui-btn--sm ui-btn--danger" onClick={() => handleDelete(r.id)}>
+                      Verwijderen
+                    </button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <p className="text-xs text-gray-500">
-        Nieuwe documenten maak je aan in de tab <strong>Docs</strong>.
-      </p>
+              );
+            })}
+            {filtered.length === 0 && (
+              <tr><td colSpan={8}><em>Geen documenten gevonden.</em></td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
+
+

@@ -1,116 +1,224 @@
-/* @ts-nocheck */
-import React, { useState } from "react";
+import React from "react";
 
-const STORAGE_KEY = "pam-docs-v1";
+type DocType = "Polis" | "Factuur" | "Garantiebewijs" | "Contract" | "Overig";
 
-function readState(): { docs: any[]; [k: string]: any } {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { docs: [] };
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return { docs: parsed };           // legacy root-array
-    if (Array.isArray(parsed?.docs)) return { ...parsed };         // { docs: [...] }
-    return { docs: [] };
-  } catch {
-    return { docs: [] };
+type FormState = {
+  title: string;
+  type: DocType | "";
+  number: string;
+  personId: string;
+  issuedAt: string;   // yyyy-mm-dd
+  expiresAt: string;  // yyyy-mm-dd
+  notes: string;
+};
+
+type PersonLite = { id: string; display: string };
+
+const DOCS_KEY = "pam-docs-v1";
+const PEOPLE_KEY = "pam-people-v1";
+
+export default function DocumentsPanel() {
+  const [form, setForm] = React.useState<FormState>({
+    title: "",
+    type: "",
+    number: "",
+    personId: "",
+    issuedAt: "",
+    expiresAt: "",
+    notes: "",
+  });
+
+  const [people, setPeople] = React.useState<PersonLite[]>([]);
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PEOPLE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const arr = Array.isArray(parsed?.people) ? parsed.people : Array.isArray(parsed) ? parsed : [];
+      const norm: PersonLite[] = arr.map((p: any) => ({
+        id: p.id ?? String(p.email ?? p.phone ?? Math.random()),
+        display: (p.fullName ?? p.name ?? "—").trim(),
+      }));
+      setPeople(norm.filter((p) => !!p.display && !!p.id));
+    } catch {}
+  }, []);
+
+  function onChange<K extends keyof FormState>(key: K, val: FormState[K]) {
+    setForm((s) => ({ ...s, [key]: val }));
   }
-}
 
-function writeState(next: { docs: any[]; [k: string]: any }) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  window.dispatchEvent(new Event("pam-docs-updated"));
-}
+  const requiredOK =
+    form.title.trim().length > 1 &&
+    !!form.type;
 
-function uid() {
-  try { return crypto.randomUUID(); }
-  catch { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
-}
+  function save() {
+    if (!requiredOK) return;
 
-export default function DocumentsPanel({ onSavedGoRegister }: { onSavedGoRegister?: () => void }) {
-  const [title, setTitle] = useState("");
-  const [file, setFile]   = useState("");
-  const [notes, setNotes] = useState("");
+    const id = (globalThis as any).crypto?.randomUUID?.() ?? String(Date.now());
+    const owner = people.find((p) => p.id === form.personId);
 
-  function reset() {
-    setTitle(""); setFile(""); setNotes("");
-  }
-
-  function handleSave(goRegister?: boolean) {
-    if (!title.trim()) { alert("Titel is verplicht."); return; }
-
-    const now = new Date().toISOString();
     const doc = {
-      id: uid(),
-      title: title.trim(),
-      name: title.trim(),         // compat voor read-paden die 'name' verwachten
-      fileName: file.trim(),
-      filename: file.trim(),      // idem voor 'filename'
-      notes: notes.trim(),
-      createdAt: now,
-      updatedAt: now,
+      id,
+      title: form.title.trim(),
+      type: form.type,
+      number: form.number.trim() || undefined,
+      ownerId: form.personId || undefined,
+      ownerName: owner?.display || undefined,
+      issuedAt: form.issuedAt || undefined,
+      expiresAt: form.expiresAt || undefined,
+      notes: form.notes?.trim() || undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
-    const prev = readState();
-    const next = { ...prev, docs: [...(prev.docs || []), doc] };
-    writeState(next);
-
-    if (goRegister) {
-      try { onSavedGoRegister?.(); } catch {}
-      try { window.dispatchEvent(new CustomEvent("pam-open-doc-register")); } catch {}
+    // compat: {docs:[...]} of een kale array [] ondersteunen
+    let out: any;
+    try {
+      const raw = localStorage.getItem(DOCS_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && Array.isArray(parsed.docs)) {
+        out = { ...parsed, docs: [...parsed.docs, doc] };
+      } else if (Array.isArray(parsed)) {
+        out = [...parsed, doc];
+      } else {
+        out = { docs: [doc] };
+      }
+    } catch {
+      out = { docs: [doc] };
     }
-    reset();
+    localStorage.setItem(DOCS_KEY, JSON.stringify(out));
+
+    // reset naar leeg formulier
+    setForm({
+      title: "",
+      type: "",
+      number: "",
+      personId: "",
+      issuedAt: "",
+      expiresAt: "",
+      notes: "",
+    });
   }
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); handleSave(false); }} className="space-y-4 max-w-3xl">
-      <h2 className="text-lg font-semibold">Documenten</h2>
-      <p className="text-sm text-gray-600 section-title">
-        Hier maak je <strong>nieuwe documenten</strong> aan. Het overzicht staat in de tab <strong>Document Register</strong>.
-      </p>
+    <div className="ui-page">
+      <div className="ui-section-title">Nieuw document</div>
 
-      <div className="field">
-        <label htmlFor="doc-title" className="text-sm font-medium">Titel *</label>
-        <input
-          id="doc-title"
-          className="border rounded px-2 py-1 w-full"
-          placeholder="Bijv. Factuur 2025-001"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+      <div className="ui-form-grid">
+        {/* Titel (verplicht) */}
+        <div className="span-2 ui-field">
+          <label htmlFor="doc-title">Titel *</label>
+          <input
+            id="doc-title"
+            placeholder='Bijv. "Polis Aansprakelijkheid 2025"'
+            value={form.title}
+            onChange={(e) => onChange("title", e.target.value)}
+          />
+          <small>Gebruik een herkenbare naam. Nummer en datums kun je hieronder kwijt.</small>
+        </div>
+
+        {/* Type (verplicht) */}
+        <div className="span-2 ui-field">
+          <label htmlFor="doc-type">Type *</label>
+          <select
+            id="doc-type"
+            value={form.type}
+            onChange={(e) => onChange("type", e.target.value as FormState["type"])}
+          >
+            <option value="">— Kies een type —</option>
+            <option>Polis</option>
+            <option>Factuur</option>
+            <option>Garantiebewijs</option>
+            <option>Contract</option>
+            <option>Overig</option>
+          </select>
+        </div>
+
+        {/* Persoon (optie) */}
+        <div className="span-2 ui-field">
+          <label htmlFor="doc-person">Koppel aan persoon (optie)</label>
+          <select
+            id="doc-person"
+            value={form.personId}
+            onChange={(e) => onChange("personId", e.target.value)}
+          >
+            <option value="">— Geen —</option>
+            {people.map((p) => (
+              <option key={p.id} value={p.id}>{p.display}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Nummer (optie) */}
+        <div className="span-2 ui-field">
+          <label htmlFor="doc-number">Documentnummer (optie)</label>
+          <input
+            id="doc-number"
+            placeholder="Bijv. POL-2025-00123"
+            value={form.number}
+            onChange={(e) => onChange("number", e.target.value)}
+          />
+        </div>
+
+        {/* Linkerkolom */}
+        <div className="ui-field">
+          <div className="ui-section-title">Datums</div>
+
+          <label htmlFor="issuedAt">Uitgegeven op</label>
+          <input
+            id="issuedAt"
+            type="date"
+            value={form.issuedAt}
+            onChange={(e) => onChange("issuedAt", e.target.value)}
+            placeholder="dd/mm/jjjj"
+          />
+
+          <label htmlFor="expiresAt" style={{ marginTop: 12 }}>Geldig tot</label>
+          <input
+            id="expiresAt"
+            type="date"
+            value={form.expiresAt}
+            onChange={(e) => onChange("expiresAt", e.target.value)}
+            placeholder="dd/mm/jjjj"
+          />
+        </div>
+
+        {/* Rechterkolom */}
+        <div className="ui-field">
+          <div className="ui-section-title">Notities</div>
+          <label htmlFor="doc-notes">Opmerkingen</label>
+          <textarea
+            id="doc-notes"
+            rows={7}
+            placeholder="Bijv. Polisnummer op PDF, bijlage staat in e-mail van 12-03-2025, enz."
+            value={form.notes}
+            onChange={(e) => onChange("notes", e.target.value)}
+          />
+        </div>
       </div>
 
-      <div className="field">
-        <label htmlFor="doc-file" className="text-sm font-medium">Bestandsnaam / URL</label>
-        <input
-          id="doc-file"
-          className="border rounded px-2 py-1 w-full"
-          placeholder="Bijv. factuur-2025-001.pdf of https://…"
-          value={file}
-          onChange={(e) => setFile(e.target.value)}
-        />
-      </div>
-
-      <div className="field">
-        <label htmlFor="doc-notes" className="text-sm font-medium">Notities</label>
-        <textarea
-          id="doc-notes"
-          className="border rounded px-2 py-1 w-full"
-          rows={4}
-          placeholder="Optioneel"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-      </div>
-
-      <div className="actions">
-        <button type="submit" className="border rounded px-4 py-2 font-medium">Opslaan</button>
-        <button type="button" className="border rounded px-4 py-2 font-medium" onClick={() => handleSave(true)}>
-          Opslaan & naar Document Register
+      {/* Acties onderaan formulier */}
+      <div className="ui-actions">
+        <button className="ui-btn ui-btn-primary" disabled={!requiredOK} onClick={save}>
+          Opslaan in register
         </button>
       </div>
-    </form>
+
+      {!requiredOK && (
+        <small style={{ display: "block", marginTop: 8 }}>
+          Vul minimaal <strong>Titel</strong> en <strong>Type</strong> in.
+        </small>
+      )}
+
+      <small style={{ display: "block", marginTop: 12 }}>
+        Na opslaan verschijnt het item in <strong>Document register</strong>.
+      </small>
+    </div>
   );
 }
+
+
 
 
 

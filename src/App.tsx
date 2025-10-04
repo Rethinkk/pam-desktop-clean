@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+// 👇 UI-kit centraal activeren (let op het pad vanaf src/)
+import { Style } from "./components/ui/UI";
+
 // 👉 Dit is je NIEUWE shell uit components (met 'doc-register' tab)
 import AssetShell from "./components/AssetShell";
 
@@ -72,7 +75,6 @@ export default function App() {
   const appName = import.meta.env.VITE_APP_NAME ?? "PAM";
   const emailApi = import.meta.env.VITE_EMAIL_API_URL ?? "";
 
-  // Alleen in development wat extra logging (onzichtbaar voor eindgebruikers)
   if (import.meta.env.DEV) {
     console.log("[ENV] VITE_APP_NAME =", appName);
     console.log("[ENV] VITE_EMAIL_API_URL =", emailApi || "(niet ingesteld)");
@@ -80,21 +82,13 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {/* ---- Alleen layout-fix, netjes binnen App ---- */}
+      {/* ⬇️ 1) UI-kit styles één keer injecteren, direct onder BrowserRouter */}
+      <Style />
+
+      {/* ---- 2) Bestaande tijdelijke layout-fix blijft staan ---- */}
       <style>{`
-        /* 1) Paneel niet gecentreerd maar links uitlijnen */
-        .container {
-          margin-left: 32px !important;
-          margin-right: auto !important;
-        }
-
-        /* Alleen toepassen op het Asset Register-scherm */
-        .asset-form-scope {
-          /* maximaal dezelfde breedte houden als voorheen */
-          max-width: 760px;
-        }
-
-        /* 2) Eén veld per regel (ook als er ergens grid/flex staat) */
+        .container { margin-left: 32px !important; margin-right: auto !important; }
+        .asset-form-scope { max-width: 760px; }
         .asset-form-scope form * { box-sizing: border-box; }
         .asset-form-scope form .row,
         .asset-form-scope form .grid,
@@ -104,8 +98,6 @@ export default function App() {
         .asset-form-scope form [class*="flex"] {
           display: block !important;
         }
-
-        /* 3) Label links naast het veld, veld vult de resterende breedte */
         @media (min-width: 760px) {
           .asset-form-scope form label {
             display: inline-block;
@@ -120,40 +112,24 @@ export default function App() {
             display: inline-block;
             width: calc(100% - 240px - 12px);
             vertical-align: middle;
-            margin-bottom: 12px; /* eigen regel afsluiten */
+            margin-bottom: 12px;
           }
         }
-
-        /* 🔹 Niet-intrusieve env-badge rechtsonder (alleen in DEV getoond via JSX) */
         .env-badge {
-          position: fixed;
-          right: 10px;
-          bottom: 10px;
-          background: rgba(0,0,0,0.65);
-          color: #fff;
-          padding: 6px 10px;
-          border-radius: 10px;
-          font-size: 12px;
-          z-index: 9999;
-          pointer-events: none; /* nooit klikken blokkeren */
+          position: fixed; right: 10px; bottom: 10px;
+          background: rgba(0,0,0,0.65); color: #fff; padding: 6px 10px;
+          border-radius: 10px; font-size: 12px; z-index: 9999; pointer-events: none;
         }
       `}</style>
 
       <Routes>
-        {/* Je bestaande routes blijven behouden */}
         <Route path="/" element={<FrontPage />} />
-
-        {/* 👉 NIEUWE shell (uit components) met de Document Register-tab */}
         <Route path="/assets" element={<AssetShell />} />
-
-        {/* 👇 Jouw oude shell blijft bereikbaar voor vergelijking/back-up */}
         <Route path="/legacy" element={<LegacyAssetShell />} />
-
-        {/* Jouw debugroute blijft bestaan */}
         <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
       </Routes>
 
-      {/* 🔹 Toon de badge alleen in development; in productie is dit onzichtbaar */}
+      {/* Badge alleen in DEV */}
       {import.meta.env.DEV && (
         <div className="env-badge">
           {appName} • {emailApi ? "mail API ✔︎" : "mail API ⨯"}
@@ -162,3 +138,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
