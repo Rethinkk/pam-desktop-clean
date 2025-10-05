@@ -1,5 +1,6 @@
 /* @ts-nocheck */
 import React from "react";
+import { ASSET_SCHEMAS } from "../config/assetTypes";
 
 type AssetType = "IT-Materieel" | "Meubilair" | "Overig";
 
@@ -23,10 +24,43 @@ type Row = {
 
 const ASSETS_KEY = "pam-assets-v1";
 
+/** ---- Dynamische kolom-config uit schema --------------------------------- */
+// 1) labels verzamelen uit alle schema's
+const LABELS_FROM_SCHEMA: Record<string, string> = {};
+Object.values(ASSET_SCHEMAS).forEach((s: any) => {
+  (s.fields || []).forEach((f: any) => {
+    if (f.label) LABELS_FROM_SCHEMA[f.key] = f.label;
+  });
+});
+
+// 2) basiskolommen + union van alle fields met table:true (excl. name/type)
+const BASE_KEYS: Array<keyof Row> = ["name", "type"];
+const SCHEMA_TABLE_KEYS: string[] = Array.from(
+  new Set(
+    Object.values(ASSET_SCHEMAS)
+      .flatMap((s: any) => (s.fields || []).filter((f: any) => f.table).map((f: any) => f.key))
+      .filter((k) => k !== "name" && k !== "type")
+  )
+);
+const TABLE_KEYS: Array<keyof Row> = Array.from(new Set([...BASE_KEYS, ...SCHEMA_TABLE_KEYS])) as any;
+
+// 3) nette kolomtitel
+function colLabel(key: keyof Row): string {
+  if (key === "name") return "Naam";
+  if (key === "type") return "Type";
+  if (key === "priceCents") return "Prijs";
+  if (key === "serial") return "Serienummer";
+  if (key === "personName") return "Persoon";
+  if (key === "purchaseDate") return "Aankoopdatum";
+  return LABELS_FROM_SCHEMA[key as string] || String(key);
+}
+
+/** ------------------------------------------------------------------------- */
+
 export default function AssetRegisterPanel() {
   const [rows, setRows] = React.useState<Row[]>([]);
   const [q, setQ] = React.useState("");
-  const [sort, setSort] = React.useState<{ key: keyof Row | "price"; dir: "asc" | "desc" }>({
+  const [sort, setSort] = React.useState<{ key: keyof Row; dir: "asc" | "desc" }>({
     key: "name",
     dir: "asc",
   });
@@ -68,7 +102,7 @@ export default function AssetRegisterPanel() {
     }
   }
 
-  function toggleSort(key: keyof Row | "price") {
+  function toggleSort(key: keyof Row) {
     setSort((s) =>
       s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }
     );
@@ -91,52 +125,60 @@ export default function AssetRegisterPanel() {
 
     setRows((r) => r.filter((x) => x.id !== id));
 
-    // ✅ alleen hier een toast
-    window.dispatchEvent(
-      new CustomEvent("pam:toast", {
-        detail: { message: "Asset verwijderd", tone: "info" },
-      })
-    );
+    // Toast (alleen bij echt verwijderen)
+    try {
+      window.dispatchEvent(
+        new CustomEvent("pam:toast", {
+          detail: { message: "Asset verwijderd", tone: "info" },
+        })
+      );
+    } catch {}
   }
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
 
+    // zoek in een vaste set + alle TABLE_KEYS
+    const SEARCH_KEYS: (keyof Row)[] = Array.from(
+      new Set<keyof Row>([
+        "name",
+        "type",
+        "serial",
+        "brand",
+        "model",
+        "personName",
+        "purchaseDate",
+        "notes",
+        ...TABLE_KEYS,
+      ])
+    ) as any;
+
     let out = !needle
       ? rows
       : rows.filter((r) =>
-          [
-            r.name,
-            r.type,
-            r.serial,
-            r.brand,
-            r.model,
-            r.personName,
-            r.purchaseDate,
-            r.notes,
-          ]
+          SEARCH_KEYS
+            .map((k) => (r as any)[k])
             .filter(Boolean)
             .some((v) => String(v).toLowerCase().includes(needle))
         );
 
+    // sortering
     out = [...out].sort((a, b) => {
-      let A: string | number = "";
-      let B: string | number = "";
+      const k = sort.key;
+      const A = (a as any)[k];
+      const B = (b as any)[k];
 
-      if (sort.key === "price") {
-        A = a.priceCents ?? 0;
-        B = b.priceCents ?? 0;
-      } else {
-        A = String(a[sort.key] ?? "");
-        B = String(b[sort.key] ?? "");
+      // numeriek voor prijs
+      if (k === "priceCents") {
+        const nA = Number(A ?? 0);
+        const nB = Number(B ?? 0);
+        return sort.dir === "asc" ? nA - nB : nB - nA;
       }
 
-      if (typeof A === "number" && typeof B === "number") {
-        return sort.dir === "asc" ? A - B : B - A;
-      }
-      return sort.dir === "asc"
-        ? String(A).localeCompare(String(B))
-        : String(B).localeCompare(String(A));
+      // default: string-vergelijking
+      const sA = String(A ?? "");
+      const sB = String(B ?? "");
+      return sort.dir === "asc" ? sA.localeCompare(sB) : sB.localeCompare(sA);
     });
 
     return out;
@@ -160,12 +202,11 @@ export default function AssetRegisterPanel() {
         <table className="ui-table">
           <thead>
             <tr>
-              <th onClick={() => toggleSort("name")}>Naam</th>
-              <th onClick={() => toggleSort("type")}>Type</th>
-              <th onClick={() => toggleSort("serial")}>Serienummer</th>
-              <th onClick={() => toggleSort("personName")}>Persoon</th>
-              <th onClick={() => toggleSort("purchaseDate")}>Aankoopdatum</th>
-              <th onClick={() => toggleSort("price")}>Prijs</th>
+              {TABLE_KEYS.map((k) => (
+                <th key={String(k)} onClick={() => toggleSort(k)}>
+                  {colLabel(k)}
+                </th>
+              ))}
               <th>Acties</th>
             </tr>
           </thead>
@@ -175,12 +216,11 @@ export default function AssetRegisterPanel() {
                 key={r.id}
                 className={r.id === highlightId ? "ui-row-highlight" : ""}
               >
-                <td>{r.name}</td>
-                <td>{r.type}</td>
-                <td>{r.serial || ""}</td>
-                <td>{r.personName || ""}</td>
-                <td>{r.purchaseDate || ""}</td>
-                <td>{formatPrice(r.priceCents)}</td>
+                {TABLE_KEYS.map((k) => {
+                  const v = (r as any)[k];
+                  if (k === "priceCents") return <td key={String(k)}>{formatPrice(r.priceCents)}</td>;
+                  return <td key={String(k)}>{v ?? ""}</td>;
+                })}
                 <td>
                   <button
                     className="ui-btn ui-btn--sm ui-btn--danger"
@@ -193,7 +233,7 @@ export default function AssetRegisterPanel() {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7}>
+                <td colSpan={TABLE_KEYS.length + 1}>
                   <em>Geen assets gevonden.</em>
                 </td>
               </tr>
