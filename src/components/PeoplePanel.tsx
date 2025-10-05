@@ -1,11 +1,30 @@
 /* @ts-nocheck */
 import React from "react";
 
-type PersonRole = "Eigenaar" | "Medewerker" | "Relatie" | "Overig";
+/** —— ROL-CONFIG —— 
+ * Pas alleen HIER de labels aan. Bestaande records tonen dan meteen de nieuwe labels.
+ * Laat 'value' gelijk aan de sleutel die je opslaat (of al in storage staat),
+ * zet 'label' op de gewenste zichtbare naam.
+ */
+const ROLE_OPTIONS: { value: string; label: string }[] = [
+  { value: "Hoofdgebruiker",   label: "Hoofdgebruiker" },
+  { value: "Partner", label: "Partner" },
+  { value: "Kind",    label: "Kind" },
+  { value: "Ouder",     label: "Ouder" },
+  { value: "Familielid",     label: "Familielid" },
+  { value: "Mede-eigenaar",     label: "Mede-eigenaar" },
+  
+];
+// label lookup (fallback = originele waarde)
+function roleLabel(v?: string) {
+  if (!v) return "";
+  const hit = ROLE_OPTIONS.find(o => o.value === v);
+  return hit?.label ?? v;
+}
 
 type FormState = {
   fullName: string;
-  role: PersonRole | "";
+  role: string | "";
   email: string;
   phone: string;
   notes: string;
@@ -15,7 +34,7 @@ type Row = {
   id: string;
   fullName: string;
   name?: string;
-  role: PersonRole;
+  role: string;
   email?: string;
   phone?: string;
   notes?: string;
@@ -51,7 +70,11 @@ export default function PeoplePanel() {
       if (!raw) return;
       const parsed = JSON.parse(raw);
       const arr: Row[] = Array.isArray(parsed?.people) ? parsed.people : Array.isArray(parsed) ? parsed : [];
-      const norm = arr.map((p) => ({ ...p, fullName: (p.fullName || p.name || "").trim() }));
+      const norm = arr.map((p) => ({
+        ...p,
+        fullName: (p.fullName || p.name || "").trim(),
+        role: String(p.role ?? ""), // zorg dat we altijd een string hebben
+      }));
       setRows(norm);
     } catch {}
   }
@@ -71,7 +94,7 @@ export default function PeoplePanel() {
       id,
       fullName: form.fullName.trim(),
       name: form.fullName.trim(),
-      role: form.role as PersonRole,
+      role: String(form.role), // sla de 'value' op
       email: form.email.trim() || undefined,
       phone: form.phone.trim() || undefined,
       notes: form.notes.trim() || undefined,
@@ -92,11 +115,18 @@ export default function PeoplePanel() {
       localStorage.setItem(PEOPLE_KEY, JSON.stringify({ people: [person] }));
     }
 
+    // ✅ bevestiging alleen hier bij opslaan
+    window.dispatchEvent(new CustomEvent("pam:toast", {
+      detail: { message: "Persoon opgeslagen ✅", tone: "success" }
+    }));
+
+    // UI bijwerken
     setRows((r) => [...r, person]);
     setForm({ fullName: "", role: "", email: "", phone: "", notes: "" });
   }
 
   function unlinkFromAssetsAndDocs(personId: string) {
+    // GEEN toasts hier.
     // Assets: personId leegmaken
     try {
       const rawA = localStorage.getItem(ASSETS_KEY);
@@ -105,8 +135,8 @@ export default function PeoplePanel() {
         const isContainerA = parsedA && Array.isArray(parsedA.assets);
         const arrA: any[] = isContainerA ? parsedA.assets : Array.isArray(parsedA) ? parsedA : [];
         const nextA = arrA.map((a) => (a.personId === personId ? { ...a, personId: undefined } : a));
-        const outA = isContainerA ? { ...parsedA, assets: nextA } : Array.isArray(parsedA) ? nextA : { assets: nextA };
-        localStorage.setItem(ASSETS_KEY, JSON.stringify(outA));
+        const out = isContainerA ? { ...parsedA, assets: nextA } : Array.isArray(parsedA) ? nextA : { assets: nextA };
+        localStorage.setItem(ASSETS_KEY, JSON.stringify(out));
       }
     } catch {}
 
@@ -124,8 +154,10 @@ export default function PeoplePanel() {
     } catch {}
   }
 
-  function handleDelete(personId: string) {
+  function handleDelete(id: string) {
     if (!confirm("Weet je zeker dat je deze persoon wilt verwijderen?")) return;
+
+    let removed = false;
 
     // 1) Verwijderen uit people storage
     try {
@@ -134,17 +166,25 @@ export default function PeoplePanel() {
         const parsed = JSON.parse(raw);
         const isContainer = parsed && Array.isArray(parsed.people);
         const arr: any[] = isContainer ? parsed.people : Array.isArray(parsed) ? parsed : [];
-        const next = arr.filter((p) => p.id !== personId);
+        const next = arr.filter((p) => p.id !== id);
         const out = isContainer ? { ...parsed, people: next } : Array.isArray(parsed) ? next : { people: next };
         localStorage.setItem(PEOPLE_KEY, JSON.stringify(out));
+        removed = true;
       }
     } catch {}
 
     // 2) Loskoppelen uit assets/docs
-    unlinkFromAssetsAndDocs(personId);
+    try { unlinkFromAssetsAndDocs(id); } catch {}
 
     // 3) UI updaten
-    setRows((r) => r.filter((x) => x.id !== personId));
+    setRows((r) => r.filter((x) => x.id !== id));
+
+    // 4) Toast alleen hier en alleen bij succes
+    if (removed) {
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: "Persoon verwijderd", tone: "info" }
+      }));
+    }
   }
 
   function toggleSort(key: keyof Row) {
@@ -194,10 +234,9 @@ export default function PeoplePanel() {
             onChange={(e) => onChange("role", e.target.value as FormState["role"])}
           >
             <option value="">— Kies een rol —</option>
-            <option>Eigenaar</option>
-            <option>Medewerker</option>
-            <option>Relatie</option>
-            <option>Overig</option>
+            {ROLE_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         </div>
 
@@ -271,7 +310,7 @@ export default function PeoplePanel() {
               {filtered.map((p) => (
                 <tr key={p.id}>
                   <td>{p.fullName || p.name}</td>
-                  <td>{p.role}</td>
+                  <td>{roleLabel(p.role)}</td>
                   <td>{p.email || ""}</td>
                   <td>{p.phone || ""}</td>
                   <td>

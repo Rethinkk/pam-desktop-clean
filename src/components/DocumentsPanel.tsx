@@ -89,6 +89,13 @@ export default function DocumentsPanel() {
     }
     localStorage.setItem(DOCS_KEY, JSON.stringify(out));
 
+    window.dispatchEvent(
+      new CustomEvent("pam:toast", {
+        detail: { message: "Document opgeslagen in register ✅", tone: "success" }
+      })
+    );
+
+
     // reset naar leeg formulier
     setForm({
       title: "",

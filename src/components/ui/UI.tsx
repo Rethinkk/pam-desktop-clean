@@ -109,6 +109,40 @@ export function Style() {
       .ui-tab:hover { background:#f8fafc; }
       .ui-tab.active { background:#0f172a; color:#fff; border-color:#0f172a; }
       .ui-tab-spacer { flex:1 1 auto; }
+
+/* Toasts (rechtsonder) */
+.ui-toast-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+.ui-toast {
+  background: #0f2d4a;        /* merk-donkerblauw */
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;             /* klik om te sluiten */
+  transform: translateY(8px);
+  opacity: 0;
+  animation: ui-toast-in .2s ease-out forwards;
+}
+@keyframes ui-toast-in {
+  to { transform: translateY(0); opacity: 1; }
+}
+/* optionele tonen (allemaal niet-rood) */
+.ui-toast.info    { background: #1f2937; }
+.ui-toast.success { background: #0f2d4a; }
+.ui-toast.warn    { background: #334155; }
+
+
     `}</style>
   );
 }
@@ -164,3 +198,37 @@ export const TabButton: React.FC<{active?: boolean} & React.ButtonHTMLAttributes
 export const TabSpacer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({className="", ...p}) => (
   <div className={`ui-tab-spacer ${className}`} {...p}/>
 );
+// --- Toast host: luister naar window events en toon meldingen rechtsonder ---
+export const ToastHost: React.FC = () => {
+  const [items, setItems] = React.useState<
+    { id: number; msg: string; tone?: "success" | "info" | "warn"; ttl?: number }[]
+  >([]);
+
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const d: any = (e as CustomEvent).detail ?? {};
+      const id = Date.now() + Math.random();
+      setItems((s) => [...s, { id, msg: d.message || String(d), tone: d.tone || "success", ttl: d.ttl }]);
+      const ttl = Number.isFinite(d.ttl) ? d.ttl : 2200;
+      setTimeout(() => setItems((s) => s.filter((x) => x.id !== id)), ttl);
+    };
+    window.addEventListener("pam:toast", handler as any);
+    return () => window.removeEventListener("pam:toast", handler as any);
+  }, []);
+
+  return (
+    <div className="ui-toast-container" role="status" aria-live="polite">
+      {items.map((t) => (
+        <div
+          key={t.id}
+          className={`ui-toast ${t.tone || ""}`}
+          onClick={() => setItems((s) => s.filter((x) => x.id !== t.id))}
+          title="Klik om te sluiten"
+        >
+          {t.msg}
+        </div>
+      ))}
+    </div>
+  );
+};
+

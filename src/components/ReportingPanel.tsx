@@ -3,6 +3,8 @@ import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+
+
 /** ---------------- Types ---------------- **/
 type MinimalAsset = {
   id: string;
@@ -564,6 +566,9 @@ export default function ReportingPanel() {
           </div>
         </div>
       </div>
+
+      
+
 
       {/* Details */}
       <div className="card">
