@@ -1,13 +1,14 @@
-
-
-
 /* @ts-nocheck */
-import React from "react";
-import { allPeople, upsertPerson } from "../lib/peopleStore";
+import React from 'react';
+import { allPeople, upsertPerson } from '../lib/peopleStore';
 
 export default function PeoplePanelSmoke() {
   const [count, setCount] = React.useState<number>(() => {
-    try { return (allPeople() || []).length; } catch { return -1; }
+    try {
+      return (allPeople() || []).length;
+    } catch {
+      return -1;
+    }
   });
 
   const seed = () => {
@@ -15,32 +16,40 @@ export default function PeoplePanelSmoke() {
     try {
       upsertPerson({
         id: String(Date.now()),
-        name: "Test Persoon",
-        fullName: "Test Persoon",
-        role: "overig",
+        name: 'Test Persoon',
+        fullName: 'Test Persoon',
+        role: 'overig',
         createdAt: now,
         updatedAt: now,
       });
       setCount((allPeople() || []).length);
     } catch (e) {
-        const msg =
+      const msg =
         e instanceof Error
           ? e.message
-          : (e && typeof e === "object" && "message" in e
-              ? (e as any).message
-              : String(e));
-      console.error("seed failed", e);
-      alert("seed failed: " + msg);
+          : e && typeof e === 'object' && 'message' in e
+            ? (e as any).message
+            : String(e);
+      console.error('seed failed', e);
+      alert('seed failed: ' + msg);
     }
   };
 
   return (
-    <div style={{padding:12, border:'1px solid #ddd', borderRadius:8}}>
-      <div data-test="people-smoke-title" style={{fontWeight:700}}>
+    <div style={{ padding: 12, border: '1px solid #ddd', borderRadius: 8 }}>
+      <div data-test="people-smoke-title" style={{ fontWeight: 700 }}>
         PEOPLE SMOKE — mounted ✅
       </div>
       <div data-test="people-smoke-count">records: {String(count)}</div>
-      <button onClick={seed} style={{marginTop:8, padding:'6px 10px', border:'1px solid #ccc', borderRadius:6}}>
+      <button
+        onClick={seed}
+        style={{
+          marginTop: 8,
+          padding: '6px 10px',
+          border: '1px solid #ccc',
+          borderRadius: 6,
+        }}
+      >
         Voeg testpersoon toe
       </button>
     </div>

@@ -1,37 +1,37 @@
 /* @ts-nocheck */
-import React, { useEffect, useState } from "react";
-import type { Person, PersonRole } from "../types";
-import { allPeople, upsertPerson } from "../lib/peopleStore";
+import React, { useEffect, useState } from 'react';
+import type { Person, PersonRole } from '../types';
+import { allPeople, upsertPerson } from '../lib/peopleStore';
 
 type Props = {
-  editing?: Person | null;           // laat leeg voor "nieuw"
-  onSaved?: (p: Person) => void;     // callback na succesvol opslaan
-  onCancel?: () => void;             // optioneel, bij bewerken
+  editing?: Person | null; // laat leeg voor "nieuw"
+  onSaved?: (p: Person) => void; // callback na succesvol opslaan
+  onCancel?: () => void; // optioneel, bij bewerken
 };
 
 const ROLES: PersonRole[] = [
-  "hoofdgebruiker",
-  "partner",
-  "kind",
-  "gemachtigde",
-  "serviceprovider",
-  "overig",
+  'hoofdgebruiker',
+  'partner',
+  'kind',
+  'gemachtigde',
+  'serviceprovider',
+  'overig',
 ];
 
 export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<PersonRole | "">("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [notes, setNotes] = useState("");
+  const [fullName, setFullName] = useState('');
+  const [role, setRole] = useState<PersonRole | ''>('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
 
   // 🔁 Gebruik een live people-lijst voor uniciteitschecks
   const [people, setPeople] = useState<Person[]>(() => allPeople());
   useEffect(() => {
     const handler = () => setPeople(allPeople());
-    window.addEventListener("pam-people-updated", handler);
-    return () => window.removeEventListener("pam-people-updated", handler);
+    window.addEventListener('pam-people-updated', handler);
+    return () => window.removeEventListener('pam-people-updated', handler);
   }, []);
 
   const editingId = editing?.id ?? null;
@@ -39,37 +39,45 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
   // Prefill bij bewerken
   useEffect(() => {
     if (!editing) {
-      setFullName(""); setRole(""); setEmail(""); setPhone(""); setNotes(""); setErrors([]);
+      setFullName('');
+      setRole('');
+      setEmail('');
+      setPhone('');
+      setNotes('');
+      setErrors([]);
       return;
     }
-    const initialName = (editing.name || editing.fullName || "").trim();
+    const initialName = (editing.name || editing.fullName || '').trim();
     setFullName(initialName);
-    setRole((editing.role as any) ?? "");
-    setEmail(editing.email ?? "");
-    setPhone(editing.phone ?? "");
-    setNotes(editing.notes ?? "");
+    setRole((editing.role as any) ?? '');
+    setEmail(editing.email ?? '');
+    setPhone(editing.phone ?? '');
+    setNotes(editing.notes ?? '');
     setErrors([]);
   }, [editing]);
 
   function validate(): string[] {
     const errs: string[] = [];
-    const nameNorm = fullName.trim().replace(/\s+/g, " ");
+    const nameNorm = fullName.trim().replace(/\s+/g, ' ');
     const emailNorm = email.trim().toLowerCase();
     const phoneTrim = phone.trim();
 
-    if (!nameNorm || nameNorm.length < 2) errs.push("Naam is verplicht (min. 2 tekens).");
-    if (!role) errs.push("Rol is verplicht.");
+    if (!nameNorm || nameNorm.length < 2)
+      errs.push('Naam is verplicht (min. 2 tekens).');
+    if (!role) errs.push('Rol is verplicht.');
 
     if (emailNorm) {
-      if (!/.+@.+\..+/.test(emailNorm)) errs.push("E-mail is ongeldig.");
+      if (!/.+@.+\..+/.test(emailNorm)) errs.push('E-mail is ongeldig.');
       const clash = people.find(
-        (p) => (p.id !== editingId) && (p.email || "").trim().toLowerCase() === emailNorm
+        (p) =>
+          p.id !== editingId &&
+          (p.email || '').trim().toLowerCase() === emailNorm,
       );
-      if (clash) errs.push("E-mail is al in gebruik.");
+      if (clash) errs.push('E-mail is al in gebruik.');
     }
 
     if (phoneTrim && !/^\+?[0-9\s\-()]{8,20}$/.test(phoneTrim)) {
-      errs.push("Telefoonnummer is ongeldig.");
+      errs.push('Telefoonnummer is ongeldig.');
     }
     return errs;
   }
@@ -77,15 +85,20 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const v = validate();
-    if (v.length) { setErrors(v); return; }
+    if (v.length) {
+      setErrors(v);
+      return;
+    }
 
     const now = new Date().toISOString();
-    const normalized = fullName.trim().replace(/\s+/g, " ");
+    const normalized = fullName.trim().replace(/\s+/g, ' ');
 
     const person: Person = {
-      id: editingId ?? (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
-      name: normalized,            // ✅ hoofdveld
-      fullName: normalized,        // ✅ mag blijven als alias; kan ook weggelaten worden
+      id:
+        editingId ??
+        (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
+      name: normalized, // ✅ hoofdveld
+      fullName: normalized, // ✅ mag blijven als alias; kan ook weggelaten worden
       role: role as PersonRole,
       email: email.trim() || undefined,
       phone: phone.trim() || undefined,
@@ -100,7 +113,11 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
 
     if (!editingId) {
       // reset alleen in nieuw-modus
-      setFullName(""); setRole(""); setEmail(""); setPhone(""); setNotes("");
+      setFullName('');
+      setRole('');
+      setEmail('');
+      setPhone('');
+      setNotes('');
     }
   }
 
@@ -108,7 +125,9 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="card space-y-3">
-      <h2 className="font-semibold text-lg">{editing ? "Persoon bewerken" : "Nieuwe persoon"}</h2>
+      <h2 className="font-semibold text-lg">
+        {editing ? 'Persoon bewerken' : 'Nieuwe persoon'}
+      </h2>
 
       {/* naam */}
       <div>
@@ -131,7 +150,9 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
         >
           <option value="">— kies rol —</option>
           {ROLES.map((r) => (
-            <option key={r} value={r}>{r}</option>
+            <option key={r} value={r}>
+              {r}
+            </option>
           ))}
         </select>
       </div>
@@ -174,7 +195,9 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
       {/* errors */}
       {hasErrors && (
         <div className="text-red-600 text-sm space-y-1">
-          {errors.map((err) => <div key={err}>• {err}</div>)}
+          {errors.map((err) => (
+            <div key={err}>• {err}</div>
+          ))}
         </div>
       )}
 
@@ -196,4 +219,3 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
     </form>
   );
 }
-

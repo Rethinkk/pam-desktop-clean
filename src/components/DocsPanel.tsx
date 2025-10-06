@@ -1,1 +1,1 @@
-export { default } from "./DocumentsPanel";
+export { default } from './DocumentsPanel';

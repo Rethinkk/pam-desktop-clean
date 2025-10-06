@@ -1,9 +1,7 @@
 /* @ts-nocheck */
-import React from "react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-
-
+import React from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 /** ---------------- Types ---------------- **/
 type MinimalAsset = {
@@ -36,9 +34,9 @@ type MinimalPerson = {
   updatedAt?: string;
 };
 
-const ASSET_KEYS  = ["pam-assets-v1", "pam-assets", "assets"];
-const DOC_KEYS    = ["pam-docs-v1", "pam-docs", "documents"];
-const PEOPLE_KEYS = ["pam-people-v1", "pam-people", "people"];
+const ASSET_KEYS = ['pam-assets-v1', 'pam-assets', 'assets'];
+const DOC_KEYS = ['pam-docs-v1', 'pam-docs', 'documents'];
+const PEOPLE_KEYS = ['pam-people-v1', 'pam-people', 'people'];
 
 /** ---------------- Utils & Readers ---------------- **/
 const parseMaybeDate = (v?: string): Date | null => {
@@ -55,7 +53,7 @@ const parseMaybeDate = (v?: string): Date | null => {
 };
 const fmtDate = (d?: string) => {
   const dt = parseMaybeDate(d);
-  if (!dt) return d ?? "";
+  if (!dt) return d ?? '';
   return dt.toLocaleDateString();
 };
 const unique = <T,>(arr: T[]) => [...new Set(arr.filter(Boolean as any))];
@@ -121,135 +119,208 @@ function withHeaderFooter(doc: jsPDF, title: string) {
   doc.setFontSize(14);
   doc.text(title, 14, 16);
   doc.setFontSize(10);
-  doc.text(`Datum: ${today()}`, pageWidth - 14, 16, { align: "right" });
+  doc.text(`Datum: ${today()}`, pageWidth - 14, 16, { align: 'right' });
 
   const addFooter = () => {
-    const pageCount = (doc as any).internal.getNumberOfPages?.() ?? doc.getNumberOfPages();
+    const pageCount =
+      (doc as any).internal.getNumberOfPages?.() ?? doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       const w = doc.internal.pageSize.getWidth();
       const h = doc.internal.pageSize.getHeight();
       doc.setFontSize(9);
-      doc.text(`Pagina ${i} / ${pageCount}  •  PAM`, w - 14, h - 10, { align: "right" });
+      doc.text(`Pagina ${i} / ${pageCount}  •  PAM`, w - 14, h - 10, {
+        align: 'right',
+      });
     }
   };
   return { addFooter };
 }
-function buildAssetTypeReport(assets: MinimalAsset[], docs: MinimalDoc[], type: string): Blob {
-  const t = (type || "UNKNOWN").toUpperCase();
+function buildAssetTypeReport(
+  assets: MinimalAsset[],
+  docs: MinimalDoc[],
+  type: string,
+): Blob {
+  const t = (type || 'UNKNOWN').toUpperCase();
   const pdf = new jsPDF();
   const { addFooter } = withHeaderFooter(pdf, `Rapport — Asset type: ${t}`);
-  const subset = assets.filter(a => (a.type ? String(a.type).toUpperCase() : "UNKNOWN") === t);
+  const subset = assets.filter(
+    (a) => (a.type ? String(a.type).toUpperCase() : 'UNKNOWN') === t,
+  );
 
   autoTable(pdf, {
     startY: 24,
-    head: [["Nummer", "Naam", "Owner", "Aangemaakt"]],
-    body: subset.map(a => [a.number ?? "—", a.name ?? "—", a.owner ?? a.ownerId ?? "—", a.createdAt ?? "—"]),
+    head: [['Nummer', 'Naam', 'Owner', 'Aangemaakt']],
+    body: subset.map((a) => [
+      a.number ?? '—',
+      a.name ?? '—',
+      a.owner ?? a.ownerId ?? '—',
+      a.createdAt ?? '—',
+    ]),
     styles: { fontSize: 9 },
     headStyles: { fillColor: [16, 42, 74] },
-    theme: "grid",
+    theme: 'grid',
   });
 
   const byAssetKey = new Map<string, MinimalDoc[]>();
-  docs.forEach(d => {
+  docs.forEach((d) => {
     const k = d.assetId ?? d.assetNumber;
     if (!k) return;
     byAssetKey.set(k, [...(byAssetKey.get(k) ?? []), d]);
   });
 
   autoTable(pdf, {
-    head: [["Asset", "Doc-titel", "Type", "Vervaldatum"]],
-    body: subset.flatMap(a => {
-      const linked = byAssetKey.get(a.id) ?? byAssetKey.get(a.number ?? "") ?? [];
-      return linked.map(d => [a.number ?? "—", d.title ?? "—", (d.type ?? "—").toUpperCase(), d.expiryDate ?? "—"]);
+    head: [['Asset', 'Doc-titel', 'Type', 'Vervaldatum']],
+    body: subset.flatMap((a) => {
+      const linked =
+        byAssetKey.get(a.id) ?? byAssetKey.get(a.number ?? '') ?? [];
+      return linked.map((d) => [
+        a.number ?? '—',
+        d.title ?? '—',
+        (d.type ?? '—').toUpperCase(),
+        d.expiryDate ?? '—',
+      ]);
     }),
     styles: { fontSize: 9 },
-    theme: "grid",
+    theme: 'grid',
     margin: { top: 10 },
   });
 
   addFooter();
-  return pdf.output("blob");
+  return pdf.output('blob');
 }
-function buildSelectedAssetsReport(assets: MinimalAsset[], docs: MinimalDoc[], selectedIds: string[]): Blob {
-  const picked = assets.filter(a => selectedIds.includes(a.id));
+function buildSelectedAssetsReport(
+  assets: MinimalAsset[],
+  docs: MinimalDoc[],
+  selectedIds: string[],
+): Blob {
+  const picked = assets.filter((a) => selectedIds.includes(a.id));
   const pdf = new jsPDF();
-  const { addFooter } = withHeaderFooter(pdf, `Rapport — Geselecteerde assets (${picked.length})`);
+  const { addFooter } = withHeaderFooter(
+    pdf,
+    `Rapport — Geselecteerde assets (${picked.length})`,
+  );
 
   autoTable(pdf, {
     startY: 24,
-    head: [["Nummer", "Naam", "Type", "Owner", "Aangemaakt"]],
-    body: picked.map(a => [a.number ?? "—", a.name ?? "—", (a.type ?? "—").toUpperCase(), a.owner ?? a.ownerId ?? "—", a.createdAt ?? "—"]),
+    head: [['Nummer', 'Naam', 'Type', 'Owner', 'Aangemaakt']],
+    body: picked.map((a) => [
+      a.number ?? '—',
+      a.name ?? '—',
+      (a.type ?? '—').toUpperCase(),
+      a.owner ?? a.ownerId ?? '—',
+      a.createdAt ?? '—',
+    ]),
     styles: { fontSize: 9 },
     headStyles: { fillColor: [16, 42, 74] },
-    theme: "grid",
+    theme: 'grid',
   });
 
   const byAssetKey = new Map<string, MinimalDoc[]>();
-  docs.forEach(d => {
+  docs.forEach((d) => {
     const k = d.assetId ?? d.assetNumber;
     if (!k) return;
     byAssetKey.set(k, [...(byAssetKey.get(k) ?? []), d]);
   });
 
   autoTable(pdf, {
-    head: [["Asset", "Doc-titel", "Type", "Vervaldatum"]],
-    body: picked.flatMap(a => {
-      const linked = byAssetKey.get(a.id) ?? byAssetKey.get(a.number ?? "") ?? [];
-      return linked.map(d => [a.number ?? "—", d.title ?? "—", (d.type ?? "—").toUpperCase(), d.expiryDate ?? "—"]);
+    head: [['Asset', 'Doc-titel', 'Type', 'Vervaldatum']],
+    body: picked.flatMap((a) => {
+      const linked =
+        byAssetKey.get(a.id) ?? byAssetKey.get(a.number ?? '') ?? [];
+      return linked.map((d) => [
+        a.number ?? '—',
+        d.title ?? '—',
+        (d.type ?? '—').toUpperCase(),
+        d.expiryDate ?? '—',
+      ]);
     }),
     styles: { fontSize: 9 },
-    theme: "grid",
+    theme: 'grid',
     margin: { top: 10 },
   });
 
   addFooter();
-  return pdf.output("blob");
+  return pdf.output('blob');
 }
-function buildTotalReport(assets: MinimalAsset[], docs: MinimalDoc[], people: MinimalPerson[]): Blob {
+function buildTotalReport(
+  assets: MinimalAsset[],
+  docs: MinimalDoc[],
+  people: MinimalPerson[],
+): Blob {
   const pdf = new jsPDF();
-  const { addFooter } = withHeaderFooter(pdf, "Totaalrapport — Assets, Documenten, Mensen");
+  const { addFooter } = withHeaderFooter(
+    pdf,
+    'Totaalrapport — Assets, Documenten, Mensen',
+  );
 
   autoTable(pdf, {
     startY: 24,
-    head: [["KPI", "Waarde"]],
+    head: [['KPI', 'Waarde']],
     body: [
-      ["Totaal assets", String(assets.length)],
-      ["Totaal documenten", String(docs.length)],
-      ["Totaal mensen", String(people.length)],
+      ['Totaal assets', String(assets.length)],
+      ['Totaal documenten', String(docs.length)],
+      ['Totaal mensen', String(people.length)],
     ],
     styles: { fontSize: 9 },
-    theme: "grid",
+    theme: 'grid',
   });
 
   autoTable(pdf, {
-    head: [["Nummer", "Naam", "Type", "Owner", "Aangemaakt"]],
-    body: assets.slice(0, 40).map(a => [a.number ?? "—", a.name ?? "—", (a.type ?? "—").toUpperCase(), a.owner ?? a.ownerId ?? "—", a.createdAt ?? "—"]),
+    head: [['Nummer', 'Naam', 'Type', 'Owner', 'Aangemaakt']],
+    body: assets
+      .slice(0, 40)
+      .map((a) => [
+        a.number ?? '—',
+        a.name ?? '—',
+        (a.type ?? '—').toUpperCase(),
+        a.owner ?? a.ownerId ?? '—',
+        a.createdAt ?? '—',
+      ]),
     styles: { fontSize: 9 },
-    theme: "grid",
+    theme: 'grid',
     margin: { top: 10 },
   });
 
   autoTable(pdf, {
-    head: [["Titel", "Type", "Asset", "Vervaldatum"]],
-    body: docs.slice(0, 40).map(d => [d.title ?? "—", (d.type ?? "—").toUpperCase(), d.assetNumber ?? d.assetId ?? "—", d.expiryDate ?? "—"]),
+    head: [['Titel', 'Type', 'Asset', 'Vervaldatum']],
+    body: docs
+      .slice(0, 40)
+      .map((d) => [
+        d.title ?? '—',
+        (d.type ?? '—').toUpperCase(),
+        d.assetNumber ?? d.assetId ?? '—',
+        d.expiryDate ?? '—',
+      ]),
     styles: { fontSize: 9 },
-    theme: "grid",
+    theme: 'grid',
     margin: { top: 10 },
   });
 
   addFooter();
-  return pdf.output("blob");
+  return pdf.output('blob');
 }
-async function sendPdfViaEmail(to: string, subject: string, filename: string, pdfBlob: Blob) {
-  const EMAIL_API_URL = (import.meta as any).env?.VITE_EMAIL_API_URL || "";
-  if (!EMAIL_API_URL) return { ok: false, reason: "Geen EMAIL_API_URL geconfigureerd." };
+async function sendPdfViaEmail(
+  to: string,
+  subject: string,
+  filename: string,
+  pdfBlob: Blob,
+) {
+  const EMAIL_API_URL = (import.meta as any).env?.VITE_EMAIL_API_URL || '';
+  if (!EMAIL_API_URL)
+    return { ok: false, reason: 'Geen EMAIL_API_URL geconfigureerd.' };
   const arrBuf = await pdfBlob.arrayBuffer();
   const base64 = btoa(String.fromCharCode(...new Uint8Array(arrBuf)));
   const res = await fetch(EMAIL_API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ to, subject, filename, fileBase64: base64, mime: "application/pdf" }),
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to,
+      subject,
+      filename,
+      fileBase64: base64,
+      mime: 'application/pdf',
+    }),
   });
   if (!res.ok) return { ok: false, reason: `Server ${res.status}` };
   return { ok: true };
@@ -260,11 +331,11 @@ export default function ReportingPanel() {
   const [assets, setAssets] = React.useState<MinimalAsset[]>([]);
   const [docs, setDocs] = React.useState<MinimalDoc[]>([]);
   const [people, setPeople] = React.useState<MinimalPerson[]>([]);
-  const [days, setDays] = React.useState<number | "all">(30);
-  const [typeFilter, setTypeFilter] = React.useState<string>("all");
+  const [days, setDays] = React.useState<number | 'all'>(30);
+  const [typeFilter, setTypeFilter] = React.useState<string>('all');
   const [sortDesc, setSortDesc] = React.useState<boolean>(true);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
-  const [recipient, setRecipient] = React.useState<string>("");
+  const [recipient, setRecipient] = React.useState<string>('');
 
   React.useEffect(() => {
     setAssets(readAssets());
@@ -273,8 +344,13 @@ export default function ReportingPanel() {
   }, []);
 
   const allTypes = React.useMemo(
-    () => unique(assets.map(a => (a.type ? String(a.type).trim().toUpperCase() : "UNKNOWN"))),
-    [assets]
+    () =>
+      unique(
+        assets.map((a) =>
+          a.type ? String(a.type).trim().toUpperCase() : 'UNKNOWN',
+        ),
+      ),
+    [assets],
   );
 
   const withinDays = (createdAt?: string, d?: number) => {
@@ -287,12 +363,13 @@ export default function ReportingPanel() {
   };
 
   const filtered = React.useMemo(() => {
-    const d = typeof days === "number" ? days : undefined;
+    const d = typeof days === 'number' ? days : undefined;
     return assets.filter(
       (a) =>
         withinDays(a.createdAt, d) &&
-        (typeFilter === "all" ||
-          (a.type ? String(a.type).trim().toUpperCase() : "UNKNOWN") === String(typeFilter))
+        (typeFilter === 'all' ||
+          (a.type ? String(a.type).trim().toUpperCase() : 'UNKNOWN') ===
+            String(typeFilter)),
     );
   }, [assets, days, typeFilter]);
 
@@ -315,7 +392,7 @@ export default function ReportingPanel() {
   const perType = React.useMemo(() => {
     const m = new Map<string, number>();
     assets.forEach((a) => {
-      const t = a.type ? String(a.type).trim().toUpperCase() : "UNKNOWN";
+      const t = a.type ? String(a.type).trim().toUpperCase() : 'UNKNOWN';
       m.set(t, (m.get(t) ?? 0) + 1);
     });
     const arr: Array<[string, number]> = [];
@@ -326,7 +403,7 @@ export default function ReportingPanel() {
   const perOwner = React.useMemo(() => {
     const m = new Map<string, number>();
     assets.forEach((a) => {
-      const o = a.owner || "—";
+      const o = a.owner || '—';
       m.set(o, (m.get(o) ?? 0) + 1);
     });
     const arr: Array<[string, number]> = [];
@@ -336,21 +413,30 @@ export default function ReportingPanel() {
 
   // Export CSV
   const toCsv = (rows: Array<Record<string, any>>) => {
-    if (!rows.length) return "";
+    if (!rows.length) return '';
     const headerSet = new Set<string>();
     for (const r of rows) for (const k of Object.keys(r)) headerSet.add(k);
     const headers = [...headerSet];
     const esc = (v: any) => {
-      if (v === null || v === undefined) return "";
+      if (v === null || v === undefined) return '';
       const s = String(v);
-      return s.includes('"') || s.includes(",") || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+      return s.includes('"') || s.includes(',') || s.includes('\n')
+        ? `"${s.replace(/"/g, '""')}"`
+        : s;
     };
-    return [headers.join(","), ...rows.map((r) => headers.map((h) => esc(r[h])).join(","))].join("\n");
+    return [
+      headers.join(','),
+      ...rows.map((r) => headers.map((h) => esc(r[h])).join(',')),
+    ].join('\n');
   };
-  const downloadText = (filename: string, content: string, mime = "text/csv") => {
+  const downloadText = (
+    filename: string,
+    content: string,
+    mime = 'text/csv',
+  ) => {
     const blob = new Blob([content], { type: mime });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
@@ -368,18 +454,18 @@ export default function ReportingPanel() {
         owner: a.owner,
         createdAt: a.createdAt,
         updatedAt: a.updatedAt,
-      }))
+      })),
     );
     downloadText(
-      `reporting_${typeof days === "number" ? days + "d" : "all"}${typeFilter !== "all" ? "_" + typeFilter : ""}.csv`,
-      csv
+      `reporting_${typeof days === 'number' ? days + 'd' : 'all'}${typeFilter !== 'all' ? '_' + typeFilter : ''}.csv`,
+      csv,
     );
   };
 
   // PDF + mail
   const downloadBlob = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
@@ -388,15 +474,24 @@ export default function ReportingPanel() {
     URL.revokeObjectURL(url);
   };
   const makeTypePdf = () => {
-    const t = typeFilter === "all" ? (allTypes[0] ?? "UNKNOWN") : typeFilter;
+    const t = typeFilter === 'all' ? (allTypes[0] ?? 'UNKNOWN') : typeFilter;
     const blob = buildAssetTypeReport(assets, docs, t);
     downloadBlob(blob, `rapport_type_${t}.pdf`);
   };
   const sendTypePdf = async () => {
-    const t = typeFilter === "all" ? (allTypes[0] ?? "UNKNOWN") : typeFilter;
+    const t = typeFilter === 'all' ? (allTypes[0] ?? 'UNKNOWN') : typeFilter;
     const blob = buildAssetTypeReport(assets, docs, t);
-    const res = await sendPdfViaEmail(recipient, `PAM Rapport (type ${t})`, `rapport_type_${t}.pdf`, blob);
-    alert(res.ok ? "Verzonden." : `Niet verzonden: ${res.reason || "onbekende fout"}`);
+    const res = await sendPdfViaEmail(
+      recipient,
+      `PAM Rapport (type ${t})`,
+      `rapport_type_${t}.pdf`,
+      blob,
+    );
+    alert(
+      res.ok
+        ? 'Verzonden.'
+        : `Niet verzonden: ${res.reason || 'onbekende fout'}`,
+    );
   };
   const makeSelectedPdf = () => {
     const blob = buildSelectedAssetsReport(assets, docs, selectedIds);
@@ -404,8 +499,17 @@ export default function ReportingPanel() {
   };
   const sendSelectedPdf = async () => {
     const blob = buildSelectedAssetsReport(assets, docs, selectedIds);
-    const res = await sendPdfViaEmail(recipient, `PAM Rapport (geselecteerd)`, `rapport_geselecteerd_${selectedIds.length}.pdf`, blob);
-    alert(res.ok ? "Verzonden." : `Niet verzonden: ${res.reason || "onbekende fout"}`);
+    const res = await sendPdfViaEmail(
+      recipient,
+      `PAM Rapport (geselecteerd)`,
+      `rapport_geselecteerd_${selectedIds.length}.pdf`,
+      blob,
+    );
+    alert(
+      res.ok
+        ? 'Verzonden.'
+        : `Niet verzonden: ${res.reason || 'onbekende fout'}`,
+    );
   };
   const makeTotalPdf = () => {
     const blob = buildTotalReport(assets, docs, people);
@@ -413,12 +517,23 @@ export default function ReportingPanel() {
   };
   const sendTotalPdf = async () => {
     const blob = buildTotalReport(assets, docs, people);
-    const res = await sendPdfViaEmail(recipient, `PAM Totaalrapport`, `rapport_totaal.pdf`, blob);
-    alert(res.ok ? "Verzonden." : `Niet verzonden: ${res.reason || "onbekende fout"}`);
+    const res = await sendPdfViaEmail(
+      recipient,
+      `PAM Totaalrapport`,
+      `rapport_totaal.pdf`,
+      blob,
+    );
+    alert(
+      res.ok
+        ? 'Verzonden.'
+        : `Niet verzonden: ${res.reason || 'onbekende fout'}`,
+    );
   };
 
   const toggleSelect = (id: string, checked: boolean) =>
-    setSelectedIds((prev) => (checked ? [...new Set([...prev, id])] : prev.filter((x) => x !== id)));
+    setSelectedIds((prev) =>
+      checked ? [...new Set([...prev, id])] : prev.filter((x) => x !== id),
+    );
 
   /** ---------------- UI ---------------- **/
   return (
@@ -464,7 +579,14 @@ export default function ReportingPanel() {
         <div className="controls">
           <div className="field">
             <label>Periode</label>
-            <select value={String(days)} onChange={(e)=>setDays(e.target.value==="all"?"all":Number(e.target.value))}>
+            <select
+              value={String(days)}
+              onChange={(e) =>
+                setDays(
+                  e.target.value === 'all' ? 'all' : Number(e.target.value),
+                )
+              }
+            >
               <option value="7">Laatste 7 dagen</option>
               <option value="30">Laatste 30 dagen</option>
               <option value="90">Laatste 90 dagen</option>
@@ -474,42 +596,79 @@ export default function ReportingPanel() {
 
           <div className="field">
             <label>Asset type</label>
-            <select value={typeFilter} onChange={(e)=>setTypeFilter(e.target.value)}>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+            >
               <option value="all">Alle types</option>
-              {allTypes.map((t)=> <option key={t} value={t}>{t}</option>)}
+              {allTypes.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="field field--quarter">
             <label>Sortering</label>
-            <button className="btn" onClick={()=>setSortDesc(s=>!s)}>
-              Sort: {sortDesc ? "Nieuw → Oud" : "Oud → Nieuw"}
+            <button className="btn" onClick={() => setSortDesc((s) => !s)}>
+              Sort: {sortDesc ? 'Nieuw → Oud' : 'Oud → Nieuw'}
             </button>
           </div>
 
           <div className="field field--quarter">
             <label>Export</label>
-            <button className="btn" onClick={exportCsv}>Export CSV</button>
+            <button className="btn" onClick={exportCsv}>
+              Export CSV
+            </button>
           </div>
 
           <div className="field field--full">
             <label>Ontvanger (e-mail, optioneel)</label>
-            <input type="email" value={recipient} onChange={(e)=>setRecipient(e.target.value)} placeholder="ontvanger@domein.com" />
+            <input
+              type="email"
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              placeholder="ontvanger@domein.com"
+            />
           </div>
         </div>
 
         <div className="actions actions--between" style={{ marginTop: 12 }}>
           <div className="actions">
-            <button className="btn btn--primary" onClick={makeTypePdf}>PDF: Per type</button>
-            <button className="btn btn--primary" onClick={makeSelectedPdf} disabled={!selectedIds.length} title={!selectedIds.length ? "Selecteer eerst assets" : ""}>
+            <button className="btn btn--primary" onClick={makeTypePdf}>
+              PDF: Per type
+            </button>
+            <button
+              className="btn btn--primary"
+              onClick={makeSelectedPdf}
+              disabled={!selectedIds.length}
+              title={!selectedIds.length ? 'Selecteer eerst assets' : ''}
+            >
               PDF: Geselecteerde
             </button>
-            <button className="btn btn--primary" onClick={makeTotalPdf}>PDF: Totaal</button>
+            <button className="btn btn--primary" onClick={makeTotalPdf}>
+              PDF: Totaal
+            </button>
           </div>
           <div className="actions">
-            <button className="btn" onClick={sendTypePdf} disabled={!recipient}>Verzend type</button>
-            <button className="btn" onClick={sendSelectedPdf} disabled={!recipient || !selectedIds.length}>Verzend geselecteerde</button>
-            <button className="btn" onClick={sendTotalPdf} disabled={!recipient}>Verzend totaal</button>
+            <button className="btn" onClick={sendTypePdf} disabled={!recipient}>
+              Verzend type
+            </button>
+            <button
+              className="btn"
+              onClick={sendSelectedPdf}
+              disabled={!recipient || !selectedIds.length}
+            >
+              Verzend geselecteerde
+            </button>
+            <button
+              className="btn"
+              onClick={sendTotalPdf}
+              disabled={!recipient}
+            >
+              Verzend totaal
+            </button>
           </div>
         </div>
       </div>
@@ -539,13 +698,23 @@ export default function ReportingPanel() {
       {/* Overzichten */}
       <div className="twocol">
         <div className="card">
-          <div className="muted" style={{marginBottom:8}}>Per type</div>
+          <div className="muted" style={{ marginBottom: 8 }}>
+            Per type
+          </div>
           <div className="tablewrap">
             <table>
-              <thead><tr><th>Type</th><th>Aantal</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Aantal</th>
+                </tr>
+              </thead>
               <tbody>
-                {perType.map(([t,n],i)=>(
-                  <tr key={t}><td>{t}</td><td>{n}</td></tr>
+                {perType.map(([t, n], i) => (
+                  <tr key={t}>
+                    <td>{t}</td>
+                    <td>{n}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -553,13 +722,23 @@ export default function ReportingPanel() {
         </div>
 
         <div className="card">
-          <div className="muted" style={{marginBottom:8}}>Per owner</div>
+          <div className="muted" style={{ marginBottom: 8 }}>
+            Per owner
+          </div>
           <div className="tablewrap">
             <table>
-              <thead><tr><th>Owner</th><th>Aantal</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Owner</th>
+                  <th>Aantal</th>
+                </tr>
+              </thead>
               <tbody>
-                {perOwner.map(([o,n])=>(
-                  <tr key={o}><td>{o}</td><td>{n}</td></tr>
+                {perOwner.map(([o, n]) => (
+                  <tr key={o}>
+                    <td>{o}</td>
+                    <td>{n}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -567,12 +746,11 @@ export default function ReportingPanel() {
         </div>
       </div>
 
-      
-
-
       {/* Details */}
       <div className="card">
-        <div className="muted" style={{marginBottom:8}}>Details</div>
+        <div className="muted" style={{ marginBottom: 8 }}>
+          Details
+        </div>
         <div className="tablewrap">
           <table>
             <thead>
@@ -586,24 +764,26 @@ export default function ReportingPanel() {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((a)=>(
+              {sorted.map((a) => (
                 <tr key={a.id}>
                   <td>
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(a.id)}
-                      onChange={(e)=>toggleSelect(a.id, e.target.checked)}
+                      onChange={(e) => toggleSelect(a.id, e.target.checked)}
                     />
                   </td>
-                  <td>{a.number ?? "—"}</td>
-                  <td>{a.name ?? "—"}</td>
-                  <td>{a.type ? String(a.type).toUpperCase() : "UNKNOWN"}</td>
-                  <td>{a.owner ?? a.ownerId ?? "—"}</td>
+                  <td>{a.number ?? '—'}</td>
+                  <td>{a.name ?? '—'}</td>
+                  <td>{a.type ? String(a.type).toUpperCase() : 'UNKNOWN'}</td>
+                  <td>{a.owner ?? a.ownerId ?? '—'}</td>
                   <td>{fmtDate(a.createdAt)}</td>
                 </tr>
               ))}
               {!sorted.length && (
-                <tr><td colSpan={6}>Geen assets in deze selectie.</td></tr>
+                <tr>
+                  <td colSpan={6}>Geen assets in deze selectie.</td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -612,4 +792,3 @@ export default function ReportingPanel() {
     </div>
   );
 }
-

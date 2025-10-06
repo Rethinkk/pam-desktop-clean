@@ -1,6 +1,6 @@
 /* @ts-nocheck */
-import React from "react";
-import ExportButton from "./ExportButton";
+import React from 'react';
+import ExportButton from './ExportButton';
 
 export default function SecurityPanel() {
   return (
@@ -8,16 +8,18 @@ export default function SecurityPanel() {
       {/* Info-balk bovenaan */}
       <div
         style={{
-          background: "#f8fafc",
-          border: "1px solid #e5e7eb",
+          background: '#f8fafc',
+          border: '1px solid #e5e7eb',
           borderRadius: 12,
-          padding: "12px 16px",
+          padding: '12px 16px',
           marginBottom: 24,
         }}
       >
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#334155" }}>
-          🔐 Je werkt nu in de <strong>lokale, beveiligde modus</strong>. 
-          Alle gegevens blijven op je eigen apparaat en verlaten dit niet.
+        <p
+          style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: '#334155' }}
+        >
+          🔐 Je werkt nu in de <strong>lokale, beveiligde modus</strong>. Alle
+          gegevens blijven op je eigen apparaat en verlaten dit niet.
         </p>
       </div>
 
@@ -30,11 +32,11 @@ export default function SecurityPanel() {
         <p style={{ lineHeight: 1.6 }}>
           In de huidige versie van <strong>Personal Asset Manager</strong> staat
           veiligheid gelijk aan transparantie. We verwerken geen gegevens buiten
-          jouw eigen apparaat. Alles wat je invoert blijft{" "}
+          jouw eigen apparaat. Alles wat je invoert blijft{' '}
           <strong>uitsluitend lokaal</strong> opgeslagen in jouw browser.
         </p>
         <p style={{ lineHeight: 1.6 }}>
-          De applicatie is ontworpen volgens één kernprincipe:{" "}
+          De applicatie is ontworpen volgens één kernprincipe:{' '}
           <strong>jij behoudt de controle</strong>. Geen stille synchronisatie,
           geen externe opslag. Alleen jij beslist of en wanneer gegevens worden
           gedeeld, geback-upt of verwijderd.
@@ -107,11 +109,9 @@ export default function SecurityPanel() {
         </p>
       </div>
 
-      <footer style={{ marginTop: 32, fontSize: "0.9em", color: "#666" }}>
+      <footer style={{ marginTop: 32, fontSize: '0.9em', color: '#666' }}>
         <p>Versie 1.0 — Local Secure Mode</p>
       </footer>
     </div>
   );
 }
-
-

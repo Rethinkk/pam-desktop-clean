@@ -1,7 +1,7 @@
 // src/components/DynamicFieldsForm.tsx
 /* @ts-nocheck */
-import React from "react";
-import type { AssetFieldDefinition } from "../config/assetSchema";
+import React from 'react';
+import type { AssetFieldDefinition } from '../config/assetSchema';
 
 type Props = {
   fields: AssetFieldDefinition[];
@@ -10,7 +10,12 @@ type Props = {
   onChange: (next: Record<string, any>) => void;
 };
 
-export default function DynamicFieldsForm({ fields, value, errors = {}, onChange }: Props) {
+export default function DynamicFieldsForm({
+  fields,
+  value,
+  errors = {},
+  onChange,
+}: Props) {
   function upd(key: string, v: any) {
     onChange({ ...value, [key]: v });
   }
@@ -40,91 +45,121 @@ export default function DynamicFieldsForm({ fields, value, errors = {}, onChange
         const err = errors[f.key];
         const commonLabel = (
           <label className="block text-sm font-medium mb-1">
-            {f.label}{f.required && <span className="text-red-500"> *</span>}
+            {f.label}
+            {f.required && <span className="text-red-500"> *</span>}
           </label>
         );
 
         return (
-          <div key={f.key} className={`ui-card p-4 rounded-2xl shadow-sm border ${err ? "border-red-300" : ""}`}>
+          <div
+            key={f.key}
+            className={`ui-card p-4 rounded-2xl shadow-sm border ${err ? 'border-red-300' : ''}`}
+          >
             {commonLabel}
 
             {/* Tekst/Email/URL/Telefoon */}
-            {(f.type === "text" || f.type === "email" || f.type === "url" || f.type === "phone") && (
+            {(f.type === 'text' ||
+              f.type === 'email' ||
+              f.type === 'url' ||
+              f.type === 'phone') && (
               <input
                 className="ui-input w-full"
-                type={f.type === "email" ? "email" : f.type === "url" ? "url" : f.type === "phone" ? "tel" : "text"}
+                type={
+                  f.type === 'email'
+                    ? 'email'
+                    : f.type === 'url'
+                      ? 'url'
+                      : f.type === 'phone'
+                        ? 'tel'
+                        : 'text'
+                }
                 placeholder={f.placeholder}
-                value={value[f.key] ?? ""}
+                value={value[f.key] ?? ''}
                 onChange={(e) => upd(f.key, e.target.value)}
               />
             )}
 
             {/* Tekst area */}
-            {f.type === "textarea" && (
+            {f.type === 'textarea' && (
               <textarea
                 className="ui-input w-full"
                 rows={3}
                 placeholder={f.placeholder}
-                value={value[f.key] ?? ""}
+                value={value[f.key] ?? ''}
                 onChange={(e) => upd(f.key, e.target.value)}
               />
             )}
 
             {/* Getallen & Valuta */}
-            {(f.type === "number" || f.type === "currency") && (
+            {(f.type === 'number' || f.type === 'currency') && (
               <input
                 className="ui-input w-full"
                 type="number"
-                step={f.type === "currency" ? "0.01" : "1"}
-                placeholder={f.type === "currency" ? "0,00" : undefined}
-                value={value[f.key] ?? ""}
-                onChange={(e) => upd(f.key, e.target.value === "" ? "" : Number(e.target.value))}
+                step={f.type === 'currency' ? '0.01' : '1'}
+                placeholder={f.type === 'currency' ? '0,00' : undefined}
+                value={value[f.key] ?? ''}
+                onChange={(e) =>
+                  upd(
+                    f.key,
+                    e.target.value === '' ? '' : Number(e.target.value),
+                  )
+                }
               />
             )}
 
             {/* Datum */}
-            {f.type === "date" && (
+            {f.type === 'date' && (
               <input
                 className="ui-input w-full"
                 type="date"
-                value={value[f.key] ?? ""}
+                value={value[f.key] ?? ''}
                 onChange={(e) => upd(f.key, e.target.value)}
               />
             )}
 
             {/* Select */}
-            {f.type === "select" && (
+            {f.type === 'select' && (
               <select
                 className="ui-input w-full"
-                value={value[f.key] ?? ""}
+                value={value[f.key] ?? ''}
                 onChange={(e) => upd(f.key, e.target.value)}
               >
                 <option value="">— kies —</option>
                 {(f.options ?? []).map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
                 ))}
               </select>
             )}
 
             {/* Bestand */}
-            {f.type === "file" && (
+            {f.type === 'file' && (
               <>
                 <input
                   className="ui-input w-full"
                   type="file"
-                  onChange={(e) => handleFileChange(f.key, e.target.files?.[0] ?? null)}
+                  onChange={(e) =>
+                    handleFileChange(f.key, e.target.files?.[0] ?? null)
+                  }
                 />
                 {value[f.key]?.name && (
                   <div className="mt-2 text-xs text-gray-600">
-                    Gekozen: <strong>{value[f.key].name}</strong> ({Math.round((value[f.key].size || 0) / 1024)} kB)
-                    <button className="ml-2 underline" onClick={() => upd(f.key, undefined)}>verwijderen</button>
+                    Gekozen: <strong>{value[f.key].name}</strong> (
+                    {Math.round((value[f.key].size || 0) / 1024)} kB)
+                    <button
+                      className="ml-2 underline"
+                      onClick={() => upd(f.key, undefined)}
+                    >
+                      verwijderen
+                    </button>
                   </div>
                 )}
               </>
             )}
 
             {/* Boolean */}
-            {f.type === "boolean" && (
+            {f.type === 'boolean' && (
               <div className="flex items-center gap-2">
                 <input
                   id={`chk-${f.key}`}
@@ -132,7 +167,9 @@ export default function DynamicFieldsForm({ fields, value, errors = {}, onChange
                   checked={!!value[f.key]}
                   onChange={(e) => upd(f.key, e.target.checked)}
                 />
-                <label htmlFor={`chk-${f.key}`} className="text-sm">Ja / Nee</label>
+                <label htmlFor={`chk-${f.key}`} className="text-sm">
+                  Ja / Nee
+                </label>
               </div>
             )}
 

@@ -1,31 +1,31 @@
-import React from "react";
+import React from 'react';
 
-type DocType = "Polis" | "Factuur" | "Garantiebewijs" | "Contract" | "Overig";
+type DocType = 'Polis' | 'Factuur' | 'Garantiebewijs' | 'Contract' | 'Overig';
 
 type FormState = {
   title: string;
-  type: DocType | "";
+  type: DocType | '';
   number: string;
   personId: string;
-  issuedAt: string;   // yyyy-mm-dd
-  expiresAt: string;  // yyyy-mm-dd
+  issuedAt: string; // yyyy-mm-dd
+  expiresAt: string; // yyyy-mm-dd
   notes: string;
 };
 
 type PersonLite = { id: string; display: string };
 
-const DOCS_KEY = "pam-docs-v1";
-const PEOPLE_KEY = "pam-people-v1";
+const DOCS_KEY = 'pam-docs-v1';
+const PEOPLE_KEY = 'pam-people-v1';
 
 export default function DocumentsPanel() {
   const [form, setForm] = React.useState<FormState>({
-    title: "",
-    type: "",
-    number: "",
-    personId: "",
-    issuedAt: "",
-    expiresAt: "",
-    notes: "",
+    title: '',
+    type: '',
+    number: '',
+    personId: '',
+    issuedAt: '',
+    expiresAt: '',
+    notes: '',
   });
 
   const [people, setPeople] = React.useState<PersonLite[]>([]);
@@ -35,10 +35,14 @@ export default function DocumentsPanel() {
       const raw = localStorage.getItem(PEOPLE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw);
-      const arr = Array.isArray(parsed?.people) ? parsed.people : Array.isArray(parsed) ? parsed : [];
+      const arr = Array.isArray(parsed?.people)
+        ? parsed.people
+        : Array.isArray(parsed)
+          ? parsed
+          : [];
       const norm: PersonLite[] = arr.map((p: any) => ({
         id: p.id ?? String(p.email ?? p.phone ?? Math.random()),
-        display: (p.fullName ?? p.name ?? "—").trim(),
+        display: (p.fullName ?? p.name ?? '—').trim(),
       }));
       setPeople(norm.filter((p) => !!p.display && !!p.id));
     } catch {}
@@ -48,9 +52,7 @@ export default function DocumentsPanel() {
     setForm((s) => ({ ...s, [key]: val }));
   }
 
-  const requiredOK =
-    form.title.trim().length > 1 &&
-    !!form.type;
+  const requiredOK = form.title.trim().length > 1 && !!form.type;
 
   function save() {
     if (!requiredOK) return;
@@ -90,21 +92,23 @@ export default function DocumentsPanel() {
     localStorage.setItem(DOCS_KEY, JSON.stringify(out));
 
     window.dispatchEvent(
-      new CustomEvent("pam:toast", {
-        detail: { message: "Document opgeslagen in register ✅", tone: "success" }
-      })
+      new CustomEvent('pam:toast', {
+        detail: {
+          message: 'Document opgeslagen in register ✅',
+          tone: 'success',
+        },
+      }),
     );
-
 
     // reset naar leeg formulier
     setForm({
-      title: "",
-      type: "",
-      number: "",
-      personId: "",
-      issuedAt: "",
-      expiresAt: "",
-      notes: "",
+      title: '',
+      type: '',
+      number: '',
+      personId: '',
+      issuedAt: '',
+      expiresAt: '',
+      notes: '',
     });
   }
 
@@ -120,9 +124,12 @@ export default function DocumentsPanel() {
             id="doc-title"
             placeholder='Bijv. "Polis Aansprakelijkheid 2025"'
             value={form.title}
-            onChange={(e) => onChange("title", e.target.value)}
+            onChange={(e) => onChange('title', e.target.value)}
           />
-          <small>Gebruik een herkenbare naam. Nummer en datums kun je hieronder kwijt.</small>
+          <small>
+            Gebruik een herkenbare naam. Nummer en datums kun je hieronder
+            kwijt.
+          </small>
         </div>
 
         {/* Type (verplicht) */}
@@ -131,7 +138,9 @@ export default function DocumentsPanel() {
           <select
             id="doc-type"
             value={form.type}
-            onChange={(e) => onChange("type", e.target.value as FormState["type"])}
+            onChange={(e) =>
+              onChange('type', e.target.value as FormState['type'])
+            }
           >
             <option value="">— Kies een type —</option>
             <option>Polis</option>
@@ -148,11 +157,13 @@ export default function DocumentsPanel() {
           <select
             id="doc-person"
             value={form.personId}
-            onChange={(e) => onChange("personId", e.target.value)}
+            onChange={(e) => onChange('personId', e.target.value)}
           >
             <option value="">— Geen —</option>
             {people.map((p) => (
-              <option key={p.id} value={p.id}>{p.display}</option>
+              <option key={p.id} value={p.id}>
+                {p.display}
+              </option>
             ))}
           </select>
         </div>
@@ -164,7 +175,7 @@ export default function DocumentsPanel() {
             id="doc-number"
             placeholder="Bijv. POL-2025-00123"
             value={form.number}
-            onChange={(e) => onChange("number", e.target.value)}
+            onChange={(e) => onChange('number', e.target.value)}
           />
         </div>
 
@@ -177,16 +188,18 @@ export default function DocumentsPanel() {
             id="issuedAt"
             type="date"
             value={form.issuedAt}
-            onChange={(e) => onChange("issuedAt", e.target.value)}
+            onChange={(e) => onChange('issuedAt', e.target.value)}
             placeholder="dd/mm/jjjj"
           />
 
-          <label htmlFor="expiresAt" style={{ marginTop: 12 }}>Geldig tot</label>
+          <label htmlFor="expiresAt" style={{ marginTop: 12 }}>
+            Geldig tot
+          </label>
           <input
             id="expiresAt"
             type="date"
             value={form.expiresAt}
-            onChange={(e) => onChange("expiresAt", e.target.value)}
+            onChange={(e) => onChange('expiresAt', e.target.value)}
             placeholder="dd/mm/jjjj"
           />
         </div>
@@ -200,32 +213,31 @@ export default function DocumentsPanel() {
             rows={7}
             placeholder="Bijv. Polisnummer op PDF, bijlage staat in e-mail van 12-03-2025, enz."
             value={form.notes}
-            onChange={(e) => onChange("notes", e.target.value)}
+            onChange={(e) => onChange('notes', e.target.value)}
           />
         </div>
       </div>
 
       {/* Acties onderaan formulier */}
       <div className="ui-actions">
-        <button className="ui-btn ui-btn-primary" disabled={!requiredOK} onClick={save}>
+        <button
+          className="ui-btn ui-btn-primary"
+          disabled={!requiredOK}
+          onClick={save}
+        >
           Opslaan in register
         </button>
       </div>
 
       {!requiredOK && (
-        <small style={{ display: "block", marginTop: 8 }}>
+        <small style={{ display: 'block', marginTop: 8 }}>
           Vul minimaal <strong>Titel</strong> en <strong>Type</strong> in.
         </small>
       )}
 
-      <small style={{ display: "block", marginTop: 12 }}>
+      <small style={{ display: 'block', marginTop: 12 }}>
         Na opslaan verschijnt het item in <strong>Document register</strong>.
       </small>
     </div>
   );
 }
-
-
-
-
-

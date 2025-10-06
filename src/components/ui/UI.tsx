@@ -1,5 +1,5 @@
 /* @ts-nocheck */
-import React from "react";
+import React from 'react';
 
 /** Style once, use anywhere (scoped onder .ui-*) */
 export function Style() {
@@ -148,72 +148,107 @@ export function Style() {
 }
 
 /** Primitive building blocks */
-export const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className="", ...p }) => (
-  <div className={`ui-card ${className}`} {...p} />
+export const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+  className = '',
+  ...p
+}) => <div className={`ui-card ${className}`} {...p} />;
+export const Controls: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+  className = '',
+  ...p
+}) => <div className={`ui-controls ${className}`} {...p} />;
+export const Grid: React.FC<
+  { cols?: 1 | 2 | 3 | 4 } & React.HTMLAttributes<HTMLDivElement>
+> = ({ cols = 2, className = '', ...p }) => (
+  <div className={`ui-grid cols-${cols} ${className}`} {...p} />
 );
-export const Controls: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className="", ...p }) => (
-  <div className={`ui-controls ${className}`} {...p}/>
-);
-export const Grid: React.FC<{cols?: 1|2|3|4} & React.HTMLAttributes<HTMLDivElement>> = ({cols=2, className="", ...p}) => (
-  <div className={`ui-grid cols-${cols} ${className}`} {...p}/>
-);
-export const Field: React.FC<{label?: string} & React.HTMLAttributes<HTMLDivElement>> = ({label, children, className="", ...p}) => (
+export const Field: React.FC<
+  { label?: string } & React.HTMLAttributes<HTMLDivElement>
+> = ({ label, children, className = '', ...p }) => (
   <div className={`ui-field ${className}`} {...p}>
     {label ? <label>{label}</label> : null}
     {children}
   </div>
 );
-export const Button: React.FC<{variant?: "primary" | "secondary"} & React.ButtonHTMLAttributes<HTMLButtonElement>> =
-  ({variant="secondary", className="", ...p}) => (
-    <button className={`ui-btn ${variant==="primary" ? "ui-btn--primary":""} ${className}`} {...p} />
+export const Button: React.FC<
+  {
+    variant?: 'primary' | 'secondary';
+  } & React.ButtonHTMLAttributes<HTMLButtonElement>
+> = ({ variant = 'secondary', className = '', ...p }) => (
+  <button
+    className={`ui-btn ${variant === 'primary' ? 'ui-btn--primary' : ''} ${className}`}
+    {...p}
+  />
 );
-export const TableWrap: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({className="", ...p}) => (
-  <div className={`ui-tablewrap ${className}`} {...p}/>
-);
-export const H1: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({className="", ...p}) => (
-  <h1 className={`ui-h1 ${className}`} {...p}/>
-);
-export const H2: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({className="", ...p}) => (
-  <div className={`ui-h2 ${className}`} {...p}/>
-);
-export const KPI: React.FC<{label:string; value:React.ReactNode}> = ({label, value}) => (
+export const TableWrap: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+  className = '',
+  ...p
+}) => <div className={`ui-tablewrap ${className}`} {...p} />;
+export const H1: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
+  className = '',
+  ...p
+}) => <h1 className={`ui-h1 ${className}`} {...p} />;
+export const H2: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
+  className = '',
+  ...p
+}) => <div className={`ui-h2 ${className}`} {...p} />;
+export const KPI: React.FC<{ label: string; value: React.ReactNode }> = ({
+  label,
+  value,
+}) => (
   <div className="ui-kpi">
     <div className="label">{label}</div>
     <div className="value">{value}</div>
   </div>
 );
 /** Tabel: jij levert <thead> en <tbody> zelf aan */
-export const Table: React.FC<React.TableHTMLAttributes<HTMLTableElement>> = ({className="", ...p}) => (
-  <table className={`ui-table ${className}`} {...p}/>
-);
+export const Table: React.FC<React.TableHTMLAttributes<HTMLTableElement>> = ({
+  className = '',
+  ...p
+}) => <table className={`ui-table ${className}`} {...p} />;
 
 /** (optioneel) Exporteer ook tab-primitives */
-export const Tabs: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({className="", ...p}) => (
-  <div className={`ui-tabs ${className}`} {...p}/>
+export const Tabs: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+  className = '',
+  ...p
+}) => <div className={`ui-tabs ${className}`} {...p} />;
+export const TabButton: React.FC<
+  { active?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>
+> = ({ active = false, className = '', ...p }) => (
+  <button className={`ui-tab ${active ? 'active' : ''} ${className}`} {...p} />
 );
-export const TabButton: React.FC<{active?: boolean} & React.ButtonHTMLAttributes<HTMLButtonElement>> =
-  ({active=false, className="", ...p}) => (
-    <button className={`ui-tab ${active? "active": ""} ${className}`} {...p}/>
-);
-export const TabSpacer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({className="", ...p}) => (
-  <div className={`ui-tab-spacer ${className}`} {...p}/>
-);
+export const TabSpacer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+  className = '',
+  ...p
+}) => <div className={`ui-tab-spacer ${className}`} {...p} />;
 // --- Toast host: luister naar window events en toon meldingen rechtsonder ---
 export const ToastHost: React.FC = () => {
   const [items, setItems] = React.useState<
-    { id: number; msg: string; tone?: "success" | "info" | "warn"; ttl?: number }[]
+    {
+      id: number;
+      msg: string;
+      tone?: 'success' | 'info' | 'warn';
+      ttl?: number;
+    }[]
   >([]);
 
   React.useEffect(() => {
     const handler = (e: Event) => {
       const d: any = (e as CustomEvent).detail ?? {};
       const id = Date.now() + Math.random();
-      setItems((s) => [...s, { id, msg: d.message || String(d), tone: d.tone || "success", ttl: d.ttl }]);
+      setItems((s) => [
+        ...s,
+        {
+          id,
+          msg: d.message || String(d),
+          tone: d.tone || 'success',
+          ttl: d.ttl,
+        },
+      ]);
       const ttl = Number.isFinite(d.ttl) ? d.ttl : 2200;
       setTimeout(() => setItems((s) => s.filter((x) => x.id !== id)), ttl);
     };
-    window.addEventListener("pam:toast", handler as any);
-    return () => window.removeEventListener("pam:toast", handler as any);
+    window.addEventListener('pam:toast', handler as any);
+    return () => window.removeEventListener('pam:toast', handler as any);
   }, []);
 
   return (
@@ -221,7 +256,7 @@ export const ToastHost: React.FC = () => {
       {items.map((t) => (
         <div
           key={t.id}
-          className={`ui-toast ${t.tone || ""}`}
+          className={`ui-toast ${t.tone || ''}`}
           onClick={() => setItems((s) => s.filter((x) => x.id !== t.id))}
           title="Klik om te sluiten"
         >
@@ -231,4 +266,3 @@ export const ToastHost: React.FC = () => {
     </div>
   );
 };
-

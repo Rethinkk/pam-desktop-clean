@@ -1,14 +1,18 @@
 /* @ts-nocheck */
-import type { Person } from "../types";
+import type { Person } from '../types';
 
-const STORAGE_KEY = "pam-people-v1";
+const STORAGE_KEY = 'pam-people-v1';
 
 function readAll(): any[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed?.people) ? parsed.people : (Array.isArray(parsed) ? parsed : []);
+    return Array.isArray(parsed?.people)
+      ? parsed.people
+      : Array.isArray(parsed)
+        ? parsed
+        : [];
   } catch {
     return [];
   }
@@ -17,7 +21,7 @@ function readAll(): any[] {
 function writeAll(list: any[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ people: list }));
-    window.dispatchEvent(new CustomEvent("pam-people-updated"));
+    window.dispatchEvent(new CustomEvent('pam-people-updated'));
   } catch {}
 }
 
@@ -25,10 +29,10 @@ function writeAll(list: any[]) {
 function normalizePerson(p: any): Person {
   const now = new Date().toISOString();
   return {
-    id: p?.id ?? (crypto?.randomUUID?.() ?? String(Date.now())),
-    name: p?.name ?? p?.fullName ?? "",        // 👈 belangrijk
-    fullName: p?.fullName ?? p?.name ?? "",
-    role: p?.role ?? "overig",
+    id: p?.id ?? crypto?.randomUUID?.() ?? String(Date.now()),
+    name: p?.name ?? p?.fullName ?? '', // 👈 belangrijk
+    fullName: p?.fullName ?? p?.name ?? '',
+    role: p?.role ?? 'overig',
     email: p?.email,
     phone: p?.phone,
     notes: p?.notes,

@@ -1,6 +1,6 @@
 /* @ts-nocheck */
-import React from "react";
-import { allPeople } from "../lib/peopleStore";
+import React from 'react';
+import { allPeople } from '../lib/peopleStore';
 
 export function SinglePersonSelect({
   value,
@@ -14,11 +14,11 @@ export function SinglePersonSelect({
   const people = allPeople();
   return (
     <select
-      value={value ?? ""}
+      value={value ?? ''}
       onChange={(e) => onChange(e.target.value || undefined)}
       className="w-full border rounded p-2"
     >
-      <option value="">{placeholder ?? "— kies persoon —"}</option>
+      <option value="">{placeholder ?? '— kies persoon —'}</option>
       {people.map((p: any) => (
         <option key={p.id} value={p.id}>
           {p.fullName}

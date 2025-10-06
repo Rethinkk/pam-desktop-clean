@@ -1,1 +1,1 @@
-export type { DocumentItem, Asset, Person, PersonRole } from "./types";
+export type { DocumentItem, Asset, Person, PersonRole } from './types';

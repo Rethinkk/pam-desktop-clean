@@ -1,5 +1,5 @@
 /* @ts-nocheck */
-import React from "react";
+import React from 'react';
 
 type State = { error: any };
 
@@ -12,19 +12,27 @@ export default class ErrorBoundary extends React.Component<any, State> {
     return { error };
   }
   componentDidCatch(error: any, info: any) {
-    console.error("[ErrorBoundary] UI crashed:", error, info);
+    console.error('[ErrorBoundary] UI crashed:', error, info);
   }
   render() {
     if (this.state.error) {
       const msg = String(this.state.error?.message || this.state.error);
       return (
-        <div style={{ padding: 16, fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ padding: 16, fontFamily: 'system-ui, sans-serif' }}>
           <h2>Er ging iets mis 😬</h2>
-          <pre style={{ whiteSpace: "pre-wrap", background:"#f7f7f7", padding:12, borderRadius:8 }}>
+          <pre
+            style={{
+              whiteSpace: 'pre-wrap',
+              background: '#f7f7f7',
+              padding: 12,
+              borderRadius: 8,
+            }}
+          >
             {msg}
           </pre>
-          <p style={{ color:"#666" }}>
-            Check de browserconsole voor de stacktrace. De rest van de app blijft werken.
+          <p style={{ color: '#666' }}>
+            Check de browserconsole voor de stacktrace. De rest van de app
+            blijft werken.
           </p>
         </div>
       );
@@ -32,5 +40,3 @@ export default class ErrorBoundary extends React.Component<any, State> {
     return this.props.children;
   }
 }
-
-

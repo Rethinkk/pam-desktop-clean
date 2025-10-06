@@ -1,19 +1,19 @@
 /* @ts-nocheck */
-import React, { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 // 👇 UI-kit centraal activeren (let op het pad vanaf src/)
-import { Style } from "./components/ui/UI";
+import { Style } from './components/ui/UI';
 
 // 👉 Dit is je NIEUWE shell uit components (met 'doc-register' tab)
-import AssetShell from "./components/AssetShell";
+import AssetShell from './components/AssetShell';
 
 // Overige imports die je lokaal gebruikte in je (oude) shell en routes:
-import FrontPage from "./components/FrontPage";
-import AssetRegisterPanel from "./components/AssetRegisterPanel";
-import AssetsPanel from "./components/AssetsPanel";
-import DocumentsPanel from "./components/DocumentsPanel";
-import PeoplePanel from "./components/PeoplePanel";
+import FrontPage from './components/FrontPage';
+import AssetRegisterPanel from './components/AssetRegisterPanel';
+import AssetsPanel from './components/AssetsPanel';
+import DocumentsPanel from './components/DocumentsPanel';
+import PeoplePanel from './components/PeoplePanel';
 
 /**
  * ✅ BELANGRIJK:
@@ -21,16 +21,43 @@ import PeoplePanel from "./components/PeoplePanel";
  * Verder is de inhoud ongewijzigd, zodat al je classNames en tabs blijven zoals je ze had.
  */
 function LegacyAssetShell() {
-  const [tab, setTab] = useState<'assets' | 'asset-register' | 'docs' | 'people' | 'about'>('assets');
+  const [tab, setTab] = useState<
+    'assets' | 'asset-register' | 'docs' | 'people' | 'about'
+  >('assets');
 
   return (
     <div className="container">
       <div className="tabs">
-        <button className={`tab ${tab==='assets'?'active':''}`} onClick={() => setTab('assets')}>Assets</button>
-        <button className={`tab ${tab==='asset-register'?'active':''}`} onClick={() => setTab('asset-register')}>Asset Register</button>
-        <button className={`tab ${tab==='docs'?'active':''}`} onClick={() => setTab('docs')}>Docs</button>
-        <button className={`tab ${tab==='people'?'active':''}`} onClick={() => setTab('people')}>Mensen</button>
-        <button className={`tab ${tab==='about'?'active':''}`} onClick={() => setTab('about')}>About</button>
+        <button
+          className={`tab ${tab === 'assets' ? 'active' : ''}`}
+          onClick={() => setTab('assets')}
+        >
+          Assets
+        </button>
+        <button
+          className={`tab ${tab === 'asset-register' ? 'active' : ''}`}
+          onClick={() => setTab('asset-register')}
+        >
+          Asset Register
+        </button>
+        <button
+          className={`tab ${tab === 'docs' ? 'active' : ''}`}
+          onClick={() => setTab('docs')}
+        >
+          Docs
+        </button>
+        <button
+          className={`tab ${tab === 'people' ? 'active' : ''}`}
+          onClick={() => setTab('people')}
+        >
+          Mensen
+        </button>
+        <button
+          className={`tab ${tab === 'about' ? 'active' : ''}`}
+          onClick={() => setTab('about')}
+        >
+          About
+        </button>
       </div>
 
       {tab === 'assets' && (
@@ -58,12 +85,14 @@ function LegacyAssetShell() {
         </section>
       )}
 
-      {tab === "people" && <PeoplePanel />}
+      {tab === 'people' && <PeoplePanel />}
 
       {tab === 'about' && (
         <section className="stack">
           <h1>Over PAM</h1>
-          <div className="card"><p>Personal Asset Manager.</p></div>
+          <div className="card">
+            <p>Personal Asset Manager.</p>
+          </div>
         </section>
       )}
     </div>
@@ -72,12 +101,12 @@ function LegacyAssetShell() {
 
 export default function App() {
   // 🔹 Lees .env-variabelen (Vite: moeten met VITE_ beginnen)
-  const appName = import.meta.env.VITE_APP_NAME ?? "PAM";
-  const emailApi = import.meta.env.VITE_EMAIL_API_URL ?? "";
+  const appName = import.meta.env.VITE_APP_NAME ?? 'PAM';
+  const emailApi = import.meta.env.VITE_EMAIL_API_URL ?? '';
 
   if (import.meta.env.DEV) {
-    console.log("[ENV] VITE_APP_NAME =", appName);
-    console.log("[ENV] VITE_EMAIL_API_URL =", emailApi || "(niet ingesteld)");
+    console.log('[ENV] VITE_APP_NAME =', appName);
+    console.log('[ENV] VITE_EMAIL_API_URL =', emailApi || '(niet ingesteld)');
   }
 
   return (
@@ -132,10 +161,9 @@ export default function App() {
       {/* Badge alleen in DEV */}
       {import.meta.env.DEV && (
         <div className="env-badge">
-          {appName} • {emailApi ? "mail API ✔︎" : "mail API ⨯"}
+          {appName} • {emailApi ? 'mail API ✔︎' : 'mail API ⨯'}
         </div>
       )}
     </BrowserRouter>
   );
 }
-

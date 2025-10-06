@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Blokkeer build/cache
+if git diff --cached --name-only | grep -E 
+'^(node_modules/|dist/|build/|coverage/)' >/dev/null; then
+  echo "❌ Commit geblokkeerd: verwijder build/cache uit je commit 
+(node_modules/, dist/, build/, coverage/)."
+  exit 1
+fi
+
+# Blokkeer logbestanden
+if git diff --cached --name-only | grep -E '\.log$' >/dev/null; then
+  echo "❌ Commit geblokkeerd: *.log bestanden niet committen."
+  exit 1
+fi
+
+# Blokkeer logbestanden
+if git diff --cached --name-only | grep -E '\.log$' >/dev/null; then
+  echo "❌ Commit geblokkeerd: *.log bestanden niet committen."
+  exit 1
+fi
+
+# Format/lint staged files
+npx lint-staged

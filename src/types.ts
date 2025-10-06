@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
 
 export type FieldKind =
   | 'text'
@@ -20,8 +20,8 @@ export type FieldDef = {
 };
 
 export type AssetTypeSchema = {
-  code: string;              // bv. "ART"
-  label: string;             // bv. "Kunst"
+  code: string; // bv. "ART"
+  label: string; // bv. "Kunst"
   required: FieldDef[];
   optional: FieldDef[];
 };
@@ -31,29 +31,27 @@ export type AssetPayload = Record<string, any>;
 export type Asset = {
   typeCode: ReactNode;
   id: string;
-  assetNumber: string;       // PAM-<CODE>-YYYYMMDD-XXXX
-  name?: string;              // asset benoeming
-  type?: string;              // schema.code
-category?: import ("./constants/assetCategories").AssetCategory;
-ownerIds?: string [];
-watcherIds?: string[];
-value?: number;
-notes?: string;
+  assetNumber: string; // PAM-<CODE>-YYYYMMDD-XXXX
+  name?: string; // asset benoeming
+  type?: string; // schema.code
+  category?: import('./constants/assetCategories').AssetCategory;
+  ownerIds?: string[];
+  watcherIds?: string[];
+  value?: number;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
   data: AssetPayload;
 
-/** NIEUW: gekoppelde personen (ids) */
-personIds?: string[];
-
+  /** NIEUW: gekoppelde personen (ids) */
+  personIds?: string[];
 };
-
 
 export type AssetRegister = {
   version: 1;
   assets: Asset[];
   counters: Record<string, number>; // per <type:date> sequence
-};// -- Documenten gekoppeld aan assets --
+}; // -- Documenten gekoppeld aan assets --
 
 export type DocumentItem = {
   id: string;
@@ -87,19 +85,18 @@ export type DocumentItem = {
   size?: number;
 
   // oude koppelingen/velden
-  uploadedBy?: string;      // oude naam van uploadedById
-  recipients?: string[];    // oude naam van recipientIds
-  assetNumbers?: string[];  // oude asset-koppeling op nummer
+  uploadedBy?: string; // oude naam van uploadedById
+  recipients?: string[]; // oude naam van recipientIds
+  assetNumbers?: string[]; // oude asset-koppeling op nummer
 };
 
-
 export type PersonRole =
-  | "hoofdgebruiker"
-  | "partner"
-  | "kind"
-  | "gemachtigde"
-  | "serviceprovider"
-  | "overig";
+  | 'hoofdgebruiker'
+  | 'partner'
+  | 'kind'
+  | 'gemachtigde'
+  | 'serviceprovider'
+  | 'overig';
 
 export type Person = {
   name: string;
@@ -112,5 +109,3 @@ export type Person = {
   createdAt: string;
   updatedAt?: string;
 };
-
-

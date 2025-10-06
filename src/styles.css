@@ -4,7 +4,7 @@
 
 /* ---- CSS Variables ---- */
 :root {
-  --pam-blue: #1E3A5F;
+  --pam-blue: #1e3a5f;
   --pam-white: #ffffff;
   --pam-light: #f7f9fb;
   --pam-accent: #24508c;
@@ -12,21 +12,36 @@
   --pam-muted: #5a739b;
 
   --radius: 12px;
-  --shadow-1: 0 1px 4px rgba(0,0,0,0.10);
-  --shadow-2: 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-1: 0 1px 4px rgba(0, 0, 0, 0.1);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* ---- Reset / Base ---- */
 *,
 *::before,
-*::after { box-sizing: border-box; }
+*::after {
+  box-sizing: border-box;
+}
 
-* { margin: 0; padding: 0; }
+* {
+  margin: 0;
+  padding: 0;
+}
 
-html, body { height: 100%; }
+html,
+body {
+  height: 100%;
+}
 
 body {
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
   background: var(--pam-blue);
   color: var(--pam-white);
   line-height: 1.45;
@@ -44,7 +59,13 @@ body {
 }
 
 /* Media responsief */
-img, video, canvas, svg { max-width: 100%; height: auto; }
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+}
 
 /* ---- Page Container (wit venster) ---- */
 .container {
@@ -99,17 +120,28 @@ img, video, canvas, svg { max-width: 100%; height: auto; }
   cursor: pointer;
   flex: 0 0 auto; /* blijft nette “chips” op 1 lijn */
 }
-.tab[aria-selected="true"],
+.tab[aria-selected='true'],
 .tab.active {
   background: var(--pam-white);
   color: var(--pam-blue);
 }
-.tab:hover { outline: 2px solid rgba(255,255,255,0.18); }
+.tab:hover {
+  outline: 2px solid rgba(255, 255, 255, 0.18);
+}
 
 /* ---- Layout helpers ---- */
-.stack { display: grid; gap: 18px; }
-.row { display: flex; gap: 14px; flex-wrap: wrap; }
-.grow { flex: 1 1 240px; }
+.stack {
+  display: grid;
+  gap: 18px;
+}
+.row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.grow {
+  flex: 1 1 240px;
+}
 
 /* ---- Cards / Sections ---- */
 .card {
@@ -128,9 +160,16 @@ img, video, canvas, svg { max-width: 100%; height: auto; }
 }
 
 /* ---- Forms ---- */
-form { display: grid; gap: 16px; }
+form {
+  display: grid;
+  gap: 16px;
+}
 
-fieldset { border: 0; padding: 0; margin: 0; }
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
 
 legend {
   font-weight: 700;
@@ -145,7 +184,9 @@ label {
   color: var(--pam-blue);
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #ccd3db;
@@ -154,12 +195,19 @@ input, select, textarea {
   background: var(--pam-white);
   color: var(--pam-blue);
   outline: none;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
-input::placeholder, textarea::placeholder { color: var(--pam-muted); }
-input:focus, select:focus, textarea:focus {
+input::placeholder,
+textarea::placeholder {
+  color: var(--pam-muted);
+}
+input:focus,
+select:focus,
+textarea:focus {
   border-color: var(--pam-accent);
-  box-shadow: 0 0 0 3px rgba(36,80,140,0.18);
+  box-shadow: 0 0 0 3px rgba(36, 80, 140, 0.18);
 }
 
 /* Compacte inline inputs in een rij */
@@ -168,17 +216,30 @@ input:focus, select:focus, textarea:focus {
   grid-template-columns: repeat(12, 1fr);
   gap: 14px;
 }
-.col-12 { grid-column: span 12; }
-.col-6  { grid-column: span 6; }
-.col-4  { grid-column: span 4; }
-.col-3  { grid-column: span 3; }
+.col-12 {
+  grid-column: span 12;
+}
+.col-6 {
+  grid-column: span 6;
+}
+.col-4 {
+  grid-column: span 4;
+}
+.col-3 {
+  grid-column: span 3;
+}
 
 @media (max-width: 720px) {
-  .col-6, .col-4, .col-3 { grid-column: span 12; }
+  .col-6,
+  .col-4,
+  .col-3 {
+    grid-column: span 12;
+  }
 }
 
 /* ---- Buttons ---- */
-button, .btn {
+button,
+.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -191,11 +252,20 @@ button, .btn {
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform .02s ease, background .15s ease, box-shadow .15s ease;
+  transition:
+    transform 0.02s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
   box-shadow: var(--shadow-1);
 }
-button:hover, .btn:hover { background: var(--pam-accent); }
-button:active, .btn:active { transform: translateY(1px); }
+button:hover,
+.btn:hover {
+  background: var(--pam-accent);
+}
+button:active,
+.btn:active {
+  transform: translateY(1px);
+}
 
 .btn-secondary {
   background: var(--pam-white);
@@ -207,7 +277,9 @@ button:active, .btn:active { transform: translateY(1px); }
   color: var(--pam-blue);
   border: 1px solid transparent;
 }
-.btn-ghost:hover { background: rgba(30,58,95,0.06); }
+.btn-ghost:hover {
+  background: rgba(30, 58, 95, 0.06);
+}
 
 /* ---- (Optioneel maar veilig) Register list minimal ---- */
 .register {
@@ -223,7 +295,10 @@ button:active, .btn:active { transform: translateY(1px); }
   font-size: 1.15rem;
   color: var(--pam-blue);
 }
-.register ul { list-style: none; margin-top: 10px; }
+.register ul {
+  list-style: none;
+  margin-top: 10px;
+}
 .register li {
   background: var(--pam-white);
   border: 1px solid var(--pam-border);
@@ -235,15 +310,22 @@ button:active, .btn:active { transform: translateY(1px); }
 }
 
 /* ---- Links ---- */
-a { color: var(--pam-accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--pam-accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 
 /* ---- Utilities ---- */
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
 /* ---- Focus visibility for keyboard users ---- */
 :focus-visible {
-  outline: 3px solid rgba(36,80,140,0.35);
+  outline: 3px solid rgba(36, 80, 140, 0.35);
   outline-offset: 2px;
 }
 
@@ -256,5 +338,7 @@ a:hover { text-decoration: underline; }
     padding-top: calc(12px + env(safe-area-inset-top));
     padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
-  .container { padding: 16px; }
+  .container {
+    padding: 16px;
+  }
 }
