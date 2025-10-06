@@ -1,0 +1,14 @@
+/Volumes/LaCie/PAM development/pam-desktop-mojave/src-tauri/target/debug/deps/serde-233e3d4a428c37b7.d: /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/lib.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/integer128.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/mod.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/de.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/ser.rs /Volumes/LaCie/PAM\ development/pam-desktop-mojave/src-tauri/target/debug/build/serde-42fda73ab761e90d/out/private.rs
+
+/Volumes/LaCie/PAM development/pam-desktop-mojave/src-tauri/target/debug/deps/libserde-233e3d4a428c37b7.rlib: /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/lib.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/integer128.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/mod.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/de.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/ser.rs /Volumes/LaCie/PAM\ development/pam-desktop-mojave/src-tauri/target/debug/build/serde-42fda73ab761e90d/out/private.rs
+
+/Volumes/LaCie/PAM development/pam-desktop-mojave/src-tauri/target/debug/deps/libserde-233e3d4a428c37b7.rmeta: /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/lib.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/integer128.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/mod.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/de.rs /Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/ser.rs /Volumes/LaCie/PAM\ development/pam-desktop-mojave/src-tauri/target/debug/build/serde-42fda73ab761e90d/out/private.rs
+
+/Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/lib.rs:
+/Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/integer128.rs:
+/Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/mod.rs:
+/Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/de.rs:
+/Users/macpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.226/src/private/ser.rs:
+/Volumes/LaCie/PAM\ development/pam-desktop-mojave/src-tauri/target/debug/build/serde-42fda73ab761e90d/out/private.rs:
+
+# env-dep:OUT_DIR=/Volumes/LaCie/PAM development/pam-desktop-mojave/src-tauri/target/debug/build/serde-42fda73ab761e90d/out

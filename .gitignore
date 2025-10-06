@@ -1,12 +1,33 @@
-node_modules
-dist
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist/
+build/
+coverage/
+
+# Local environment
+.env
+.env.local
+.env.*.local
+
+# Editor & OS files
 .DS_Store
-target
-src-tauri/target
-src-tauri/.cargo
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs & caches
 *.log
-backups/
-*.zip
-backups/
-*.zip
-.vercel
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# Local test data (zoals onze storage-dumps)
+pam-assets-backup.json
+
