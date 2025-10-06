@@ -37,45 +37,30 @@ const ALLOWED_TABS: TabKey[] = [
 function ReportingLook() {
   return (
     <style>{`
-      /* Brand sizing control (één plek tweaken) */
       .rp { --brand-scale: 1.40; }
 
-      /* ===== Brand header (donkere balk, witte tekst) ===== */
+      /* Brand header */
       .rp .brandwrap {
-        background:#f8fafcß;            /* donker */
-        color:#fff;                    /* wit */
+        background:#f8fafc;
+        color:#0f172a;
         border-radius:16px;
         padding:14px 16px;
         margin: 0 0 16px;
         box-shadow:0 6px 20px rgba(0,0,0,0.08);
       }
-      .rp .brandbar {
-        display:flex; align-items:baseline; gap:8px;
-      }
-      .rp .brand-word {
-        font-weight:800;
-        font-size: calc(16px * var(--brand-scale));
-        line-height:1.12;
-        letter-spacing:.2px;
-      }
-      .rp .brand-sep { <opacity:.9; }
-      .rp .brand-tag {
-        font-weight:600;
-        font-size: calc(16px * var(--brand-scale));
-        opacity:.95;
-      }
+      .rp .brandbar { display:flex; align-items:baseline; gap:8px; }
+      .rp .brand-word { font-weight:800; font-size: calc(16px * var(--brand-scale)); line-height:1.12; letter-spacing:.2px; }
+      .rp .brand-sep { opacity:.9; }
+      .rp .brand-tag { font-weight:600; font-size: calc(16px * var(--brand-scale)); opacity:.95; }
 
       /* Layout & cards */
       .rp { padding: 24px 24px 32px 24px; }
       .rp h1 { font-size: 28px; line-height: 1.2; margin: 0 0 16px; font-weight: 700; }
       .rp .card { background:#fff; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.08); padding:16px; margin-bottom:16px; }
 
-      /* Tabs (huisstijl) */
+      /* Tabs */
       .rp .tabs { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px; }
-      .rp .tab {
-        border:1px solid #e5e7eb; background:#fff; color:#0f172a;
-        padding:8px 12px; border-radius:12px; font-weight:600; cursor:pointer;
-      }
+      .rp .tab { border:1px solid #e5e7eb; background:#fff; color:#0f172a; padding:8px 12px; border-radius:12px; font-weight:600; cursor:pointer; }
       .rp .tab:hover { background:#f8fafc; }
       .rp .tab.active { background:#0f172a; color:#fff; border-color:#0f172a; }
       .rp .tab-spacer { flex:1 1 auto; }
@@ -109,6 +94,7 @@ function usePersistedTab(defaultTab: TabKey = "assets") {
 
 export default function AssetShell() {
   const [tab, setTab] = usePersistedTab("assets");
+  
 
   return (
     <div className="rp">

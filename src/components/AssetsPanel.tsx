@@ -2,30 +2,34 @@
 import React from "react";
 import { ASSET_TYPES, ASSET_SCHEMAS } from "../config/assetTypes";
 
-type AssetType = "IT-Materieel" | "Meubilair" | "Overig";
+// Stabiel type-ID + label
+type AssetTypeId = (typeof ASSET_TYPES)[number]["id"];
+
 type FormState = {
   name: string;
-  type: AssetType | "";
+  typeId: AssetTypeId | "";
+  typeLabel: string;        // afgeleid uit select
   personId: string;
   documentIds: string[];
   serial: string;
   brand: string;
   model: string;
-  purchaseDate: string;   // yyyy-mm-dd
-  warrantyUntil: string;  // yyyy-mm-dd
-  priceRaw: string;       // user input/mask
-  priceCents: number;     // numeric for storage
+  purchaseDate: string;     // yyyy-mm-dd
+  warrantyUntil: string;    // yyyy-mm-dd
+  priceRaw: string;         // user input/mask
+  priceCents: number;       // numeric for storage
   notes: string;
 };
 
 const ASSETS_KEY = "pam-assets-v1";
 const PEOPLE_KEY = "pam-people-v1";
-const DOCS_KEY = "pam-docs-v1";
+const DOCS_KEY   = "pam-docs-v1";
 
 export default function AssetsPanel() {
   const [form, setForm] = React.useState<FormState>({
     name: "",
-    type: "",
+    typeId: "",
+    typeLabel: "",
     personId: "",
     documentIds: [],
     serial: "",
@@ -40,20 +44,16 @@ export default function AssetsPanel() {
 
   const [docCount, setDocCount] = React.useState<number>(0);
   const [people, setPeople] = React.useState<Array<{ id: string; name: string }>>([]);
-  const [docs, setDocs] = React.useState<Array<{ id: string; title: string }>>([]);
+  const [docs, setDocs]     = React.useState<Array<{ id: string; title: string }>>([]);
 
-  // laad personen + documenten voor de selecties
+  // Personen + documenten laden voor selecties
   React.useEffect(() => {
     try {
       const rawP = localStorage.getItem(PEOPLE_KEY);
       if (rawP) {
         const parsed = JSON.parse(rawP);
         const arr = Array.isArray(parsed?.people) ? parsed.people : Array.isArray(parsed) ? parsed : [];
-        setPeople(
-          arr
-            .map((p: any) => ({ id: p.id, name: p.fullName ?? p.name ?? "" }))
-            .filter((p: any) => p.id && p.name)
-        );
+        setPeople(arr.map((p: any) => ({ id: p.id, name: p.fullName ?? p.name ?? "" })).filter((p: { id: any; name: any; }) => p.id && p.name));
       }
     } catch {}
     try {
@@ -61,11 +61,7 @@ export default function AssetsPanel() {
       if (rawD) {
         const parsed = JSON.parse(rawD);
         const arr = Array.isArray(parsed?.docs) ? parsed.docs : Array.isArray(parsed) ? parsed : [];
-        setDocs(
-          arr
-            .map((d: any) => ({ id: d.id, title: d.title ?? d.name ?? "" }))
-            .filter((d: any) => d.id && d.title)
-        );
+        setDocs(arr.map((d: any) => ({ id: d.id, title: d.title ?? d.name ?? "" })).filter((d: { id: any; title: any; }) => d.id && d.title));
       }
     } catch {}
   }, []);
@@ -74,7 +70,14 @@ export default function AssetsPanel() {
     setForm((s) => ({ ...s, [key]: val }));
   }
 
-  // ---------- helpers
+  // --- helpers
+  function handleTypeChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const id = e.target.value as AssetTypeId | "";
+    const rec = ASSET_TYPES.find((t) => t.id === id);
+    onChange("typeId", id);
+    onChange("typeLabel", rec?.label ?? "");
+  }
+
   function handleSerial(e: React.ChangeEvent<HTMLInputElement>) {
     const v = e.target.value.toUpperCase().trim();
     onChange("serial", v);
@@ -110,7 +113,7 @@ export default function AssetsPanel() {
     setDocCount(selected.length);
   }
 
-  /** Zoek de weergavenaam van gekoppelde persoon voor in het register */
+  /** Weergavenaam gekoppelde persoon (voor register) */
   function resolvePersonName(personId: string): string | undefined {
     try {
       const raw = localStorage.getItem(PEOPLE_KEY);
@@ -125,8 +128,8 @@ export default function AssetsPanel() {
     }
   }
 
-  // ---------- schema-gestuurde validatie
-  const schema = ASSET_SCHEMAS[form.type] ?? { fields: [] };
+  // --- schema-koppeling via stabiele id
+  const schema = form.typeId ? ASSET_SCHEMAS[form.typeId] : { fields: [] };
   const requiredKeys: string[] = schema.fields.filter((f: any) => f.required).map((f: any) => f.key);
 
   function isFieldSatisfied(key: string): boolean {
@@ -140,39 +143,57 @@ export default function AssetsPanel() {
   }
 
   const requiredOK =
-    form.name.trim().length > 1 && !!form.type &&
+    form.name.trim().length > 1 &&
+    !!form.typeId &&
     requiredKeys.every((k) => isFieldSatisfied(k));
 
-  // ---------- save
+  // --- opslaan
   function save(): void {
     if (!requiredOK) return;
 
-    // 1) asset object opbouwen
     const id =
       (globalThis as any).crypto?.randomUUID?.() ??
       `a_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
 
     const personName = form.personId ? resolvePersonName(form.personId) : undefined;
 
+    // 🔐 Compatibele opslag:
+    //  - plat: voor legacy lezers
+    //  - data:   mirror voor nieuwere lezers
+    //  - typeId + typeLabel: stabiel + toonbaar
     const asset = {
       id,
       name: form.name.trim(),
-      type: form.type,
+      typeId: form.typeId || undefined,
+      typeLabel: form.typeLabel || undefined,
+
+      // plat
       serial: form.serial.trim() || undefined,
       brand: form.brand.trim() || undefined,
       model: form.model.trim() || undefined,
-      purchaseDate: form.purchaseDate || undefined, // schema bepaalt verplichting
+      purchaseDate: form.purchaseDate || undefined,
       warrantyUntil: form.warrantyUntil || undefined,
       priceCents: form.priceCents > 0 ? form.priceCents : undefined,
       personId: form.personId || undefined,
-      personName,                               // voor register-weergave
+      personName,
       documentIds: form.documentIds?.length ? form.documentIds : undefined,
       notes: form.notes.trim() || undefined,
+
+      // mirror (nieuw)
+      data: {
+        serial: form.serial.trim() || undefined,
+        brand: form.brand.trim() || undefined,
+        model: form.model.trim() || undefined,
+        purchaseDate: form.purchaseDate || undefined,
+        warrantyUntil: form.warrantyUntil || undefined,
+        priceCents: form.priceCents > 0 ? form.priceCents : undefined,
+        notes: form.notes.trim() || undefined,
+      },
+
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    // 2) wegschrijven naar localStorage (compat: {assets:[]} of [])
     try {
       const raw = localStorage.getItem(ASSETS_KEY);
       const parsed = raw ? JSON.parse(raw) : null;
@@ -182,28 +203,26 @@ export default function AssetsPanel() {
         out = { ...parsed, assets: [...parsed.assets, asset] };
       } else if (Array.isArray(parsed)) {
         out = [...parsed, asset];
+      } else if (parsed && Array.isArray(parsed.rows)) {
+        out = { ...parsed, rows: [...parsed.rows, asset] };
       } else {
+        // voorkeursvorm
         out = { assets: [asset] };
       }
 
       localStorage.setItem(ASSETS_KEY, JSON.stringify(out));
 
-      // nette toast via eventbus (alleen bij expliciet opslaan)
       try {
-        window.dispatchEvent(
-          new CustomEvent("pam:toast", {
-            detail: { message: "Asset opgeslagen", type: "success" },
-          })
-        );
+        window.dispatchEvent(new CustomEvent("pam:toast", { detail: { message: "Asset opgeslagen", type: "success" } }));
       } catch {}
 
-      // optioneel highlighten in register
       try { sessionStorage.setItem("pam-last-created", id); } catch {}
 
-      // 3) formulier resetten
+      // reset
       setForm({
         name: "",
-        type: "",
+        typeId: "",
+        typeLabel: "",
         personId: "",
         documentIds: [],
         serial: "",
@@ -222,7 +241,7 @@ export default function AssetsPanel() {
     }
   }
 
-  // ---------- UI helpers voor velden uit schema
+  // --- UI helpers
   function labelFor(key: string) {
     const def = schema.fields.find((f: any) => f.key === key);
     return def?.label ?? key;
@@ -265,7 +284,6 @@ export default function AssetsPanel() {
           </>
         );
       default:
-        // fallback op tekstveld
         return (
           <>
             <label htmlFor={`req-${key}`}>{labelFor(key)} *</label>
@@ -306,11 +324,11 @@ export default function AssetsPanel() {
       case "purchaseDate":
       case "priceCents":
       case "serial":
-        // als het optioneel is voor dit type (kan), gebruik dezelfde renderer zonder ster
+        // optioneel: render zonder ster
         return renderRequiredField(key).props
           ? React.cloneElement(<div />, {}, renderRequiredField(key).props.children?.map?.((c: any) =>
               c?.type === "label"
-                ? React.cloneElement(c, {}, labelFor(key)) // ster weghalen
+                ? React.cloneElement(c, {}, labelFor(key))
                 : c
             ) ?? renderRequiredField(key))
           : null;
@@ -324,7 +342,7 @@ export default function AssetsPanel() {
     }
   }
 
-  // Bepaal required/optional sets vanuit schema (excl. name/type, die staan bovenaan)
+  // sets vanuit schema (excl. name/type die hierboven staan)
   const requiredFieldKeys = schema.fields
     .filter((f: any) => f.required && f.key !== "name" && f.key !== "type")
     .map((f: any) => f.key as string);
@@ -338,7 +356,7 @@ export default function AssetsPanel() {
       <div className="ui-section-title">Nieuw asset</div>
 
       <div className="ui-form-grid">
-        {/* Naam (altijd zichtbaar) */}
+        {/* Naam */}
         <div className="span-2 ui-field">
           <label htmlFor="asset-name">Assetnaam / Benoeming *</label>
           <input
@@ -349,17 +367,13 @@ export default function AssetsPanel() {
           />
         </div>
 
-        {/* Type (altijd zichtbaar) */}
+        {/* Type (id) */}
         <div className="span-2 ui-field">
           <label htmlFor="asset-type">Assettype *</label>
-          <select
-            id="asset-type"
-            value={form.type}
-            onChange={(e) => onChange("type", e.target.value as FormState["type"])}
-          >
+          <select id="asset-type" value={form.typeId} onChange={handleTypeChange}>
             <option value="">— Kies een type —</option>
             {ASSET_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t.id} value={t.id}>{t.label}</option>
             ))}
           </select>
         </div>
@@ -398,11 +412,11 @@ export default function AssetsPanel() {
           </select>
           <small id="docs-tip" className="ui-tip">
             <span>ℹ️</span>
-            Je kunt meerdere documenten selecteren. Gebruik Shift-klik voor een bereik of Cmd/Ctrl-klik voor losse keuzes.
+            Meerdere selecties: Shift-klik (bereik) of Cmd/Ctrl-klik (los).
           </small>
         </div>
 
-        {/* Linkerkolom: VERPLICHT volgens schema */}
+        {/* Linkerkolom: VERPLICHT */}
         <div className="ui-field">
           <div className="ui-section-title">Verplicht</div>
           {requiredFieldKeys.length === 0 && <small><em>Geen verplichte velden voor dit type.</em></small>}
@@ -413,7 +427,7 @@ export default function AssetsPanel() {
           ))}
         </div>
 
-        {/* Rechterkolom: OPTIONEEL volgens schema */}
+        {/* Rechterkolom: OPTIONEEL */}
         <div className="ui-field">
           <div className="ui-section-title">Optioneel</div>
           {optionalFieldKeys.map((k) => (
@@ -424,7 +438,7 @@ export default function AssetsPanel() {
         </div>
       </div>
 
-      {/* Acties onderaan formulier */}
+      {/* Acties */}
       <div className="ui-actions">
         <button className="ui-btn ui-btn-primary" disabled={!requiredOK} onClick={save}>
           Opslaan in register
