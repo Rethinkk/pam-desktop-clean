@@ -1,36 +1,39 @@
 /* @ts-nocheck */
-import React from "react";
+import React from 'react';
 
-import AssetsPanel from "./AssetsPanel";
-import DocumentsPanel from "./DocumentsPanel";
-import PeoplePanel from "./PeoplePanel";
-import ReportingPanel from "./ReportingPanel";
-import AssetRegisterPanel from "./AssetRegisterPanel";
-import DocumentRegisterPanel from "./DocumentRegisterPanel";
-import SecurityPanel from "./SecurityPanel";
-import AboutPanel from "./AboutPanel"; // ✅ About terug
-import { Style as UIStyle, ToastHost } from "./ui/UI";
+import AssetsPanel from './AssetsPanel';
+import DocumentsPanel from './DocumentsPanel';
+import PeoplePanel from './PeoplePanel';
+import ReportingPanel from './ReportingPanel';
+import AssetRegisterPanel from './AssetRegisterPanel';
+import DocumentRegisterPanel from './DocumentRegisterPanel';
+import SecurityPanel from './SecurityPanel';
+import AboutPanel from './AboutPanel'; // ✅ About terug
+import { Style as UIStyle, ToastHost } from './ui/UI';
+import TriggersPanel from './TriggersPanel';
 
 type TabKey =
-  | "assets"
-  | "asset-register"
-  | "docs"
-  | "doc-register"
-  | "people"
-  | "reporting"
-  | "about"
-  | "security";
+  | 'assets'
+  | 'asset-register'
+  | 'docs'
+  | 'doc-register'
+  | 'people'
+  | 'reporting'
+  | 'security'
+  | 'triggers'
+  | 'about';
 
-const TAB_STORAGE_KEY = "pam-active-tab";
+const TAB_STORAGE_KEY = 'pam-active-tab';
 const ALLOWED_TABS: TabKey[] = [
-  "assets",
-  "asset-register",
-  "docs",
-  "doc-register",
-  "people",
-  "reporting",
-  "about",
-  "security",
+  'assets',
+  'asset-register',
+  'docs',
+  'doc-register',
+  'people',
+  'reporting',
+  'security',
+  'triggers',
+  'about',
 ];
 
 /** Injecteer de 'Reporting-look' als algemene UI-stijl (scoped onder .rp) */
@@ -69,11 +72,11 @@ function ReportingLook() {
 }
 
 /** Slaat de actieve tab op in localStorage en herstelt veilig */
-function usePersistedTab(defaultTab: TabKey = "assets") {
+function usePersistedTab(defaultTab: TabKey = 'assets') {
   const [tab, setTab] = React.useState<TabKey>(() => {
     try {
       const saved = localStorage.getItem(TAB_STORAGE_KEY) as TabKey | null;
-      return (saved && ALLOWED_TABS.includes(saved)) ? saved : defaultTab;
+      return saved && ALLOWED_TABS.includes(saved) ? saved : defaultTab;
     } catch {
       return defaultTab;
     }
@@ -93,8 +96,7 @@ function usePersistedTab(defaultTab: TabKey = "assets") {
 }
 
 export default function AssetShell() {
-  const [tab, setTab] = usePersistedTab("assets");
-  
+  const [tab, setTab] = usePersistedTab('assets');
 
   return (
     <div className="rp">
@@ -114,83 +116,118 @@ export default function AssetShell() {
       {/* Tabs */}
       <div className="card" style={{ marginBottom: 8 }}>
         <div className="tabs">
-          <button className={`tab ${tab === "assets" ? "active" : ""}`} onClick={() => setTab("assets")}>
+          <button
+            className={`tab ${tab === 'assets' ? 'active' : ''}`}
+            onClick={() => setTab('assets')}
+          >
             Assets
           </button>
-          <button className={`tab ${tab === "asset-register" ? "active" : ""}`} onClick={() => setTab("asset-register")}>
+          <button
+            className={`tab ${tab === 'asset-register' ? 'active' : ''}`}
+            onClick={() => setTab('asset-register')}
+          >
             Asset register
           </button>
-          <button className={`tab ${tab === "docs" ? "active" : ""}`} onClick={() => setTab("docs")}>
+          <button
+            className={`tab ${tab === 'docs' ? 'active' : ''}`}
+            onClick={() => setTab('docs')}
+          >
             Documenten
           </button>
-          <button className={`tab ${tab === "doc-register" ? "active" : ""}`} onClick={() => setTab("doc-register")}>
+          <button
+            className={`tab ${tab === 'doc-register' ? 'active' : ''}`}
+            onClick={() => setTab('doc-register')}
+          >
             Document register
           </button>
-          <button className={`tab ${tab === "people" ? "active" : ""}`} onClick={() => setTab("people")}>
+          <button
+            className={`tab ${tab === 'people' ? 'active' : ''}`}
+            onClick={() => setTab('people')}
+          >
             Mensen
           </button>
-          <button className={`tab ${tab === "reporting" ? "active" : ""}`} onClick={() => setTab("reporting")}>
+          <button
+            className={`tab ${tab === 'reporting' ? 'active' : ''}`}
+            onClick={() => setTab('reporting')}
+          >
             Rapportage
           </button>
-          <button className={`tab ${tab === "about" ? "active" : ""}`} onClick={() => setTab("about")}>
-            About
+
+          <button
+            className={`tab ${tab === 'triggers' ? 'active' : ''}`}
+            onClick={() => setTab('triggers')}
+          >
+            Triggers
           </button>
-          <button className={`tab ${tab === "security" ? "active" : ""}`} onClick={() => setTab("security")}>
+
+          <button
+            className={`tab ${tab === 'security' ? 'active' : ''}`}
+            onClick={() => setTab('security')}
+          >
             Security
           </button>
-          <div className="tab-spacer" />
+
+          <button
+            className={`tab ${tab === 'about' ? 'active' : ''}`}
+            onClick={() => setTab('about')}
+          >
+            About
+          </button>
         </div>
       </div>
 
       {/* Panels */}
-      {tab === "assets" && (
+      {tab === 'assets' && (
         <div className="card">
           <AssetsPanel />
         </div>
       )}
 
-      {tab === "asset-register" && (
+      {tab === 'asset-register' && (
         <div className="card">
           <AssetRegisterPanel />
         </div>
       )}
 
-      {tab === "docs" && (
+      {tab === 'docs' && (
         <div className="card">
           <DocumentsPanel />
         </div>
       )}
 
-      {tab === "doc-register" && (
+      {tab === 'doc-register' && (
         <div className="card">
           <DocumentRegisterPanel />
         </div>
       )}
 
-      {tab === "people" && (
+      {tab === 'people' && (
         <div className="card">
           <PeoplePanel />
         </div>
       )}
 
-      {tab === "reporting" && (
+      {tab === 'reporting' && (
         <div className="card" style={{ padding: 0 }}>
           <ReportingPanel />
         </div>
       )}
 
-      {tab === "about" && (
-        <div className="card">
-          <AboutPanel />
-        </div>
-      )}
-
-      {tab === "security" && (
+      {tab === 'security' && (
         <div className="card">
           <SecurityPanel />
+        </div>
+      )}
+      {tab === 'triggers' && (
+        <div className="card">
+          <TriggersPanel />
+        </div>
+      )}
+      {tab === 'about' && (
+        <div className="card">
+          <AboutPanel />
         </div>
       )}
     </div>
   );
 }
-

@@ -1,0 +1,233 @@
+/* Scoped styles for TriggersPanel */
+.tp {
+  max-width: 960px;
+}
+.tp-h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.4rem;
+}
+.tp-subtle {
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0.25rem 0 0.75rem;
+}
+.tp-empty-note {
+  color: rgba(0, 0, 0, 0.65);
+  padding: 0.5rem 0 0.75rem;
+}
+
+.tp-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+}
+.tp-form {
+  display: grid;
+  gap: 10px;
+}
+.tp-form-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.tp-field {
+  display: grid;
+  gap: 6px;
+}
+.tp-field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tp-label {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.7);
+}
+.tp-input,
+.tp-select {
+  width: 100%;
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fff;
+}
+.tp-actions-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tp-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #cfd8e3;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.tp-chip.is-active {
+  background: #142c45;
+  color: #fff;
+  border-color: #142c45;
+}
+.tp-chip-box {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.tp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tp-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tp-title-text {
+  font-weight: 600;
+}
+.tp-badge {
+  background: #142c45;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+}
+
+.tp-link-danger {
+  background: none;
+  border: none;
+  color: #b42318;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tp-switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  border: 1px solid #cfd8e3;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.tp-switch.is-on {
+  background: #142c45;
+  border-color: #142c45;
+}
+.tp-switch-handle {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  transition: transform 0.18s ease;
+}
+.tp-switch.is-on .tp-switch-handle {
+  transform: translateX(18px);
+}
+.tp-switch-label {
+  margin-left: 52px;
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.tp-table-wrap {
+  overflow: auto;
+  margin-top: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+}
+.tp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.tp-table thead th {
+  text-align: left;
+  background: #f6f7f9;
+  padding: 8px 10px;
+}
+.tp-table tbody td {
+  padding: 8px 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.tp-table .tp-empty {
+  color: rgba(0, 0, 0, 0.55);
+  padding: 12px 10px;
+}
+.tp-num {
+  text-align: right;
+}
+
+.tp-toolbar {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tp-btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tp-btn,
+.tp-btn-link {
+  border: 1px solid #cfd8e3;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.95rem;
+}
+.tp-btn:hover,
+.tp-btn-link:hover {
+  background: #f6f7f9;
+}
+.tp-btn-primary {
+  background: #142c45;
+  color: #fff;
+  border-color: #142c45;
+}
+.tp-btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.tp-details summary {
+  cursor: pointer;
+  margin-top: 8px;
+}
+.tp-pre {
+  background: #f6f7f9;
+  padding: 10px;
+  border-radius: 10px;
+  white-space: pre-wrap;
+}
