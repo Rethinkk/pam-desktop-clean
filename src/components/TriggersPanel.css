@@ -99,7 +99,7 @@
 .tp-card-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 36px;
 }
 .tp-title-text {
   font-weight: 600;
@@ -115,7 +115,7 @@
 .tp-link-danger {
   background: none;
   border: none;
-  color: #b42318;
+  color: #142c45;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -150,7 +150,7 @@
   transform: translateX(18px);
 }
 .tp-switch-label {
-  margin-left: 52px;
+  margin-left: 80px;
   font-size: 0.85rem;
   color: rgba(0, 0, 0, 0.65);
 }

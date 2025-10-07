@@ -1,5 +1,10 @@
-#!/usr/bin/env sh
+#!/bin/sh
 . "$(dirname -- "$0")/_/husky.sh"
+
+set -e
+
+echo "▶ Running lint-staged…"
+npx lint-staged
 
 # Blokkeer build/cache
 if git diff --cached --name-only | grep -E 

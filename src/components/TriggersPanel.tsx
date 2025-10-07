@@ -376,10 +376,14 @@ function TriggerForm(props: {
     [peopleMap],
   );
 
-  const [label, setLabel] = React.useState<string>(
-    'Expiraties binnen 2 maanden',
-  );
+  // --- Koppeling tussen Label en Melden ---
+  const makeLabel = (m: number) =>
+    `Expiraties binnen ${m} maand${m === 1 ? '' : 'en'}`;
+
   const [monthsAhead, setMonthsAhead] = React.useState<number>(2);
+  const [label, setLabel] = React.useState<string>(makeLabel(2));
+  const [labelTouched, setLabelTouched] = React.useState<boolean>(false);
+
   const [targetPeopleIds, setTargetPeopleIds] = React.useState<string[]>([]);
   const [typeFilters, setTypeFilters] = React.useState<string[]>([
     ...DEFAULT_SUPPORTED_TYPES,
@@ -395,19 +399,23 @@ function TriggerForm(props: {
       cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t],
     );
   }
+
   function submit() {
+    const finalLabel = (label || '').trim() || makeLabel(monthsAhead);
     const t: Trigger = {
       id: Math.random().toString(36).slice(2),
       type: 'expiry-reminder',
-      label: label.trim() || `Expiry ${monthsAhead}m`,
+      label: finalLabel,
       enabled: true,
       monthsAhead,
       targetPeopleIds,
       typeFilters,
     };
     onAdd(t);
-    setLabel('Expiraties binnen 2 maanden');
+    // reset
     setMonthsAhead(2);
+    setLabel(makeLabel(2));
+    setLabelTouched(false);
     setTargetPeopleIds([]);
     setTypeFilters([...DEFAULT_SUPPORTED_TYPES]);
   }
@@ -417,25 +425,20 @@ function TriggerForm(props: {
       <div className="tp-form">
         <div className="tp-form-title">Nieuwe trigger</div>
 
-        <label className="tp-field">
-          <span className="tp-label">Label</span>
-          <input
-            className="tp-input"
-            value={label}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setLabel(e.target.value)
-            }
-          />
-        </label>
-
+        {/* 1) Informeer mij (eerst) */}
         <div className="tp-field-row">
-          <span className="tp-label">Melden</span>
+          <span className="tp-label">Informeer mij</span>
           <select
             className="tp-select"
             value={monthsAhead}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setMonthsAhead(Number(e.target.value))
-            }
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+              const m = Number(e.target.value);
+              setMonthsAhead(m);
+              const autoLabelRegex = /^Expiraties binnen \d+\s*maand(en)?$/i;
+              if (!labelTouched || autoLabelRegex.test(label.trim())) {
+                setLabel(makeLabel(m));
+              }
+            }}
           >
             {[1, 2, 3, 6, 12].map((m) => (
               <option key={m} value={m}>
@@ -445,6 +448,20 @@ function TriggerForm(props: {
           </select>
         </div>
 
+        {/* 2) Label (eronder) */}
+        <label className="tp-field">
+          <span className="tp-label">Label</span>
+          <input
+            className="tp-input"
+            value={label}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setLabelTouched(true);
+              setLabel(e.target.value);
+            }}
+          />
+        </label>
+
+        {/* Types */}
         <div className="tp-field">
           <div className="tp-label">Types:</div>
           <div className="tp-chip-row">
@@ -460,6 +477,7 @@ function TriggerForm(props: {
           </div>
         </div>
 
+        {/* Personen */}
         <div className="tp-field">
           <div className="tp-label">Personen:</div>
           <div className="tp-chip-row">
@@ -493,7 +511,6 @@ function TriggerForm(props: {
     </div>
   );
 }
-
 // ---------------- Card: trigger preview/actions ----------------
 function TriggerCard(props: {
   t: Trigger;
