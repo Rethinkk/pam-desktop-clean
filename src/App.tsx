@@ -113,6 +113,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <DebugApiBanner />
       {/* ⬇️ 1) UI-kit styles één keer injecteren, direct onder BrowserRouter */}
       <Style />
 
