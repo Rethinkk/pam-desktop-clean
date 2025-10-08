@@ -1,6 +1,4 @@
 /* @ts-nocheck */
-import DebugApiBanner from "./DebugApiBanner";
-
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -30,42 +28,16 @@ function LegacyAssetShell() {
   return (
     <div className="container">
       <div className="tabs">
-        <button
-          className={`tab ${tab === 'assets' ? 'active' : ''}`}
-          onClick={() => setTab('assets')}
-        >
-          Assets
-        </button>
-        <button
-          className={`tab ${tab === 'asset-register' ? 'active' : ''}`}
-          onClick={() => setTab('asset-register')}
-        >
-          Asset Register
-        </button>
-        <button
-          className={`tab ${tab === 'docs' ? 'active' : ''}`}
-          onClick={() => setTab('docs')}
-        >
-          Docs
-        </button>
-        <button
-          className={`tab ${tab === 'people' ? 'active' : ''}`}
-          onClick={() => setTab('people')}
-        >
-          Mensen
-        </button>
-        <button
-          className={`tab ${tab === 'about' ? 'active' : ''}`}
-          onClick={() => setTab('about')}
-        >
-          About
-        </button>
+        <button className={`tab ${tab === 'assets' ? 'active' : ''}`} onClick={() => setTab('assets')}>Assets</button>
+        <button className={`tab ${tab === 'asset-register' ? 'active' : ''}`} onClick={() => setTab('asset-register')}>Asset Register</button>
+        <button className={`tab ${tab === 'docs' ? 'active' : ''}`} onClick={() => setTab('docs')}>Docs</button>
+        <button className={`tab ${tab === 'people' ? 'active' : ''}`} onClick={() => setTab('people')}>Mensen</button>
+        <button className={`tab ${tab === 'about' ? 'active' : ''}`} onClick={() => setTab('about')}>About</button>
       </div>
 
       {tab === 'assets' && (
         <section className="stack">
           <h1>Assets</h1>
-          {/* Navigeer na aanmaken naar het register */}
           <AssetsPanel />
         </section>
       )}
@@ -73,7 +45,6 @@ function LegacyAssetShell() {
       {tab === 'asset-register' && (
         <section className="stack">
           <h1>Asset register</h1>
-          {/* >>> scope zodat alleen dit scherm gestyled wordt <<< */}
           <div className="asset-form-scope">
             <AssetRegisterPanel />
           </div>
@@ -111,9 +82,52 @@ export default function App() {
     console.log('[ENV] VITE_EMAIL_API_URL =', emailApi || '(niet ingesteld)');
   }
 
+  // -- eenvoudige API check + tellingen (inline) --
+  const API = import.meta.env.VITE_API_BASE || "https://pam-desktop-api.onrender.com";
+  const [apiStatus, setApiStatus] = React.useState<"loading" | "ok" | "fail">("loading");
+  const [counts, setCounts] = React.useState<{ people?: number; assets?: number }>({});
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        await fetch(`${API}/healthz`).then(r => r.text());
+        const [people, assets] = await Promise.all([
+          fetch(`${API}/people`).then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch(`${API}/assets`).then(r => r.ok ? r.json() : []).catch(() => []),
+        ]);
+        if (!mounted) return;
+        setCounts({ people: (people || []).length, assets: (assets || []).length });
+        setApiStatus("ok");
+      } catch {
+        if (mounted) setApiStatus("fail");
+      }
+    })();
+    return () => { mounted = false; };
+  }, [API]);
+
   return (
     <BrowserRouter>
-      <DebugApiBanner />
+      {/* Debug-balk bovenaan */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 9999,
+          padding: "8px 12px",
+          background: apiStatus === "ok" ? "#e7f9ed" : "#fdeaea",
+          borderBottom: "1px solid",
+          borderColor: apiStatus === "ok" ? "#c2efd0" : "#f5c2c7",
+          fontSize: 13
+        }}
+      >
+        {apiStatus === "loading"
+          ? "Connecting…"
+          : apiStatus === "ok"
+            ? `API connected • People: ${counts.people ?? 0} • Assets: ${counts.assets ?? 0}`
+            : "API not reachable. Check VITE_API_BASE & CORS_ORIGIN."}
+      </div>
+
       {/* ⬇️ 1) UI-kit styles één keer injecteren, direct onder BrowserRouter */}
       <Style />
 
@@ -141,7 +155,7 @@ export default function App() {
           .asset-form-scope form label + input,
           .asset-form-scope form label + select,
           .asset-form-scope form label + textarea {
-            display: inline-block;
+            display: inline-block,
             width: calc(100% - 240px - 12px);
             vertical-align: middle;
             margin-bottom: 12px;
@@ -170,3 +184,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
