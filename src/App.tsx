@@ -1,48 +1,40 @@
 /* @ts-nocheck */
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// 👇 UI-kit centraal activeren (let op het pad vanaf src/)
-import { Style } from './components/ui/UI';
+import { Style } from "./components/ui/UI";
+import AssetShell from "./components/AssetShell";
 
-// 👉 Dit is je NIEUWE shell uit components (met 'doc-register' tab)
-import AssetShell from './components/AssetShell';
+import FrontPage from "./components/FrontPage";
+import AssetRegisterPanel from "./components/AssetRegisterPanel";
+import AssetsPanel from "./components/AssetsPanel";
+import DocumentsPanel from "./components/DocumentsPanel";
+import PeoplePanel from "./components/PeoplePanel";
 
-// Overige imports die je lokaal gebruikte in je (oude) shell en routes:
-import FrontPage from './components/FrontPage';
-import AssetRegisterPanel from './components/AssetRegisterPanel';
-import AssetsPanel from './components/AssetsPanel';
-import DocumentsPanel from './components/DocumentsPanel';
-import PeoplePanel from './components/PeoplePanel';
-
-/**
- * ✅ BELANGRIJK:
- * We hernoemen je LOKALE shell zodat hij de geïmporteerde AssetShell niet meer overschrijft.
- * Verder is de inhoud ongewijzigd, zodat al je classNames en tabs blijven zoals je ze had.
- */
+/** Oude shell blijft bestaan voor /legacy */
 function LegacyAssetShell() {
   const [tab, setTab] = useState<
-    'assets' | 'asset-register' | 'docs' | 'people' | 'about'
-  >('assets');
+    "assets" | "asset-register" | "docs" | "people" | "about"
+  >("assets");
 
   return (
     <div className="container">
       <div className="tabs">
-        <button className={`tab ${tab === 'assets' ? 'active' : ''}`} onClick={() => setTab('assets')}>Assets</button>
-        <button className={`tab ${tab === 'asset-register' ? 'active' : ''}`} onClick={() => setTab('asset-register')}>Asset Register</button>
-        <button className={`tab ${tab === 'docs' ? 'active' : ''}`} onClick={() => setTab('docs')}>Docs</button>
-        <button className={`tab ${tab === 'people' ? 'active' : ''}`} onClick={() => setTab('people')}>Mensen</button>
-        <button className={`tab ${tab === 'about' ? 'active' : ''}`} onClick={() => setTab('about')}>About</button>
+        <button className={`tab ${tab === "assets" ? "active" : ""}`} onClick={() => setTab("assets")}>Assets</button>
+        <button className={`tab ${tab === "asset-register" ? "active" : ""}`} onClick={() => setTab("asset-register")}>Asset Register</button>
+        <button className={`tab ${tab === "docs" ? "active" : ""}`} onClick={() => setTab("docs")}>Docs</button>
+        <button className={`tab ${tab === "people" ? "active" : ""}`} onClick={() => setTab("people")}>Mensen</button>
+        <button className={`tab ${tab === "about" ? "active" : ""}`} onClick={() => setTab("about")}>About</button>
       </div>
 
-      {tab === 'assets' && (
+      {tab === "assets" && (
         <section className="stack">
           <h1>Assets</h1>
           <AssetsPanel />
         </section>
       )}
 
-      {tab === 'asset-register' && (
+      {tab === "asset-register" && (
         <section className="stack">
           <h1>Asset register</h1>
           <div className="asset-form-scope">
@@ -51,16 +43,16 @@ function LegacyAssetShell() {
         </section>
       )}
 
-      {tab === 'docs' && (
+      {tab === "docs" && (
         <section className="stack">
           <h1>Documenten</h1>
           <DocumentsPanel />
         </section>
       )}
 
-      {tab === 'people' && <PeoplePanel />}
+      {tab === "people" && <PeoplePanel />}
 
-      {tab === 'about' && (
+      {tab === "about" && (
         <section className="stack">
           <h1>Over PAM</h1>
           <div className="card">
@@ -73,65 +65,83 @@ function LegacyAssetShell() {
 }
 
 export default function App() {
-  // 🔹 Lees .env-variabelen (Vite: moeten met VITE_ beginnen)
-  const appName = import.meta.env.VITE_APP_NAME ?? 'PAM';
-  const emailApi = import.meta.env.VITE_EMAIL_API_URL ?? '';
+  // Env voor badge (niet kritisch)
+  const appName = import.meta.env.VITE_APP_NAME ?? "PAM";
+  const emailApi = import.meta.env.VITE_EMAIL_API_URL ?? "";
 
-  if (import.meta.env.DEV) {
-    console.log('[ENV] VITE_APP_NAME =', appName);
-    console.log('[ENV] VITE_EMAIL_API_URL =', emailApi || '(niet ingesteld)');
-  }
+  // --- VEILIGE debug-balk (blokkeert nooit rendering) ---
+  const API =
+    (import.meta as any).env?.VITE_API_BASE ||
+    "https://pam-desktop-api.onrender.com";
 
-  // -- eenvoudige API check + tellingen (inline) --
-  const API = import.meta.env.VITE_API_BASE || "https://pam-desktop-api.onrender.com";
-  const [apiStatus, setApiStatus] = React.useState<"loading" | "ok" | "fail">("loading");
-  const [counts, setCounts] = React.useState<{ people?: number; assets?: number }>({});
+  const [apiStatus, setApiStatus] = useState<"idle" | "loading" | "ok" | "fail">(
+    "idle"
+  );
+  const [counts, setCounts] = useState<{ people?: number; assets?: number }>({});
 
-  React.useEffect(() => {
-    let mounted = true;
+  useEffect(() => {
+    let alive = true;
+    // geen fetch → geen probleem
+    if (!API) return;
+
     (async () => {
       try {
-        await fetch(`${API}/healthz`).then(r => r.text());
+        setApiStatus("loading");
+        // ping
+        await fetch(`${API}/healthz`, { method: "GET" }).then((r) => r.text());
+        // probeer rustig data te lezen (valt stil bij fout)
         const [people, assets] = await Promise.all([
-          fetch(`${API}/people`).then(r => r.ok ? r.json() : []).catch(() => []),
-          fetch(`${API}/assets`).then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch(`${API}/people`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+          fetch(`${API}/assets`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
         ]);
-        if (!mounted) return;
-        setCounts({ people: (people || []).length, assets: (assets || []).length });
+        if (!alive) return;
+        setCounts({
+          people: Array.isArray(people) ? people.length : 0,
+          assets: Array.isArray(assets) ? assets.length : 0,
+        });
         setApiStatus("ok");
       } catch {
-        if (mounted) setApiStatus("fail");
+        if (alive) setApiStatus("fail");
       }
     })();
-    return () => { mounted = false; };
+
+    return () => {
+      alive = false;
+    };
   }, [API]);
 
   return (
     <BrowserRouter>
-      {/* Debug-balk bovenaan */}
+      {/* Debug-balk (kan later uit als je wilt) */}
       <div
         style={{
           position: "sticky",
           top: 0,
           zIndex: 9999,
           padding: "8px 12px",
-          background: apiStatus === "ok" ? "#e7f9ed" : "#fdeaea",
+          background:
+            apiStatus === "ok" ? "#e7f9ed" :
+            apiStatus === "fail" ? "#fdeaea" : "#fffbe6",
           borderBottom: "1px solid",
-          borderColor: apiStatus === "ok" ? "#c2efd0" : "#f5c2c7",
-          fontSize: 13
+          borderColor:
+            apiStatus === "ok" ? "#c2efd0" :
+            apiStatus === "fail" ? "#f5c2c7" : "#ffe58f",
+          fontSize: 13,
         }}
       >
-        {apiStatus === "loading"
+        {apiStatus === "idle" || apiStatus === "loading"
           ? "Connecting…"
           : apiStatus === "ok"
-            ? `API connected • People: ${counts.people ?? 0} • Assets: ${counts.assets ?? 0}`
-            : "API not reachable. Check VITE_API_BASE & CORS_ORIGIN."}
+          ? `API connected • People: ${counts.people ?? 0} • Assets: ${
+              counts.assets ?? 0
+            }`
+          : "API not reachable. Check VITE_API_BASE & CORS_ORIGIN."}
       </div>
 
-      {/* ⬇️ 1) UI-kit styles één keer injecteren, direct onder BrowserRouter */}
+      {/* UI-kit styles */}
       <Style />
 
-      {/* ---- 2) Bestaande tijdelijke layout-fix blijft staan ---- */}
+      {/* Tijdelijke layout-fix */}
       <style>{`
         .container { margin-left: 32px !important; margin-right: auto !important; }
         .asset-form-scope { max-width: 760px; }
@@ -155,7 +165,7 @@ export default function App() {
           .asset-form-scope form label + input,
           .asset-form-scope form label + select,
           .asset-form-scope form label + textarea {
-            display: inline-block,
+            display: inline-block;
             width: calc(100% - 240px - 12px);
             vertical-align: middle;
             margin-bottom: 12px;
@@ -175,13 +185,12 @@ export default function App() {
         <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
       </Routes>
 
-      {/* Badge alleen in DEV */}
+      {/* Dev-badge */}
       {import.meta.env.DEV && (
         <div className="env-badge">
-          {appName} • {emailApi ? 'mail API ✔︎' : 'mail API ⨯'}
+          {appName} • {emailApi ? "mail API ✔︎" : "mail API ⨯"}
         </div>
       )}
     </BrowserRouter>
   );
 }
-
