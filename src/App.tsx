@@ -1,4 +1,6 @@
 /* @ts-nocheck */
+import DebugApiBanner from "./DebugApiBanner";
+
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
