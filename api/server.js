@@ -80,7 +80,13 @@ app.post("/people", async (req, res) => {
 app.get("/assets", async (_req, res) => {
   const { rows } = await pool.query("select * from assets order by created_at desc");
   res.json(rows);
+
+  });
+app.get("/", (_req, res) => {
+  res.json({ status: "ok", service: "pam-api", time: new Date().toISOString() });
 });
+  
+
 app.post("/assets", async (req, res) => {
   const { type_id, label, domain, category, expiry_date } = req.body || {};
   const { rows } = await pool.query(
