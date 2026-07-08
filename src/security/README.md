@@ -6,6 +6,7 @@ Current status:
 
 - `crypto.ts` wraps Web Crypto AES-GCM JSON encryption/decryption.
 - `vaultKey.ts` is a development bootstrap helper only.
+- `secureLocalStorageAdapter.ts` lets repositories use encrypted IndexedDB through the existing synchronous storage boundary after bootstrap hydration.
 
 Production warning:
 

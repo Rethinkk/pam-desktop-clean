@@ -1,6 +1,8 @@
 import type { Asset, DocumentItem, Person } from "../types";
 import type { AssetSchema } from "../config/assetSchema";
+import { SECURE_LOCAL_STORAGE } from "../lib/config";
 import { localStorageAdapter } from "./localStorageAdapter";
+import { secureLocalStorageAdapter } from "./secureLocalStorageAdapter";
 import type {
   AssetRepository,
   DocumentRepository,
@@ -14,6 +16,10 @@ export const DOCS_KEY = "pam-docs-v1";
 export const DOCS_SEQ_KEY = "pam-docs-seq";
 export const PEOPLE_KEY = "pam-people-v1";
 export const ASSET_SCHEMA_KEY = "pam-asset-schema-v1";
+
+export const activeStorageAdapter: LocalStoragePort = SECURE_LOCAL_STORAGE
+  ? secureLocalStorageAdapter
+  : localStorageAdapter;
 
 const ASSET_CANDIDATE_KEYS = [
   ASSETS_KEY,
@@ -86,7 +92,7 @@ function normalizeDocument(input: any): DocumentItem {
 }
 
 export function createAssetRepository(
-  storage: LocalStoragePort = localStorageAdapter,
+  storage: LocalStoragePort = activeStorageAdapter,
 ): AssetRepository {
   function migrateToPrimary(): { assets: Asset[] } {
     const all: Asset[][] = [];
@@ -125,7 +131,7 @@ export function createAssetRepository(
 }
 
 export function createPersonRepository(
-  storage: LocalStoragePort = localStorageAdapter,
+  storage: LocalStoragePort = activeStorageAdapter,
 ): PersonRepository {
   return {
     all() {
@@ -139,7 +145,7 @@ export function createPersonRepository(
 }
 
 export function createDocumentRepository(
-  storage: LocalStoragePort = localStorageAdapter,
+  storage: LocalStoragePort = activeStorageAdapter,
 ): DocumentRepository {
   return {
     all() {
@@ -159,7 +165,7 @@ export function createDocumentRepository(
 }
 
 export function createSchemaRepository(
-  storage: LocalStoragePort = localStorageAdapter,
+  storage: LocalStoragePort = activeStorageAdapter,
 ): SchemaRepository {
   return {
     load() {

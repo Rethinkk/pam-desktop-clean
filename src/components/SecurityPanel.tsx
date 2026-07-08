@@ -1,5 +1,6 @@
 import React from "react";
 import ExportButton from "./ExportButton";
+import { hydrateSecureLocalStorageAdapter } from "../storage/secureLocalStorageAdapter";
 import {
   getSecureMigrationStatus,
   migrateLocalStorageToEncryptedIndexedDb,
@@ -36,6 +37,9 @@ export default function SecurityPanel() {
     setVerification(null);
     try {
       const nextStatus = await migrateLocalStorageToEncryptedIndexedDb({ force: true });
+      if (nextStatus.secureModeEnabled) {
+        await hydrateSecureLocalStorageAdapter();
+      }
       setStatus(nextStatus);
       setMessage("Migratie naar encrypted IndexedDB is afgerond.");
     } catch (error: unknown) {

@@ -211,6 +211,12 @@ Keep `localStorage` only for:
 - UI preferences
 - migration markers
 
+Current implementation:
+
+- `VITE_SECURE_LOCAL_STORAGE=false`: repositories use the localStorage adapter.
+- `VITE_SECURE_LOCAL_STORAGE=true`: bootstrap migrates POC data, hydrates encrypted IndexedDB into a synchronous cache, and repositories read/write through that secure adapter.
+- Writes update the in-memory cache immediately and persist encrypted records to IndexedDB in the background.
+
 Secure mode UX must include:
 
 - export-before-migration warning
@@ -250,13 +256,14 @@ Build a one-time migration:
 
 ## Immediate Next Engineering Task
 
-Complete the secure local mode flow while preserving behavior.
+Start the cloud adapter behind the same repository boundary.
 
 Acceptance criteria:
 
 - Existing local POC behavior still works.
-- Security & Privacy screen can export, migrate and verify encrypted local storage.
-- Hybrid key-management direction is documented.
+- Secure local mode remains the default foundation for sensitive data.
+- Cloud sync stores encrypted records and does not receive raw vault keys.
+- Backend access is account-scoped and vault-scoped.
 - Typecheck and build pass.
 
 This gives PAM a clean foundation for secure local storage and cloud sync without forcing a backend decision too early.
