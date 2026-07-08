@@ -1,18 +1,6 @@
 /* @ts-nocheck */
 import type { DocumentItem } from "../types";
-
-const LS_KEY = "pam-docs-v1";
-const SEQ_KEY = "pam-docs-seq";
-
-function readRaw(): any[] {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed?.docs) ? parsed.docs : (Array.isArray(parsed) ? parsed : []);
-  } catch { return []; }
-}
-function writeRaw(arr: any[]) { localStorage.setItem(LS_KEY, JSON.stringify({ docs: arr })); }
+import { documentRepository } from "../storage/repositories";
 
 function normalize(d: any): DocumentItem {
   const created = d.createdAt ?? d.uploadedAt ?? new Date().toISOString();
@@ -35,19 +23,17 @@ function normalize(d: any): DocumentItem {
   };
 }
 
-export const loadDocsCompat = () => ({ docs: readRaw().map(normalize) });
-export const saveDocsCompat = (docs: DocumentItem[]) => writeRaw(docs.map(normalize));
+export const loadDocsCompat = () => ({ docs: documentRepository.all().map(normalize) });
+export const saveDocsCompat = (docs: DocumentItem[]) => documentRepository.saveAll(docs.map(normalize));
 
 export function generateDocNumberCompat(): string {
-  const n = Number(localStorage.getItem(SEQ_KEY) ?? "0") + 1;
-  localStorage.setItem(SEQ_KEY, String(n));
-  return `DOC-${String(n).padStart(4, "0")}`;
+  return documentRepository.nextNumber();
 }
 
 export function persistDocCompat(doc: DocumentItem) {
-  const arr = readRaw();
+  const arr = documentRepository.all();
   arr.push(normalize({ ...doc, updatedAt: new Date().toISOString() }));
-  writeRaw(arr);
+  documentRepository.saveAll(arr);
 }
 
 export function docsForAssetCompat(assetKey: string): DocumentItem[] {

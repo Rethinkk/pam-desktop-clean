@@ -5,16 +5,16 @@ This checklist tracks the path from POC storage to production-ready local and cl
 ## Step 1: Repository Contracts
 
 - [ ] Define domain entities for assets, people, documents and triggers.
-- [ ] Add repository interfaces for CRUD and list operations.
+- [x] Add repository interfaces for CRUD and list operations.
 - [ ] Add a storage event/subscribe mechanism for UI refreshes.
-- [ ] Add a compatibility adapter over current `localStorage` keys.
+- [x] Add a compatibility adapter over current `localStorage` keys.
 
 ## Step 2: Move Existing Stores
 
-- [ ] Move `assetNumber.ts` reads/writes behind the asset repository.
-- [ ] Move `peopleStore.ts` reads/writes behind the people repository.
-- [ ] Move `compatDocs.ts` reads/writes behind the document repository.
-- [ ] Move `exportAll.ts` to use repositories instead of direct storage keys.
+- [x] Move `assetNumber.ts` reads/writes behind the asset repository.
+- [x] Move `peopleStore.ts` reads/writes behind the people repository.
+- [x] Move `compatDocs.ts` reads/writes behind the document repository.
+- [x] Move `exportAll.ts` to use repositories instead of direct storage keys.
 
 ## Step 3: Remove Component Storage Access
 

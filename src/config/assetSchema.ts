@@ -1,4 +1,5 @@
 // src/config/assetSchema.ts
+import { schemaRepository } from "../storage/repositories";
 
 /** -----------------------------
  *  Type-definities
@@ -40,23 +41,14 @@ export interface AssetSchema {
 /** -----------------------------
  *  Helpers voor opslag/gebruik
  *  ----------------------------- */
-const STORAGE_KEY = "pam-asset-schema-v1";
-
 export function loadAssetSchema(): AssetSchema {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return DEFAULT_ASSET_SCHEMA;
-  try {
-    const parsed = JSON.parse(raw);
-    // simpele guard: val terug als er geen types zijn
-    if (!parsed?.types?.length) return DEFAULT_ASSET_SCHEMA;
-    return parsed;
-  } catch {
-    return DEFAULT_ASSET_SCHEMA;
-  }
+  const parsed = schemaRepository.load();
+  if (!parsed?.types?.length) return DEFAULT_ASSET_SCHEMA;
+  return parsed;
 }
 
 export function saveAssetSchema(schema: AssetSchema) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(schema));
+  schemaRepository.save(schema);
 }
 
 export function getAssetType(schema: AssetSchema, typeId: string): AssetTypeDefinition | undefined {
