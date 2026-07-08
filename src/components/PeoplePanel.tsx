@@ -1,5 +1,6 @@
 /* @ts-nocheck */
 import React from "react";
+import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 
 /** —— ROL-CONFIG —— 
  * Pas alleen HIER de labels aan. Bestaande records tonen dan meteen de nieuwe labels.
@@ -42,10 +43,6 @@ type Row = {
   updatedAt: string;
 };
 
-const PEOPLE_KEY = "pam-people-v1";
-const ASSETS_KEY = "pam-assets-v1";
-const DOCS_KEY = "pam-docs-v1";
-
 export default function PeoplePanel() {
   const [form, setForm] = React.useState<FormState>({
     fullName: "",
@@ -66,10 +63,7 @@ export default function PeoplePanel() {
 
   function load() {
     try {
-      const raw = localStorage.getItem(PEOPLE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      const arr: Row[] = Array.isArray(parsed?.people) ? parsed.people : Array.isArray(parsed) ? parsed : [];
+      const arr: Row[] = personRepository.all() as any;
       const norm = arr.map((p) => ({
         ...p,
         fullName: (p.fullName || p.name || "").trim(),
@@ -102,18 +96,7 @@ export default function PeoplePanel() {
       updatedAt: now,
     };
 
-    try {
-      const raw = localStorage.getItem(PEOPLE_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-      const out = parsed && Array.isArray(parsed.people)
-        ? { ...parsed, people: [...parsed.people, person] }
-        : Array.isArray(parsed)
-        ? [...parsed, person]
-        : { people: [person] };
-      localStorage.setItem(PEOPLE_KEY, JSON.stringify(out));
-    } catch {
-      localStorage.setItem(PEOPLE_KEY, JSON.stringify({ people: [person] }));
-    }
+    personRepository.saveAll([...personRepository.all(), person as any]);
 
     // ✅ bevestiging alleen hier bij opslaan
     window.dispatchEvent(new CustomEvent("pam:toast", {
@@ -129,28 +112,18 @@ export default function PeoplePanel() {
     // GEEN toasts hier.
     // Assets: personId leegmaken
     try {
-      const rawA = localStorage.getItem(ASSETS_KEY);
-      if (rawA) {
-        const parsedA = JSON.parse(rawA);
-        const isContainerA = parsedA && Array.isArray(parsedA.assets);
-        const arrA: any[] = isContainerA ? parsedA.assets : Array.isArray(parsedA) ? parsedA : [];
-        const nextA = arrA.map((a) => (a.personId === personId ? { ...a, personId: undefined } : a));
-        const out = isContainerA ? { ...parsedA, assets: nextA } : Array.isArray(parsedA) ? nextA : { assets: nextA };
-        localStorage.setItem(ASSETS_KEY, JSON.stringify(out));
-      }
+      const nextA = assetRepository
+        .load()
+        .assets.map((a: any) => (a.personId === personId ? { ...a, personId: undefined } : a));
+      assetRepository.save({ assets: nextA });
     } catch {}
 
     // Docs: ownerId leegmaken
     try {
-      const rawD = localStorage.getItem(DOCS_KEY);
-      if (rawD) {
-        const parsedD = JSON.parse(rawD);
-        const isContainerD = parsedD && Array.isArray(parsedD.docs);
-        const arrD: any[] = isContainerD ? parsedD.docs : Array.isArray(parsedD) ? parsedD : [];
-        const nextD = arrD.map((d) => (d.ownerId === personId ? { ...d, ownerId: undefined } : d));
-        const outD = isContainerD ? { ...parsedD, docs: nextD } : Array.isArray(parsedD) ? nextD : { docs: nextD };
-        localStorage.setItem(DOCS_KEY, JSON.stringify(outD));
-      }
+      const nextD = documentRepository
+        .all()
+        .map((d: any) => (d.ownerId === personId ? { ...d, ownerId: undefined } : d));
+      documentRepository.saveAll(nextD as any);
     } catch {}
   }
 
@@ -161,16 +134,9 @@ export default function PeoplePanel() {
 
     // 1) Verwijderen uit people storage
     try {
-      const raw = localStorage.getItem(PEOPLE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const isContainer = parsed && Array.isArray(parsed.people);
-        const arr: any[] = isContainer ? parsed.people : Array.isArray(parsed) ? parsed : [];
-        const next = arr.filter((p) => p.id !== id);
-        const out = isContainer ? { ...parsed, people: next } : Array.isArray(parsed) ? next : { people: next };
-        localStorage.setItem(PEOPLE_KEY, JSON.stringify(out));
-        removed = true;
-      }
+      const next = personRepository.all().filter((p: any) => p.id !== id);
+      personRepository.saveAll(next);
+      removed = true;
     } catch {}
 
     // 2) Loskoppelen uit assets/docs
@@ -330,6 +296,5 @@ export default function PeoplePanel() {
     </div>
   );
 }
-
 
 

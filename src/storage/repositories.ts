@@ -61,6 +61,7 @@ function normalizeDocument(input: any): DocumentItem {
   const created = input?.createdAt ?? input?.uploadedAt ?? new Date().toISOString();
   const updated = input?.updatedAt ?? created;
   return {
+    ...input,
     id:
       input?.id ??
       `doc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,

@@ -1,4 +1,5 @@
 import React from "react";
+import { documentRepository, personRepository } from "../storage/repositories";
 
 type DocType = "Polis" | "Factuur" | "Garantiebewijs" | "Contract" | "Overig";
 
@@ -14,9 +15,6 @@ type FormState = {
 
 type PersonLite = { id: string; display: string };
 
-const DOCS_KEY = "pam-docs-v1";
-const PEOPLE_KEY = "pam-people-v1";
-
 export default function DocumentsPanel() {
   const [form, setForm] = React.useState<FormState>({
     title: "",
@@ -31,17 +29,11 @@ export default function DocumentsPanel() {
   const [people, setPeople] = React.useState<PersonLite[]>([]);
 
   React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem(PEOPLE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      const arr = Array.isArray(parsed?.people) ? parsed.people : Array.isArray(parsed) ? parsed : [];
-      const norm: PersonLite[] = arr.map((p: any) => ({
-        id: p.id ?? String(p.email ?? p.phone ?? Math.random()),
-        display: (p.fullName ?? p.name ?? "—").trim(),
-      }));
-      setPeople(norm.filter((p) => !!p.display && !!p.id));
-    } catch {}
+    const norm: PersonLite[] = personRepository.all().map((p: any) => ({
+      id: p.id ?? String(p.email ?? p.phone ?? Math.random()),
+      display: (p.fullName ?? p.name ?? "—").trim(),
+    }));
+    setPeople(norm.filter((p) => !!p.display && !!p.id));
   }, []);
 
   function onChange<K extends keyof FormState>(key: K, val: FormState[K]) {
@@ -72,22 +64,7 @@ export default function DocumentsPanel() {
       updatedAt: new Date().toISOString(),
     };
 
-    // compat: {docs:[...]} of een kale array [] ondersteunen
-    let out: any;
-    try {
-      const raw = localStorage.getItem(DOCS_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-      if (parsed && Array.isArray(parsed.docs)) {
-        out = { ...parsed, docs: [...parsed.docs, doc] };
-      } else if (Array.isArray(parsed)) {
-        out = [...parsed, doc];
-      } else {
-        out = { docs: [doc] };
-      }
-    } catch {
-      out = { docs: [doc] };
-    }
-    localStorage.setItem(DOCS_KEY, JSON.stringify(out));
+    documentRepository.saveAll([...documentRepository.all(), doc as any]);
 
     window.dispatchEvent(
       new CustomEvent("pam:toast", {
@@ -224,7 +201,6 @@ export default function DocumentsPanel() {
     </div>
   );
 }
-
 
 
 

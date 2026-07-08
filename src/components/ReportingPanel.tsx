@@ -2,6 +2,7 @@
 import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 
 
 
@@ -36,10 +37,6 @@ type MinimalPerson = {
   updatedAt?: string;
 };
 
-const ASSET_KEYS  = ["pam-assets-v1", "pam-assets", "assets"];
-const DOC_KEYS    = ["pam-docs-v1", "pam-docs", "documents"];
-const PEOPLE_KEYS = ["pam-people-v1", "pam-people", "people"];
-
 /** ---------------- Utils & Readers ---------------- **/
 const parseMaybeDate = (v?: string): Date | null => {
   if (!v) return null;
@@ -61,23 +58,8 @@ const fmtDate = (d?: string) => {
 const unique = <T,>(arr: T[]) => [...new Set(arr.filter(Boolean as any))];
 const today = () => new Date().toLocaleDateString();
 
-function readFromKeys(keys: string[]) {
-  for (const key of keys) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) continue;
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed?.items)) return parsed.items;
-      if (Array.isArray(parsed?.docs)) return parsed.docs;
-      if (Array.isArray(parsed?.assets)) return parsed.assets;
-      if (Array.isArray(parsed?.people)) return parsed.people;
-      if (Array.isArray(parsed)) return parsed;
-    } catch {}
-  }
-  return [];
-}
 function readAssets(): MinimalAsset[] {
-  const arr = readFromKeys(ASSET_KEYS);
+  const arr = assetRepository.load().assets;
   return arr.map((a: any) => ({
     id: a.id ?? a.uuid ?? a._id ?? String(a.number ?? a.name ?? Math.random()),
     number: a.number ?? a.assetNumber ?? a.code ?? a.no,
@@ -90,7 +72,7 @@ function readAssets(): MinimalAsset[] {
   })) as MinimalAsset[];
 }
 function readDocs(): MinimalDoc[] {
-  const arr = readFromKeys(DOC_KEYS);
+  const arr = documentRepository.all();
   return arr.map((d: any) => ({
     id: d.id ?? d.uuid ?? d._id ?? String(d.title ?? Math.random()),
     title: d.title ?? d.name ?? d.label,
@@ -103,7 +85,7 @@ function readDocs(): MinimalDoc[] {
   })) as MinimalDoc[];
 }
 function readPeople(): MinimalPerson[] {
-  const arr = readFromKeys(PEOPLE_KEYS);
+  const arr = personRepository.all();
   return arr.map((p: any) => ({
     id: p.id ?? p.uuid ?? p._id ?? String(p.email ?? p.name ?? Math.random()),
     name: p.name ?? p.fullName ?? p.displayName,
@@ -612,4 +594,3 @@ export default function ReportingPanel() {
     </div>
   );
 }
-

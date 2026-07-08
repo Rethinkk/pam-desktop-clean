@@ -18,13 +18,13 @@ This checklist tracks the path from POC storage to production-ready local and cl
 
 ## Step 3: Remove Component Storage Access
 
-- [ ] `AssetsPanel`
-- [ ] `AssetRegisterPanel`
-- [ ] `DocumentsPanel`
-- [ ] `DocumentRegisterPanel`
-- [ ] `PeoplePanel`
-- [ ] `ReportingPanel`
-- [ ] `SecurityPanel`
+- [x] `AssetsPanel`
+- [x] `AssetRegisterPanel`
+- [x] `DocumentsPanel`
+- [x] `DocumentRegisterPanel`
+- [x] `PeoplePanel`
+- [x] `ReportingPanel`
+- [x] `SecurityPanel`
 
 ## Step 4: Secure Local Storage
 

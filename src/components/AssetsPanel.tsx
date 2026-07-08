@@ -1,6 +1,7 @@
 /* @ts-nocheck */
 import React from "react";
 import { ASSET_TYPES, ASSET_SCHEMAS } from "../config/assetTypes";
+import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 
 // Stabiel type-ID + label
 type AssetTypeId = (typeof ASSET_TYPES)[number]["id"];
@@ -20,10 +21,6 @@ type FormState = {
   priceCents: number;       // numeric for storage
   notes: string;
 };
-
-const ASSETS_KEY = "pam-assets-v1";
-const PEOPLE_KEY = "pam-people-v1";
-const DOCS_KEY   = "pam-docs-v1";
 
 export default function AssetsPanel() {
   const [form, setForm] = React.useState<FormState>({
@@ -48,22 +45,17 @@ export default function AssetsPanel() {
 
   // Personen + documenten laden voor selecties
   React.useEffect(() => {
-    try {
-      const rawP = localStorage.getItem(PEOPLE_KEY);
-      if (rawP) {
-        const parsed = JSON.parse(rawP);
-        const arr = Array.isArray(parsed?.people) ? parsed.people : Array.isArray(parsed) ? parsed : [];
-        setPeople(arr.map((p: any) => ({ id: p.id, name: p.fullName ?? p.name ?? "" })).filter((p: { id: any; name: any; }) => p.id && p.name));
-      }
-    } catch {}
-    try {
-      const rawD = localStorage.getItem(DOCS_KEY);
-      if (rawD) {
-        const parsed = JSON.parse(rawD);
-        const arr = Array.isArray(parsed?.docs) ? parsed.docs : Array.isArray(parsed) ? parsed : [];
-        setDocs(arr.map((d: any) => ({ id: d.id, title: d.title ?? d.name ?? "" })).filter((d: { id: any; title: any; }) => d.id && d.title));
-      }
-    } catch {}
+    const peopleList = personRepository
+      .all()
+      .map((p: any) => ({ id: p.id, name: p.fullName ?? p.name ?? "" }))
+      .filter((p: { id: any; name: any }) => p.id && p.name);
+    setPeople(peopleList);
+
+    const docList = documentRepository
+      .all()
+      .map((d: any) => ({ id: d.id, title: d.title ?? d.name ?? "" }))
+      .filter((d: { id: any; title: any }) => d.id && d.title);
+    setDocs(docList);
   }, []);
 
   function onChange<K extends keyof FormState>(key: K, val: FormState[K]) {
@@ -115,17 +107,9 @@ export default function AssetsPanel() {
 
   /** Weergavenaam gekoppelde persoon (voor register) */
   function resolvePersonName(personId: string): string | undefined {
-    try {
-      const raw = localStorage.getItem(PEOPLE_KEY);
-      if (!raw) return undefined;
-      const parsed = JSON.parse(raw);
-      const arr = Array.isArray(parsed?.people) ? parsed.people : Array.isArray(parsed) ? parsed : [];
-      const hit = arr.find((p: any) => p.id === personId);
-      const name = hit?.fullName ?? hit?.name;
-      return name ? String(name) : undefined;
-    } catch {
-      return undefined;
-    }
+    const hit = personRepository.all().find((p: any) => p.id === personId);
+    const name = hit?.fullName ?? hit?.name;
+    return name ? String(name) : undefined;
   }
 
   // --- schema-koppeling via stabiele id
@@ -195,22 +179,8 @@ export default function AssetsPanel() {
     };
 
     try {
-      const raw = localStorage.getItem(ASSETS_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-
-      let out: any;
-      if (parsed && Array.isArray(parsed.assets)) {
-        out = { ...parsed, assets: [...parsed.assets, asset] };
-      } else if (Array.isArray(parsed)) {
-        out = [...parsed, asset];
-      } else if (parsed && Array.isArray(parsed.rows)) {
-        out = { ...parsed, rows: [...parsed.rows, asset] };
-      } else {
-        // voorkeursvorm
-        out = { assets: [asset] };
-      }
-
-      localStorage.setItem(ASSETS_KEY, JSON.stringify(out));
+      const reg = assetRepository.load();
+      assetRepository.save({ assets: [...reg.assets, asset as any] });
 
       try {
         window.dispatchEvent(new CustomEvent("pam:toast", { detail: { message: "Asset opgeslagen", type: "success" } }));
@@ -457,4 +427,3 @@ export default function AssetsPanel() {
     </div>
   );
 }
-

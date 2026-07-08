@@ -6,6 +6,7 @@ import {
   type AssetSchema,
   type AssetTypeDefinition,
 } from "../config/assetSchema";
+import { assetRepository } from "../storage/repositories";
 
 
 
@@ -40,7 +41,6 @@ type Row = {
   [key: string]: any;
 };
 
-const ASSETS_KEY = "pam-assets-v1";
 const PSEUDO_DETAILS = "__details__";
 
 /** -----------------------------
@@ -395,18 +395,7 @@ export default function AssetRegisterPanel() {
 
   function load() {
     try {
-      const raw = localStorage.getItem(ASSETS_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-
-      const arr: Row[] = Array.isArray(parsed?.assets)
-        ? parsed.assets
-        : Array.isArray(parsed)
-        ? parsed
-        : Array.isArray(parsed?.items)
-        ? parsed.items
-        : [];
-
+      const arr: Row[] = assetRepository.load().assets;
       // Flatten ALTIJD: toont ook records met .data
       const normalized = arr.map((r: any) => (r?.data ? flattenRow(r) : r));
       setRows(normalized);
@@ -423,27 +412,8 @@ export default function AssetRegisterPanel() {
     if (!confirm("Weet je zeker dat je dit asset wilt verwijderen?")) return;
 
     try {
-      const raw = localStorage.getItem(ASSETS_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const isContainer = parsed && (Array.isArray(parsed.assets) || Array.isArray(parsed.items));
-        const list = Array.isArray(parsed?.assets)
-          ? parsed.assets
-          : Array.isArray(parsed?.items)
-          ? parsed.items
-          : Array.isArray(parsed)
-          ? parsed
-          : [];
-
-        const next = list.filter((a: any) => a.id !== id);
-        let out: any;
-        if (Array.isArray(parsed?.assets)) out = { ...parsed, assets: next };
-        else if (Array.isArray(parsed?.items)) out = { ...parsed, items: next };
-        else if (Array.isArray(parsed)) out = next;
-        else out = { assets: next };
-
-        localStorage.setItem(ASSETS_KEY, JSON.stringify(out));
-      }
+      const next = assetRepository.load().assets.filter((a: any) => a.id !== id);
+      assetRepository.save({ assets: next });
     } catch {}
 
     setRows((r) => r.filter((x) => x.id !== id));
@@ -460,21 +430,8 @@ export default function AssetRegisterPanel() {
   // 🔹 NIEUW: opslaan van nieuw asset (compatibel met alle opslagvormen)
   function persistAdd(record: any) {
     try {
-      const raw = localStorage.getItem(ASSETS_KEY);
-      if (!raw) {
-        localStorage.setItem(ASSETS_KEY, JSON.stringify([record]));
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        localStorage.setItem(ASSETS_KEY, JSON.stringify([record, ...parsed]));
-      } else if (Array.isArray(parsed?.assets)) {
-        localStorage.setItem(ASSETS_KEY, JSON.stringify({ ...parsed, assets: [record, ...parsed.assets] }));
-      } else if (Array.isArray(parsed?.items)) {
-        localStorage.setItem(ASSETS_KEY, JSON.stringify({ ...parsed, items: [record, ...parsed.items] }));
-      } else {
-        localStorage.setItem(ASSETS_KEY, JSON.stringify([record]));
-      }
+      const reg = assetRepository.load();
+      assetRepository.save({ assets: [record, ...reg.assets] });
     } catch {}
   }
 

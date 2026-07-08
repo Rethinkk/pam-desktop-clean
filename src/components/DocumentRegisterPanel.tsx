@@ -1,5 +1,6 @@
 /* @ts-nocheck */
 import React from "react";
+import { assetRepository, documentRepository } from "../storage/repositories";
 
 type DocRow = {
   id: string;
@@ -10,9 +11,6 @@ type DocRow = {
   issuedAt?: string;  // yyyy-mm-dd
   expiresAt?: string; // yyyy-mm-dd
 };
-
-const DOCS_KEY = "pam-docs-v1";
-const ASSETS_KEY = "pam-assets-v1";
 
 function parseYMD(s?: string) {
   if (!s) return null;
@@ -52,10 +50,7 @@ export default function DocumentRegisterPanel() {
 
   function load() {
     try {
-      const raw = localStorage.getItem(DOCS_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      const docs: DocRow[] = Array.isArray(parsed?.docs) ? parsed.docs : Array.isArray(parsed) ? parsed : [];
+      const docs: DocRow[] = documentRepository.all() as any;
       const norm = docs.map((d: any) => ({
         id: d.id ?? String(Math.random()),
         title: d.title ?? d.name ?? "",
@@ -72,33 +67,18 @@ export default function DocumentRegisterPanel() {
   function persistDelete(docId: string) {
     // 1) Documenten opschonen
     try {
-      const raw = localStorage.getItem(DOCS_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const isContainer = parsed && Array.isArray(parsed.docs);
-        const arr: any[] = isContainer ? parsed.docs : Array.isArray(parsed) ? parsed : [];
-        const next = arr.filter((d) => d.id !== docId);
-        const out = isContainer ? { ...parsed, docs: next } : Array.isArray(parsed) ? next : { docs: next };
-        localStorage.setItem(DOCS_KEY, JSON.stringify(out));
-      }
+      documentRepository.saveAll(documentRepository.all().filter((d: any) => d.id !== docId));
     } catch {}
 
     // 2) Document-koppelingen bij assets verwijderen (documentIds[])
     try {
-      const rawA = localStorage.getItem(ASSETS_KEY);
-      if (rawA) {
-        const parsedA = JSON.parse(rawA);
-        const isContainerA = parsedA && Array.isArray(parsedA.assets);
-        const arrA: any[] = isContainerA ? parsedA.assets : Array.isArray(parsedA) ? parsedA : [];
-        const nextA = arrA.map((a) => {
-          if (Array.isArray(a.documentIds)) {
-            return { ...a, documentIds: a.documentIds.filter((x: any) => x !== docId) };
-          }
-          return a;
-        });
-        const outA = isContainerA ? { ...parsedA, assets: nextA } : Array.isArray(parsedA) ? nextA : { assets: nextA };
-        localStorage.setItem(ASSETS_KEY, JSON.stringify(outA));
-      }
+      const nextA = assetRepository.load().assets.map((a: any) => {
+        if (Array.isArray(a.documentIds)) {
+          return { ...a, documentIds: a.documentIds.filter((x: any) => x !== docId) };
+        }
+        return a;
+      });
+      assetRepository.save({ assets: nextA });
     } catch {}
   }
 
@@ -192,5 +172,4 @@ export default function DocumentRegisterPanel() {
     </div>
   );
 }
-
 
