@@ -28,8 +28,8 @@ This checklist tracks the path from POC storage to production-ready local and cl
 
 ## Step 4: Secure Local Storage
 
-- [ ] Add encrypted IndexedDB adapter.
-- [ ] Add local migration from POC `localStorage`.
+- [x] Add encrypted IndexedDB adapter.
+- [x] Add local migration from POC `localStorage`.
 - [ ] Keep only non-sensitive UI preferences in `localStorage`.
 - [ ] Add export-before-migration safety path.
 

@@ -99,6 +99,8 @@ Important design choices still to decide:
 - Whether selected metadata may remain searchable server-side.
 - How sharing with family members or advisors should work.
 
+The current encrypted IndexedDB adapter is a foundation layer, not the final key-management model. It is gated behind `VITE_SECURE_LOCAL_STORAGE=true` and currently uses a development vault-key helper so the migration path can be tested without designing the full unlock/recovery UX first. Before production, PAM must replace that helper with user-controlled key derivation, key wrapping and recovery.
+
 ## Authentication & Authorization
 
 Minimum production baseline:

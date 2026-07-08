@@ -22,6 +22,13 @@ export type LocalStoragePort = {
   keys(): string[];
 };
 
+export type AsyncStoragePort = {
+  read<T = unknown>(key: string): Promise<T | undefined>;
+  write<T = unknown>(key: string, value: T, eventName?: StorageEventName): Promise<void>;
+  remove(key: string, eventName?: StorageEventName): Promise<void>;
+  keys(): Promise<string[]>;
+};
+
 export type AssetRepository = {
   load(): { assets: Asset[] };
   save(next: { assets: Asset[] } | Asset[]): void;
