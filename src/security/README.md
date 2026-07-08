@@ -13,8 +13,10 @@ The development vault key is stored locally so the encrypted IndexedDB migration
 
 Production key management still needs:
 
-- user unlock flow
-- password/passkey or provider-backed key wrapping
-- recovery key UX
+- hybrid user unlock flow: account login plus separate vault unlock
+- passphrase, passkey or provider-backed vault-key wrapping
+- recovery key UX before cloud sync is trusted for important data
 - key rotation
 - shared vault key distribution
+
+The cloud backend must never store the raw vault key. Account recovery and vault recovery are related product flows, but they must not silently become the same secret.

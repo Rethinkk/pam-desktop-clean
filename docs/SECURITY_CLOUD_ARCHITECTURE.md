@@ -92,12 +92,24 @@ Use envelope-style encryption:
 
 Recommended browser primitive: Web Crypto API with AES-GCM for content encryption.
 
+### Chosen Key Management Direction: Hybrid
+
+PAM should use a hybrid model for production:
+
+- Account login unlocks access to the application, sync session and account metadata.
+- A separate vault key encrypts the actual PAM records and documents.
+- The cloud backend must never store the raw vault key.
+- The vault key may be wrapped by a user passphrase, recovery key, passkey-backed secret, or a provider-backed wrapping mechanism.
+- A user must complete recovery-key setup before relying on cloud sync for important data.
+
+This keeps the day-to-day UX understandable while preserving user control over sensitive data. Losing an account password should not automatically expose data, and losing a vault/recovery key must be treated as a real recovery event rather than a simple password reset.
+
 Important design choices still to decide:
 
-- Password-derived key vs provider auth plus separate recovery key.
 - Recovery flow if a user loses their key.
 - Whether selected metadata may remain searchable server-side.
 - How sharing with family members or advisors should work.
+- Which wrapping options are enabled first: recovery phrase, passkey, provider-backed wrapping, or a combination.
 
 The current encrypted IndexedDB adapter is a foundation layer, not the final key-management model. It is gated behind `VITE_SECURE_LOCAL_STORAGE=true` and currently uses a development vault-key helper so the migration path can be tested without designing the full unlock/recovery UX first. Before production, PAM must replace that helper with user-controlled key derivation, key wrapping and recovery.
 
@@ -199,6 +211,13 @@ Keep `localStorage` only for:
 - UI preferences
 - migration markers
 
+Secure mode UX must include:
+
+- export-before-migration warning
+- explicit migration start
+- migration status in the Security & Privacy screen
+- encrypted storage verification after migration
+
 ### Phase 3: Cloud Adapter
 
 Add a cloud adapter behind the same repository contract.
@@ -231,13 +250,13 @@ Build a one-time migration:
 
 ## Immediate Next Engineering Task
 
-Create the storage boundary while preserving behavior.
+Complete the secure local mode flow while preserving behavior.
 
 Acceptance criteria:
 
 - Existing local POC behavior still works.
-- `AssetsPanel`, `PeoplePanel`, document panels and reporting no longer parse/write storage directly.
-- `localStorage` is hidden behind one adapter.
+- Security & Privacy screen can export, migrate and verify encrypted local storage.
+- Hybrid key-management direction is documented.
 - Typecheck and build pass.
 
 This gives PAM a clean foundation for secure local storage and cloud sync without forcing a backend decision too early.
