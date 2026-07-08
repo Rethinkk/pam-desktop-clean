@@ -230,10 +230,20 @@ Add a cloud adapter behind the same repository contract.
 
 Suggested modules:
 
-- `src/storage/cloudAdapter.ts`
-- `src/storage/syncQueue.ts`
+- `src/sync/cloudAdapter.ts`
+- `src/sync/syncQueue.ts`
+- `src/sync/syncCoordinator.ts`
+- `src/sync/syncStatus.ts`
 - `src/security/crypto.ts`
 - `src/security/vaultKey.ts`
+
+Current implementation:
+
+- `VITE_CLOUD_SYNC_ENABLED=false`: cloud-sync remains disabled and no backend is contacted.
+- `VITE_CLOUD_SYNC_ENABLED=true`: sync status and queue are active, but a production provider adapter must still be implemented.
+- The sync coordinator collects local record groups, encrypts payloads client-side and passes only encrypted records to the cloud adapter.
+- The cloud adapter contract does not receive raw vault keys.
+- Sync queue/status are operational metadata and may remain outside encrypted vault storage.
 
 ### Phase 4: Migration
 

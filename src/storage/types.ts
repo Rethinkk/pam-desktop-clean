@@ -13,7 +13,8 @@ export type StorageEventName =
   | "pam-assets-updated"
   | "pam-people-updated"
   | "pam-docs-updated"
-  | "pam-schema-updated";
+  | "pam-schema-updated"
+  | "pam-sync-updated";
 
 export type LocalStoragePort = {
   read<T = unknown>(key: string): T | undefined;

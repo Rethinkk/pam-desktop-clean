@@ -2,6 +2,12 @@ import React from "react";
 import ExportButton from "./ExportButton";
 import { hydrateSecureLocalStorageAdapter } from "../storage/secureLocalStorageAdapter";
 import {
+  queueLocalDataForCloudSync,
+  runCloudSyncNow,
+} from "../sync/syncCoordinator";
+import { getCloudSyncStatus } from "../sync/syncStatus";
+import type { CloudSyncStatus } from "../sync/types";
+import {
   getSecureMigrationStatus,
   migrateLocalStorageToEncryptedIndexedDb,
   type SecureMigrationStatus,
@@ -17,8 +23,13 @@ export default function SecurityPanel() {
   const [status, setStatus] = React.useState<SecureMigrationStatus | null>(null);
   const [verification, setVerification] =
     React.useState<SecureMigrationVerification | null>(null);
+  const [cloudStatus, setCloudStatus] = React.useState<CloudSyncStatus>(() =>
+    getCloudSyncStatus(),
+  );
   const [message, setMessage] = React.useState("");
+  const [cloudMessage, setCloudMessage] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  const [cloudBusy, setCloudBusy] = React.useState(false);
 
   const refreshStatus = React.useCallback(async () => {
     const nextStatus = await getSecureMigrationStatus();
@@ -67,6 +78,38 @@ export default function SecurityPanel() {
       setBusy(false);
     }
   }, [refreshStatus]);
+
+  const queueCloudSync = React.useCallback(async () => {
+    setCloudBusy(true);
+    setCloudMessage("");
+    try {
+      const nextStatus = await queueLocalDataForCloudSync();
+      setCloudStatus(nextStatus);
+      setCloudMessage("Lokale data staat klaar in de cloud-sync wachtrij.");
+    } catch (error: unknown) {
+      setCloudMessage(`Queue mislukt: ${getErrorMessage(error)}`);
+    } finally {
+      setCloudBusy(false);
+    }
+  }, []);
+
+  const syncNow = React.useCallback(async () => {
+    setCloudBusy(true);
+    setCloudMessage("");
+    try {
+      const nextStatus = await runCloudSyncNow();
+      setCloudStatus(nextStatus);
+      setCloudMessage(
+        nextStatus.state === "success"
+          ? "Cloud-sync afgerond."
+          : nextStatus.lastError ?? "Cloud-sync is nog niet actief.",
+      );
+    } catch (error: unknown) {
+      setCloudMessage(`Sync mislukt: ${getErrorMessage(error)}`);
+    } finally {
+      setCloudBusy(false);
+    }
+  }, []);
 
   const encryptedCount = status?.encryptedKeys?.length ?? 0;
   const sourceKeys = status?.sourceKeys ?? [];
@@ -218,6 +261,69 @@ export default function SecurityPanel() {
           Let op: de huidige vault-key helper is alleen bedoeld voor ontwikkeling.
           Productie vereist een echte unlock-, recovery- en key-rotation flow.
         </p>
+      </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
+          Cloud sync
+        </h2>
+        <p style={{ lineHeight: 1.6 }}>
+          De cloud-laag staat nu als boundary klaar. PAM kan lokale data in een
+          sync-wachtrij zetten en alleen encrypted records aanbieden aan een
+          toekomstige provider-adapter. Er wordt nog geen backend gekoppeld.
+        </p>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 8,
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            margin: "12px 0",
+          }}
+        >
+          <div>
+            <strong>Cloud flag</strong>
+            <div>{cloudStatus.enabled ? "Aan" : "Uit"} via <code>VITE_CLOUD_SYNC_ENABLED</code></div>
+          </div>
+          <div>
+            <strong>Provider</strong>
+            <div>{cloudStatus.provider}</div>
+          </div>
+          <div>
+            <strong>Status</strong>
+            <div>{cloudStatus.state}</div>
+          </div>
+          <div>
+            <strong>Wachtrij</strong>
+            <div>{cloudStatus.queuedCount} recordgroep(en)</div>
+          </div>
+        </div>
+
+        {cloudStatus.lastAttemptAt && (
+          <p style={{ fontSize: 13, color: "#475569" }}>
+            Laatste poging: {cloudStatus.lastAttemptAt}
+          </p>
+        )}
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="btn" onClick={queueCloudSync} disabled={cloudBusy}>
+            Zet lokale data klaar
+          </button>
+          <button className="btn btn-secondary" onClick={syncNow} disabled={cloudBusy}>
+            Sync nu
+          </button>
+        </div>
+
+        {(cloudMessage || cloudStatus.lastError) && (
+          <p
+            style={{
+              marginTop: 12,
+              color: cloudStatus.state === "error" ? "#991b1b" : "#166534",
+            }}
+          >
+            {cloudMessage || cloudStatus.lastError}
+          </p>
+        )}
       </div>
 
       {/* Toekomstige opties */}

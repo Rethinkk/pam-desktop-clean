@@ -6,3 +6,6 @@ export const STORAGE_KEY = import.meta.env.VITE_STORAGE_KEY ||
 "pam-register-v1";
 export const SECURE_LOCAL_STORAGE =
   (import.meta.env.VITE_SECURE_LOCAL_STORAGE ?? "false") === "true";
+export const CLOUD_SYNC_ENABLED =
+  (import.meta.env.VITE_CLOUD_SYNC_ENABLED ?? "false") === "true";
+export const CLOUD_PROVIDER = import.meta.env.VITE_CLOUD_PROVIDER || "none";
