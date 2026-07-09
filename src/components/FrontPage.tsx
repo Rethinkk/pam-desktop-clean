@@ -54,6 +54,18 @@ export default function FrontPage() {
         >
           your personal asset manager
         </p>
+        <p
+          style={{
+            margin: "22px auto 0",
+            maxWidth: 560,
+            fontSize: "clamp(16px, 2.2vw, 22px)",
+            lineHeight: 1.55,
+            fontWeight: 500,
+            opacity: 0.86,
+          }}
+        >
+          PAM helpt u graag verder om uw assets vast te leggen en te beheren.
+        </p>
       </section>
     </main>
   );
