@@ -1,5 +1,6 @@
 /* @ts-nocheck */
 import React from "react";
+import { useLocation } from "react-router-dom";
 
 import AssetsPanel from "./AssetsPanel";
 import DocumentsPanel from "./DocumentsPanel";
@@ -93,7 +94,10 @@ function usePersistedTab(defaultTab: TabKey = "assets") {
 }
 
 export default function AssetShell() {
-  const [tab, setTab] = usePersistedTab("assets");
+  const location = useLocation();
+  const requestedTab = location.state?.tab;
+  const initialTab = ALLOWED_TABS.includes(requestedTab) ? requestedTab : "assets";
+  const [tab, setTab] = usePersistedTab(initialTab);
   
 
   return (
@@ -193,4 +197,3 @@ export default function AssetShell() {
     </div>
   );
 }
-
