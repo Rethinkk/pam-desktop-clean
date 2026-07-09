@@ -10,6 +10,7 @@ import AssetShell from "./components/AssetShell";
 
 // Overige imports die je lokaal gebruikte in je (oude) shell en routes:
 import FrontPage from "./components/FrontPage";
+import GuidedStartPage from "./components/GuidedStartPage";
 import AssetRegisterPanel from "./components/AssetRegisterPanel";
 import AssetsPanel from "./components/AssetsPanel";
 import DocumentsPanel from "./components/DocumentsPanel";
@@ -124,6 +125,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<FrontPage />} />
+        <Route path="/start" element={<GuidedStartPage />} />
         <Route path="/assets" element={<AssetShell />} />
         <Route path="/legacy" element={<LegacyAssetShell />} />
         <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
@@ -138,4 +140,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
