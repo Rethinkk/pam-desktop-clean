@@ -91,6 +91,21 @@ export default function GuidedStartPage() {
         }}
       >
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+          <button
+            onClick={() => navigate("/")}
+            style={{
+              background: "rgba(255,255,255,0.1)",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,0.28)",
+              borderRadius: 999,
+              padding: "8px 13px",
+              fontSize: 13,
+              fontWeight: 700,
+              marginBottom: 20,
+            }}
+          >
+            Terug naar PAM
+          </button>
           <p
             style={{
               margin: "0 0 12px",

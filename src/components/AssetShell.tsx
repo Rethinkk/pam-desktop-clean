@@ -1,6 +1,6 @@
 /* @ts-nocheck */
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import AssetsPanel from "./AssetsPanel";
 import DocumentsPanel from "./DocumentsPanel";
@@ -50,6 +50,8 @@ function ReportingLook() {
         box-shadow:0 6px 20px rgba(0,0,0,0.08);
       }
       .rp .brandbar { display:flex; align-items:baseline; gap:8px; }
+      .rp .brand-home { appearance:none; border:0; background:transparent; color:inherit; padding:0; box-shadow:none; cursor:pointer; text-align:left; }
+      .rp .brand-home:hover { background:transparent; text-decoration:none; }
       .rp .brand-word { font-weight:800; font-size: calc(16px * var(--brand-scale)); line-height:1.12; letter-spacing:.2px; }
       .rp .brand-sep { opacity:.9; }
       .rp .brand-tag { font-weight:600; font-size: calc(16px * var(--brand-scale)); opacity:.95; }
@@ -95,6 +97,7 @@ function usePersistedTab(defaultTab: TabKey = "assets") {
 
 export default function AssetShell() {
   const location = useLocation();
+  const navigate = useNavigate();
   const requestedTab = location.state?.tab;
   const initialTab = ALLOWED_TABS.includes(requestedTab) ? requestedTab : "assets";
   const [tab, setTab] = usePersistedTab(initialTab);
@@ -108,11 +111,11 @@ export default function AssetShell() {
 
       {/* Brand (donkere balk, witte tekst) */}
       <div className="brandwrap">
-        <div className="brandbar" aria-label="Brand">
+        <button className="brandbar brand-home" onClick={() => navigate("/")} aria-label="Terug naar PAM homepage">
           <span className="brand-word">PAM</span>
           <span className="brand-sep">—</span>
           <span className="brand-tag">Your Personal Asset Manager</span>
-        </div>
+        </button>
       </div>
 
       {/* Tabs */}
