@@ -124,13 +124,15 @@ Minimum production baseline:
 - One default vault per user.
 - Future support for shared vaults with roles.
 
-Possible backend options:
+European backend options:
 
-- Supabase: Postgres, Row Level Security, Auth, Storage, Edge Functions.
-- Firebase: Auth, Firestore, Storage, Security Rules.
-- Custom backend: more control, higher build and maintenance cost.
+- OVHcloud EU: preferred production direction for European positioning and core vault storage.
+- Scaleway EU: pragmatic European alternative for faster product development.
+- Custom EU backend: more control, higher build and maintenance cost.
 
-Initial recommendation: Supabase, unless there is a strong reason to prefer Firebase or custom hosting. Supabase maps well to relational asset/document/person data and row-level policies.
+Production recommendation: OVHcloud EU as the primary target, with Scaleway EU as the fallback. Avoid AWS/Amazon for core vault storage so PAM can credibly position itself around European data residency and independence.
+
+Supabase, Firebase, Neon and similar managed developer platforms may still be useful for experiments, but they should not be the production promise if the public position is "European cloud infrastructure, no Amazon dependency for PAM vault storage."
 
 ## Sync Model
 
@@ -240,9 +242,11 @@ Suggested modules:
 Current implementation:
 
 - `VITE_CLOUD_SYNC_ENABLED=false`: cloud-sync remains disabled and no backend is contacted.
-- `VITE_CLOUD_SYNC_ENABLED=true`: sync status and queue are active, but a production provider adapter must still be implemented.
+- `VITE_CLOUD_SYNC_ENABLED=true`: sync status and queue are active, and the HTTP cloud adapter can post encrypted records to `VITE_CLOUD_SYNC_ENDPOINT`.
+- Allowed frontend provider values are `ovhcloud-eu`, `scaleway-eu` and `custom-eu`.
 - The sync coordinator collects local record groups, encrypts payloads client-side and passes only encrypted records to the cloud adapter.
 - The cloud adapter contract does not receive raw vault keys.
+- The browser uses `credentials: include`; production auth should use HttpOnly session cookies, not browser-exposed API secrets.
 - Sync queue/status are operational metadata and may remain outside encrypted vault storage.
 
 ### Phase 4: Migration

@@ -2,10 +2,14 @@
 export const ENV = import.meta.env.VITE_ENV || "development";
 export const DEBUG = (import.meta.env.VITE_DEBUG ?? "false") === "true";
 export const API_URL = import.meta.env.VITE_API_URL || "";
-export const STORAGE_KEY = import.meta.env.VITE_STORAGE_KEY || 
-"pam-register-v1";
+export const STORAGE_KEY = import.meta.env.VITE_STORAGE_KEY || "pam-register-v1";
 export const SECURE_LOCAL_STORAGE =
   (import.meta.env.VITE_SECURE_LOCAL_STORAGE ?? "false") === "true";
 export const CLOUD_SYNC_ENABLED =
   (import.meta.env.VITE_CLOUD_SYNC_ENABLED ?? "false") === "true";
 export const CLOUD_PROVIDER = import.meta.env.VITE_CLOUD_PROVIDER || "none";
+export const CLOUD_SYNC_ENDPOINT =
+  import.meta.env.VITE_CLOUD_SYNC_ENDPOINT ||
+  (API_URL ? `${API_URL.replace(/\/$/, "")}/api/pam/sync/push` : "");
+export const CLOUD_REGION_POLICY =
+  import.meta.env.VITE_CLOUD_REGION_POLICY || "eu-only";

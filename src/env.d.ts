@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_SECURE_LOCAL_STORAGE?: string;
   readonly VITE_CLOUD_SYNC_ENABLED?: string;
   readonly VITE_CLOUD_PROVIDER?: string;
+  readonly VITE_CLOUD_SYNC_ENDPOINT?: string;
+  readonly VITE_CLOUD_REGION_POLICY?: string;
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;
