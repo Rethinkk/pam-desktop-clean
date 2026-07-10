@@ -49,6 +49,22 @@ VITE_CLOUD_REGION_POLICY=eu-only
 VITE_CLOUD_SYNC_ENDPOINT=http://127.0.0.1:8787/api/pam/sync/push
 ```
 
+## Automated Test
+
+```bash
+npm run test:server
+```
+
+This starts the server on a random local port and verifies:
+
+- unauthenticated sync is rejected
+- dev-login sets a signed HttpOnly cookie
+- non-European provider values are rejected
+- non-`eu-only` region policy is rejected
+- invalid encrypted record shapes are rejected
+- `ovhcloud-eu` encrypted record sync succeeds
+- temporary test data is cleaned up
+
 ## Production Direction
 
 For OVHcloud/Scaleway production, replace the JSON file store with a database table for encrypted records.

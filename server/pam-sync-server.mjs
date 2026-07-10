@@ -271,6 +271,20 @@ async function router(request, response) {
   }
 }
 
-createServer(router).listen(PORT, "127.0.0.1", () => {
-  console.log(`PAM sync server listening on http://127.0.0.1:${PORT}`);
-});
+export function createPamSyncServer() {
+  return createServer(router);
+}
+
+export function startPamSyncServer(port = PORT, host = "127.0.0.1") {
+  const server = createPamSyncServer();
+  server.listen(port, host, () => {
+    const address = server.address();
+    const actualPort = typeof address === "object" && address ? address.port : port;
+    console.log(`PAM sync server listening on http://${host}:${actualPort}`);
+  });
+  return server;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  startPamSyncServer();
+}
