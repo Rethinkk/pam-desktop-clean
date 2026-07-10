@@ -113,4 +113,40 @@ export type Person = {
   updatedAt?: string;
 };
 
+export type ConsentProfessionalRole =
+  | "notaris"
+  | "fiscalist"
+  | "accountant"
+  | "executeur"
+  | "adviseur"
+  | "overig";
+
+export type ConsentAccessRight =
+  | "assets_read"
+  | "documents_read"
+  | "people_read"
+  | "report_download"
+  | "export_download";
+
+export type ConsentRecord = {
+  id: string;
+  professionalName: string;
+  organizationName?: string;
+  professionalEmail?: string;
+  role: ConsentProfessionalRole;
+  purpose: string;
+  accessRights: ConsentAccessRight[];
+  assetScope: "all" | "selected";
+  assetIds: string[];
+  documentScope: "all" | "selected";
+  documentIds: string[];
+  startsAt: string;
+  expiresAt?: string;
+  status: "active" | "revoked" | "expired";
+  consentText: string;
+  grantedAt: string;
+  revokedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
 

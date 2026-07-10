@@ -43,11 +43,11 @@ async function request(baseUrl, path, options = {}) {
   };
 }
 
-function encryptedRecord() {
+function encryptedRecord(type = "assets", storageKey = "pam-assets-v1") {
   return {
-    id: "assets:pam-assets-v1",
+    id: `${type}:${storageKey}`,
     vaultId: "dev-vault",
-    type: "assets",
+    type,
     encryptedPayload: {
       version: 1,
       algorithm: "AES-GCM",
@@ -125,14 +125,20 @@ try {
       "X-PAM-Cloud-Provider": "ovhcloud-eu",
       "X-PAM-Region-Policy": "eu-only",
     },
-    body: JSON.stringify({ records: [encryptedRecord()] }),
+    body: JSON.stringify({
+      records: [
+        encryptedRecord(),
+        encryptedRecord("consents", "pam-consents-v1"),
+      ],
+    }),
   });
   assert.equal(accepted.response.status, 200);
-  assert.equal(accepted.body.uploadedCount, 1);
+  assert.equal(accepted.body.uploadedCount, 2);
   assert.ok(accepted.body.cursor);
 
   const store = JSON.parse(await readFile(join(dataDir, "encrypted-records.json"), "utf8"));
   assert.equal(store.records["dev-vault"]["assets:pam-assets-v1"].type, "assets");
+  assert.equal(store.records["dev-vault"]["consents:pam-consents-v1"].type, "consents");
   assert.equal(
     store.records["dev-vault"]["assets:pam-assets-v1"].encryptedPayload.ciphertext,
     "dGVzdC1jaXBoZXJ0ZXh0",

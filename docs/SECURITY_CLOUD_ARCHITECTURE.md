@@ -32,6 +32,7 @@ PAM data should be classified before storage and sync:
 | Personal metadata | asset names, relationships, trigger labels | Authenticated, tenant-scoped, encrypted at rest |
 | Sensitive personal data | bank accounts, policy numbers, IDs, inheritance records | Client-side encrypted before cloud sync |
 | Documents/files | scans, invoices, identity documents, contracts | Encrypted object storage with metadata separated |
+| Consent records | advisor access purpose, scope, validity, revocation | Tenant-scoped, encrypted, auditable |
 | Operational data | logs, sync status, errors | No sensitive payloads, short retention |
 
 ## Target Architecture
@@ -76,6 +77,7 @@ Cloud storage should contain:
 - Encrypted asset records.
 - Encrypted person records.
 - Encrypted document metadata.
+- Encrypted consent records.
 - Encrypted file blobs in object storage.
 - Sync cursors and conflict metadata.
 
@@ -123,6 +125,22 @@ Minimum production baseline:
 - Row-level access control in the backend.
 - One default vault per user.
 - Future support for shared vaults with roles.
+
+### Consent & Professional Access
+
+PAM should treat professional access as explicit user consent, not as a loose invitation link. The first implementation stores a `ConsentRecord` locally and includes it in export, secure local migration and encrypted cloud sync.
+
+A consent record captures:
+
+- professional name, organization, email and role;
+- purpose of access;
+- permitted access rights;
+- start and optional expiry date;
+- active, expired or revoked status;
+- generated Dutch consent text;
+- downloadable consent receipt.
+
+Production authorization should later enforce these records server-side and client-side. A notary, fiscal advisor or accountant should only see a vault after the user has granted consent, and every access should be written to an audit log without exposing sensitive payloads in logs.
 
 European backend options:
 

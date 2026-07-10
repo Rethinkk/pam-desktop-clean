@@ -12,6 +12,7 @@ PAM's production web app should be local-first, encrypted by default and backed 
 - Browser app: React/Vite web app.
 - Secure local storage: encrypted IndexedDB behind `VITE_SECURE_LOCAL_STORAGE=true`.
 - Cloud sync: encrypted records posted to a European backend endpoint.
+- Consent model: explicit professional access consent before shared login/roles.
 
 ## Runtime Flags
 
@@ -61,6 +62,7 @@ Start with these backend concepts:
 - `users`: auth identity.
 - `vaults`: one default vault per user.
 - `vault_members`: access control, initially owner-only.
+- `consent_records`: user-granted professional access purpose, scope, validity and revocation.
 - `encrypted_records`: encrypted PAM record groups.
 - `sync_events`: operational sync metadata without plaintext payloads.
 
@@ -83,6 +85,7 @@ Before PAM can be trusted as a real cloud app:
 
 - Replace the development vault-key helper.
 - Add account login and logout.
+- Connect professional invitations to stored consent records.
 - Add vault unlock/recovery flow.
 - Implement backend session validation.
 - Implement encrypted cloud record persistence.

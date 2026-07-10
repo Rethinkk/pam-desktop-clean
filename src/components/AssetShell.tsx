@@ -8,6 +8,7 @@ import PeoplePanel from "./PeoplePanel";
 import ReportingPanel from "./ReportingPanel";
 import AssetRegisterPanel from "./AssetRegisterPanel";
 import DocumentRegisterPanel from "./DocumentRegisterPanel";
+import ConsentPanel from "./ConsentPanel";
 import SecurityPanel from "./SecurityPanel";
 import AboutPanel from "./AboutPanel"; // ✅ About terug
 import { Style as UIStyle, ToastHost } from "./ui/UI";
@@ -18,6 +19,7 @@ type TabKey =
   | "docs"
   | "doc-register"
   | "people"
+  | "consents"
   | "reporting"
   | "about"
   | "security";
@@ -29,6 +31,7 @@ const ALLOWED_TABS: TabKey[] = [
   "docs",
   "doc-register",
   "people",
+  "consents",
   "reporting",
   "about",
   "security",
@@ -136,6 +139,9 @@ export default function AssetShell() {
           <button className={`tab ${tab === "people" ? "active" : ""}`} onClick={() => setTab("people")}>
             Mensen
           </button>
+          <button className={`tab ${tab === "consents" ? "active" : ""}`} onClick={() => setTab("consents")}>
+            Toestemming
+          </button>
           <button className={`tab ${tab === "reporting" ? "active" : ""}`} onClick={() => setTab("reporting")}>
             Rapportage
           </button>
@@ -177,6 +183,12 @@ export default function AssetShell() {
       {tab === "people" && (
         <div className="card">
           <PeoplePanel />
+        </div>
+      )}
+
+      {tab === "consents" && (
+        <div className="card">
+          <ConsentPanel />
         </div>
       )}
 

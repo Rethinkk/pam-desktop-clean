@@ -1,4 +1,11 @@
 import { localStorageAdapter } from "../storage/localStorageAdapter";
+import {
+  ASSET_SCHEMA_KEY,
+  ASSETS_KEY,
+  CONSENTS_KEY,
+  DOCS_KEY,
+  PEOPLE_KEY,
+} from "../storage/repositories";
 import type { CloudRecordType, SyncQueueItem } from "./types";
 
 const SYNC_QUEUE_KEY = "pam-cloud-sync-queue-v1";
@@ -7,10 +14,11 @@ export const SYNCABLE_STORAGE_KEYS: Array<{
   storageKey: string;
   recordType: CloudRecordType;
 }> = [
-  { storageKey: "pam-assets-v1", recordType: "assets" },
-  { storageKey: "pam-people-v1", recordType: "people" },
-  { storageKey: "pam-docs-v1", recordType: "documents" },
-  { storageKey: "pam-asset-schema-v1", recordType: "schema" },
+  { storageKey: ASSETS_KEY, recordType: "assets" },
+  { storageKey: PEOPLE_KEY, recordType: "people" },
+  { storageKey: DOCS_KEY, recordType: "documents" },
+  { storageKey: ASSET_SCHEMA_KEY, recordType: "schema" },
+  { storageKey: CONSENTS_KEY, recordType: "consents" },
 ];
 
 export function getSyncQueue(): SyncQueueItem[] {

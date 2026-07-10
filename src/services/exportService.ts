@@ -1,4 +1,10 @@
-import { assetRepository, documentRepository, personRepository, schemaRepository } from "../storage/repositories";
+import {
+  assetRepository,
+  consentRepository,
+  documentRepository,
+  personRepository,
+  schemaRepository,
+} from "../storage/repositories";
 
 export type PamExport = {
   app: "PersonalAssetManager";
@@ -8,6 +14,7 @@ export type PamExport = {
   assets: unknown[];
   docs: unknown[];
   people: unknown[];
+  consents: unknown[];
   meta?: Record<string, unknown>;
 };
 
@@ -20,6 +27,7 @@ export function buildPamExport(): PamExport {
     assets: assetRepository.load().assets,
     docs: documentRepository.all(),
     people: personRepository.all(),
+    consents: consentRepository.all(),
     meta: {
       locale: navigator.language,
       userAgent: navigator.userAgent,

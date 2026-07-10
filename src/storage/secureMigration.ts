@@ -1,6 +1,7 @@
 import {
   ASSET_SCHEMA_KEY,
   ASSETS_KEY,
+  CONSENTS_KEY,
   DOCS_KEY,
   DOCS_SEQ_KEY,
   PEOPLE_KEY,
@@ -18,6 +19,7 @@ const POC_KEYS = [
   DOCS_SEQ_KEY,
   PEOPLE_KEY,
   ASSET_SCHEMA_KEY,
+  CONSENTS_KEY,
   "pam-asset-register-v1",
   "pam-assets-register-v1",
 ];

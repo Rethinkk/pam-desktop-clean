@@ -1,4 +1,4 @@
-import type { Asset, DocumentItem, Person } from "../types";
+import type { Asset, ConsentRecord, DocumentItem, Person } from "../types";
 import type { AssetSchema } from "../config/assetSchema";
 
 export type JsonValue =
@@ -14,6 +14,7 @@ export type StorageEventName =
   | "pam-people-updated"
   | "pam-docs-updated"
   | "pam-schema-updated"
+  | "pam-consents-updated"
   | "pam-sync-updated";
 
 export type LocalStoragePort = {
@@ -49,4 +50,11 @@ export type DocumentRepository = {
 export type SchemaRepository = {
   load(): AssetSchema | undefined;
   save(schema: AssetSchema): void;
+};
+
+export type ConsentRepository = {
+  all(): ConsentRecord[];
+  saveAll(consents: ConsentRecord[]): void;
+  upsert(consent: ConsentRecord): void;
+  revoke(id: string): ConsentRecord | undefined;
 };

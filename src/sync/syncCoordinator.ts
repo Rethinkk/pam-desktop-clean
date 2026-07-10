@@ -4,6 +4,7 @@ import {
   activeStorageAdapter,
   ASSET_SCHEMA_KEY,
   ASSETS_KEY,
+  CONSENTS_KEY,
   DOCS_KEY,
   PEOPLE_KEY,
 } from "../storage/repositories";
@@ -24,6 +25,7 @@ const RECORD_TYPES_BY_STORAGE_KEY = new Map<string, CloudRecordType>([
   [PEOPLE_KEY, "people"],
   [DOCS_KEY, "documents"],
   [ASSET_SCHEMA_KEY, "schema"],
+  [CONSENTS_KEY, "consents"],
 ]);
 
 function recordTypeForStorageKey(storageKey: string): CloudRecordType {

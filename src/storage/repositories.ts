@@ -1,10 +1,11 @@
-import type { Asset, DocumentItem, Person } from "../types";
+import type { Asset, ConsentRecord, DocumentItem, Person } from "../types";
 import type { AssetSchema } from "../config/assetSchema";
 import { SECURE_LOCAL_STORAGE } from "../lib/config";
 import { localStorageAdapter } from "./localStorageAdapter";
 import { secureLocalStorageAdapter } from "./secureLocalStorageAdapter";
 import type {
   AssetRepository,
+  ConsentRepository,
   DocumentRepository,
   LocalStoragePort,
   PersonRepository,
@@ -16,6 +17,7 @@ export const DOCS_KEY = "pam-docs-v1";
 export const DOCS_SEQ_KEY = "pam-docs-seq";
 export const PEOPLE_KEY = "pam-people-v1";
 export const ASSET_SCHEMA_KEY = "pam-asset-schema-v1";
+export const CONSENTS_KEY = "pam-consents-v1";
 
 export const activeStorageAdapter: LocalStoragePort = SECURE_LOCAL_STORAGE
   ? secureLocalStorageAdapter
@@ -88,6 +90,55 @@ function normalizeDocument(input: any): DocumentItem {
     updatedAt: updated,
     notes: input?.notes,
     assetNumbers: Array.isArray(input?.assetNumbers) ? input.assetNumbers : undefined,
+  };
+}
+
+function normalizeConsent(input: any): ConsentRecord {
+  const now = new Date().toISOString();
+  const grantedAt = input?.grantedAt ?? input?.createdAt ?? now;
+  const role =
+    input?.role === "notaris" ||
+    input?.role === "fiscalist" ||
+    input?.role === "accountant" ||
+    input?.role === "executeur" ||
+    input?.role === "adviseur" ||
+    input?.role === "overig"
+      ? input.role
+      : "overig";
+  const status =
+    input?.status === "revoked" || input?.status === "expired" ? input.status : "active";
+  const accessRights = Array.isArray(input?.accessRights)
+    ? input.accessRights.filter((right: unknown) =>
+        [
+          "assets_read",
+          "documents_read",
+          "people_read",
+          "report_download",
+          "export_download",
+        ].includes(String(right)),
+      )
+    : [];
+
+  return {
+    id: input?.id ?? `consent_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+    professionalName: input?.professionalName ?? "",
+    organizationName: input?.organizationName,
+    professionalEmail: input?.professionalEmail,
+    role,
+    purpose: input?.purpose ?? "",
+    accessRights,
+    assetScope: input?.assetScope === "selected" ? "selected" : "all",
+    assetIds: Array.isArray(input?.assetIds) ? input.assetIds : [],
+    documentScope: input?.documentScope === "selected" ? "selected" : "all",
+    documentIds: Array.isArray(input?.documentIds) ? input.documentIds : [],
+    startsAt: input?.startsAt ?? grantedAt,
+    expiresAt: input?.expiresAt,
+    status,
+    consentText: input?.consentText ?? "",
+    grantedAt,
+    revokedAt: input?.revokedAt,
+    createdAt: input?.createdAt ?? grantedAt,
+    updatedAt: input?.updatedAt ?? now,
   };
 }
 
@@ -178,7 +229,54 @@ export function createSchemaRepository(
   };
 }
 
+export function createConsentRepository(
+  storage: LocalStoragePort = activeStorageAdapter,
+): ConsentRepository {
+  return {
+    all() {
+      return toArray<ConsentRecord>(storage.read(CONSENTS_KEY), "consents").map(normalizeConsent);
+    },
+
+    saveAll(consents) {
+      storage.write(
+        CONSENTS_KEY,
+        { consents: consents.map(normalizeConsent) },
+        "pam-consents-updated",
+      );
+    },
+
+    upsert(consent) {
+      const normalized = normalizeConsent(consent);
+      const existing = this.all();
+      const index = existing.findIndex((item) => item.id === normalized.id);
+      const next =
+        index >= 0
+          ? existing.map((item) => (item.id === normalized.id ? normalized : item))
+          : [normalized, ...existing];
+      this.saveAll(next);
+    },
+
+    revoke(id) {
+      const now = new Date().toISOString();
+      let revoked: ConsentRecord | undefined;
+      const next = this.all().map((item) => {
+        if (item.id !== id) return item;
+        revoked = {
+          ...item,
+          status: "revoked",
+          revokedAt: now,
+          updatedAt: now,
+        };
+        return revoked;
+      });
+      this.saveAll(next);
+      return revoked;
+    },
+  };
+}
+
 export const assetRepository = createAssetRepository();
 export const personRepository = createPersonRepository();
 export const documentRepository = createDocumentRepository();
 export const schemaRepository = createSchemaRepository();
+export const consentRepository = createConsentRepository();

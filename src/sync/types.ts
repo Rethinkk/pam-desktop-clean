@@ -1,6 +1,6 @@
 import type { EncryptedPayload } from "../security/crypto";
 
-export type CloudRecordType = "assets" | "people" | "documents" | "schema";
+export type CloudRecordType = "assets" | "people" | "documents" | "schema" | "consents";
 
 export type SyncState = "disabled" | "idle" | "syncing" | "success" | "error";
 

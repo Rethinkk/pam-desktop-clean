@@ -131,7 +131,7 @@ function isValidEncryptedRecord(record) {
   return (
     record &&
     typeof record.id === "string" &&
-    ["assets", "people", "documents", "schema"].includes(record.type) &&
+    ["assets", "people", "documents", "schema", "consents"].includes(record.type) &&
     record.encryptionVersion === 1 &&
     typeof record.updatedAt === "string" &&
     isEncryptedPayload(record.encryptedPayload)
