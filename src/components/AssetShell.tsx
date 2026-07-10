@@ -111,7 +111,7 @@ export default function AssetShell() {
 
       {/* Brand (donkere balk, witte tekst) */}
       <div className="brandwrap">
-        <button className="brandbar brand-home" onClick={() => navigate("/")} aria-label="Terug naar PAM homepage">
+        <button className="brandbar brand-home" onClick={() => navigate("/start")} aria-label="Terug naar PAM startpagina">
           <span className="brand-word">PAM</span>
           <span className="brand-sep">—</span>
           <span className="brand-tag">Your Personal Asset Manager</span>
