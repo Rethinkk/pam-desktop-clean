@@ -92,4 +92,15 @@ Before PAM can be trusted as a real cloud app:
 
 ## Next Engineering Step
 
-Build the backend API skeleton for `POST /api/pam/sync/push` on the selected European platform, then connect it to the current `HttpCloudAdapter`.
+Replace the file-backed skeleton in `server/pam-sync-server.mjs` with a production database adapter on the selected European platform.
+
+Current backend skeleton:
+
+- `server/pam-sync-server.mjs`
+- `POST /api/pam/sync/push`
+- signed HttpOnly `pam_session` cookie validation
+- EU provider and region-policy checks
+- encrypted-record shape validation
+- file-backed encrypted record persistence for development
+
+The skeleton is suitable for contract testing. It is not the final production persistence layer.

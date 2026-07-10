@@ -10,3 +10,8 @@ backups/
 backups/
 *.zip
 .vercel
+.env
+.env.local
+.env.*.local
+server/data/*.json
+server/data/*.jsonl
