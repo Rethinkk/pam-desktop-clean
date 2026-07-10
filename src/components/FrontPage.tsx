@@ -8,15 +8,6 @@ export default function FrontPage() {
 
   return (
     <main
-      onClick={() => navigate("/start")}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          navigate("/start");
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label="Open PAM"
       style={{
         minHeight: "calc(100vh - 40px)",
         background: blue,
@@ -26,7 +17,6 @@ export default function FrontPage() {
         display: "grid",
         placeItems: "center",
         textAlign: "center",
-        cursor: "pointer",
         padding: "32px 20px",
       }}
     >
@@ -66,6 +56,22 @@ export default function FrontPage() {
         >
           PAM helpt u graag verder om uw assets vast te leggen en te beheren.
         </p>
+        <button
+          onClick={() => navigate("/start")}
+          style={{
+            margin: "30px auto 0",
+            background: "#fff",
+            color: blue,
+            border: "1px solid rgba(255,255,255,0.8)",
+            borderRadius: 999,
+            padding: "13px 24px",
+            fontSize: "clamp(15px, 2vw, 18px)",
+            fontWeight: 800,
+            boxShadow: "0 10px 28px rgba(0,0,0,0.18)",
+          }}
+        >
+          PAM nodigt u uit
+        </button>
       </section>
     </main>
   );
