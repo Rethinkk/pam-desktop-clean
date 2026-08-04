@@ -63,6 +63,11 @@ export default function GuidedStartPage() {
     return `/assets?tab=${encodeURIComponent(tab)}`;
   }
 
+  function followLink(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    window.location.assign(event.currentTarget.href);
+  }
+
   return (
     <main
       style={{
@@ -136,6 +141,7 @@ export default function GuidedStartPage() {
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 26 }}>
             <a
               href={tabHref("assets")}
+              onClick={followLink}
               style={{
                 background: "#fff",
                 color: blue,
@@ -151,6 +157,7 @@ export default function GuidedStartPage() {
             </a>
             <a
               href={tabHref("asset-register")}
+              onClick={followLink}
               style={{
                 background: "rgba(255,255,255,0.12)",
                 color: "#fff",
@@ -219,6 +226,7 @@ export default function GuidedStartPage() {
             <a
               href={tabHref(card.tab)}
               key={card.title}
+              onClick={followLink}
               style={{
                 display: "block",
                 textAlign: "left",
@@ -265,7 +273,7 @@ export default function GuidedStartPage() {
           }}
         >
           <span>Uw assets vormen de basis. PAM is local-first ontworpen; cloud-sync komt pas met expliciete beveiliging.</span>
-          <a className="btn-secondary" href={tabHref("security")}>
+          <a className="btn-secondary" href={tabHref("security")} onClick={followLink}>
             Veiligheid bekijken
           </a>
         </div>
