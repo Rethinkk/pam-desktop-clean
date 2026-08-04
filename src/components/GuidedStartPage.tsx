@@ -16,6 +16,7 @@ type ActionCard = {
   text: string;
   cta: string;
   tab: TargetTab;
+  primary?: boolean;
 };
 
 const blue = "#1E3A5F";
@@ -24,20 +25,21 @@ const border = "#d8e0ea";
 
 const actionCards: ActionCard[] = [
   {
-    title: "Begin met assets",
-    text: "Leg woning, voertuig, verzekering, rekening of ander belangrijk bezit vast.",
+    title: "Begin met uw assets",
+    text: "Leg eerst een woning, voertuig, rekening, verzekering of ander belangrijk bezit vast.",
     cta: "Asset toevoegen",
     tab: "asset-register",
+    primary: true,
   },
   {
-    title: "Orden documenten",
-    text: "Bewaar contracten, polissen, facturen en scans bij de juiste onderdelen.",
+    title: "Koppel documenten",
+    text: "Bewaar contracten, polissen, facturen en scans bij de assets waar ze bij horen.",
     cta: "Document toevoegen",
     tab: "docs",
   },
   {
     title: "Voeg mensen toe",
-    text: "Noteer familie, adviseurs, executeurs of andere belangrijke contactpersonen.",
+    text: "Noteer familie, adviseurs, executeurs of andere personen die bij uw assets horen.",
     cta: "Persoon toevoegen",
     tab: "people",
   },
@@ -127,7 +129,7 @@ export default function GuidedStartPage() {
               letterSpacing: 0,
             }}
           >
-            Rust en overzicht in alles wat belangrijk is.
+            Begin met wat waarde heeft.
           </h1>
           <p
             style={{
@@ -138,9 +140,9 @@ export default function GuidedStartPage() {
               color: "#dbeafe",
             }}
           >
-            PAM helpt je belangrijke assets, bezittingen, documenten en
-            contactpersonen stap voor stap vast te leggen. Voor jezelf, en voor
-            de mensen die ooit moeten weten wat er is en waar het staat.
+            PAM helpt u belangrijke assets stap voor stap vast te leggen. Daarna
+            koppelt u eenvoudig documenten en mensen aan wat voor u waarde heeft.
+            Zo ontstaat rust en overzicht.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 26 }}>
             <button
@@ -154,7 +156,7 @@ export default function GuidedStartPage() {
                 fontWeight: 800,
               }}
             >
-              Begin met invullen
+              Eerste asset vastleggen
             </button>
             <button
               onClick={() => openTab("assets")}
@@ -207,10 +209,9 @@ export default function GuidedStartPage() {
         >
           <h2 style={{ margin: "0 0 8px", fontSize: 22 }}>Waar helpt PAM bij?</h2>
           <p style={{ margin: 0, color: "#475569", lineHeight: 1.6 }}>
-            Niet alles hoeft vandaag compleet. PAM is bedoeld om orde te brengen
-            in kleine stappen: eerst wat je weet, later aanvullen wat ontbreekt.
-            Zo groeit je persoonlijke overzicht zonder dat het als administratie
-            voelt.
+            Niet alles hoeft vandaag compleet. Begin met één asset. Later vult u
+            documenten, personen en extra details aan. Zo groeit uw persoonlijke
+            overzicht zonder dat het als administratie voelt.
           </p>
         </div>
 
@@ -228,12 +229,14 @@ export default function GuidedStartPage() {
               style={{
                 display: "block",
                 textAlign: "left",
-                background: "#fff",
+                background: card.primary ? "#eef5ff" : "#fff",
                 color: blue,
-                border: `1px solid ${border}`,
+                border: card.primary ? `2px solid ${accent}` : `1px solid ${border}`,
                 borderRadius: 12,
                 padding: 18,
-                boxShadow: "0 4px 14px rgba(15,23,42,0.08)",
+                boxShadow: card.primary
+                  ? "0 7px 20px rgba(36,80,140,0.16)"
+                  : "0 4px 14px rgba(15,23,42,0.08)",
                 cursor: "pointer",
               }}
             >
