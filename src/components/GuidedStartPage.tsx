@@ -1,15 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
+import type { PamWorkspaceTab } from "../lib/workspaceTabs";
 
-type TargetTab =
-  | "assets"
-  | "asset-register"
-  | "docs"
-  | "doc-register"
-  | "people"
-  | "reporting"
-  | "security";
+type TargetTab = PamWorkspaceTab;
 
 type ActionCard = {
   title: string;
@@ -24,28 +18,28 @@ const border = "#d8e0ea";
 
 const actionCards: ActionCard[] = [
   {
-    title: "Begin met assets",
-    text: "Leg woning, voertuig, verzekering, rekening of ander belangrijk bezit vast.",
+    title: "Leg uw eerste asset vast",
+    text: "Begin met een woning, voertuig, rekening, verzekering of ander belangrijk bezit.",
     cta: "Asset toevoegen",
-    tab: "asset-register",
+    tab: "assets",
   },
   {
-    title: "Orden documenten",
-    text: "Bewaar contracten, polissen, facturen en scans bij de juiste onderdelen.",
+    title: "Koppel documenten",
+    text: "Bewaar contracten, polissen, facturen en scans bij de assets waar ze bij horen.",
     cta: "Document toevoegen",
     tab: "docs",
   },
   {
-    title: "Voeg mensen toe",
-    text: "Noteer familie, adviseurs, executeurs of andere belangrijke contactpersonen.",
+    title: "Voeg betrokken mensen toe",
+    text: "Noteer wie eigenaar, contactpersoon, adviseur of betrokkene is bij uw assets.",
     cta: "Persoon toevoegen",
     tab: "people",
   },
   {
-    title: "Bekijk overzicht",
-    text: "Controleer wat al is ingevuld en maak een rapport of export voor jezelf.",
-    cta: "Naar rapportage",
-    tab: "reporting",
+    title: "Regel toestemming",
+    text: "Geef later gericht toestemming aan bijvoorbeeld een notaris, fiscalist of accountant.",
+    cta: "Toestemming vastleggen",
+    tab: "consents",
   },
 ];
 
@@ -127,7 +121,7 @@ export default function GuidedStartPage() {
               letterSpacing: 0,
             }}
           >
-            Rust en overzicht in alles wat belangrijk is.
+            Begin bij uw assets.
           </h1>
           <p
             style={{
@@ -138,13 +132,13 @@ export default function GuidedStartPage() {
               color: "#dbeafe",
             }}
           >
-            PAM helpt je belangrijke assets, bezittingen, documenten en
-            contactpersonen stap voor stap vast te leggen. Voor jezelf, en voor
-            de mensen die ooit moeten weten wat er is en waar het staat.
+            PAM helpt u belangrijke assets stap voor stap vast te leggen. Daarna
+            koppelt u eenvoudig documenten, betrokken personen en toestemmingen
+            aan wat voor u waarde heeft.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 26 }}>
             <button
-              onClick={() => openTab("asset-register")}
+              onClick={() => openTab("assets")}
               style={{
                 background: "#fff",
                 color: blue,
@@ -154,10 +148,10 @@ export default function GuidedStartPage() {
                 fontWeight: 800,
               }}
             >
-              Begin met invullen
+              Eerste asset toevoegen
             </button>
             <button
-              onClick={() => openTab("assets")}
+              onClick={() => openTab("asset-register")}
               style={{
                 background: "rgba(255,255,255,0.12)",
                 color: "#fff",
@@ -167,7 +161,7 @@ export default function GuidedStartPage() {
                 fontWeight: 800,
               }}
             >
-              Bekijk mijn overzicht
+              Bekijk asset register
             </button>
           </div>
         </div>
@@ -207,10 +201,9 @@ export default function GuidedStartPage() {
         >
           <h2 style={{ margin: "0 0 8px", fontSize: 22 }}>Waar helpt PAM bij?</h2>
           <p style={{ margin: 0, color: "#475569", lineHeight: 1.6 }}>
-            Niet alles hoeft vandaag compleet. PAM is bedoeld om orde te brengen
-            in kleine stappen: eerst wat je weet, later aanvullen wat ontbreekt.
-            Zo groeit je persoonlijke overzicht zonder dat het als administratie
-            voelt.
+            Niet alles hoeft vandaag compleet. Begin met één asset. Daarna kunt u
+            stap voor stap documenten, personen en toestemming toevoegen. Zo groeit
+            uw persoonlijke overzicht zonder dat het als administratie voelt.
           </p>
         </div>
 
@@ -269,7 +262,7 @@ export default function GuidedStartPage() {
             fontSize: 14,
           }}
         >
-          <span>PAM is local-first ontworpen. Cloud-sync komt pas met expliciete beveiliging.</span>
+          <span>Uw assets vormen de basis. PAM is local-first ontworpen; cloud-sync komt pas met expliciete beveiliging.</span>
           <button className="btn-secondary" onClick={() => openTab("security")}>
             Veiligheid bekijken
           </button>

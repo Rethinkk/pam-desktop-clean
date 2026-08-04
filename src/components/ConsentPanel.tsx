@@ -329,9 +329,9 @@ export default function ConsentPanel() {
             title="Nog geen toestemming nodig"
             body="Toestemming wordt belangrijk zodra een notaris, fiscalist, accountant of adviseur mag meekijken. Leg dan vast wie toegang krijgt, met welk doel en voor welke periode."
             actionLabel="Toestemming invullen"
-            secondaryLabel="Eerst rapportage bekijken"
+            secondaryLabel="Eerst asset toevoegen"
             onAction={() => document.getElementById("consent-professional")?.focus()}
-            onSecondary={() => openPamTab("reporting")}
+            onSecondary={() => openPamTab("assets")}
           />
         ) : (
           <div style={{ display: "grid", gap: 12 }}>
