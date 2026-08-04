@@ -59,9 +59,12 @@ export default function GuidedStartPage() {
   const navigate = useNavigate();
   const counts = React.useMemo(() => safeCounts(), []);
 
-  function tabHref(tab: TargetTab) {
-    return `/assets?tab=${encodeURIComponent(tab)}`;
-  }
+  const openTab = React.useCallback(
+    (tab: TargetTab) => {
+      navigate(`/assets?tab=${encodeURIComponent(tab)}`, { state: { tab } });
+    },
+    [navigate],
+  );
 
   return (
     <main
@@ -134,36 +137,32 @@ export default function GuidedStartPage() {
             aan wat voor u waarde heeft.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 26 }}>
-            <a
-              href={tabHref("assets")}
+            <button
+              onClick={() => openTab("assets")}
               style={{
                 background: "#fff",
                 color: blue,
                 border: 0,
                 borderRadius: 10,
-                display: "inline-flex",
                 padding: "13px 18px",
                 fontWeight: 800,
-                textDecoration: "none",
               }}
             >
               Eerste asset toevoegen
-            </a>
-            <a
-              href={tabHref("asset-register")}
+            </button>
+            <button
+              onClick={() => openTab("asset-register")}
               style={{
                 background: "rgba(255,255,255,0.12)",
                 color: "#fff",
                 border: "1px solid rgba(255,255,255,0.35)",
                 borderRadius: 10,
-                display: "inline-flex",
                 padding: "13px 18px",
                 fontWeight: 800,
-                textDecoration: "none",
               }}
             >
               Bekijk asset register
-            </a>
+            </button>
           </div>
         </div>
       </section>
@@ -216,9 +215,9 @@ export default function GuidedStartPage() {
           }}
         >
           {actionCards.map((card) => (
-            <a
-              href={tabHref(card.tab)}
+            <button
               key={card.title}
+              onClick={() => openTab(card.tab)}
               style={{
                 display: "block",
                 textAlign: "left",
@@ -229,7 +228,6 @@ export default function GuidedStartPage() {
                 padding: 18,
                 boxShadow: "0 4px 14px rgba(15,23,42,0.08)",
                 cursor: "pointer",
-                textDecoration: "none",
               }}
             >
               <strong style={{ display: "block", fontSize: 19, marginBottom: 8 }}>
@@ -248,7 +246,7 @@ export default function GuidedStartPage() {
               >
                 {card.cta}
               </span>
-            </a>
+            </button>
           ))}
         </div>
 
@@ -265,9 +263,9 @@ export default function GuidedStartPage() {
           }}
         >
           <span>Uw assets vormen de basis. PAM is local-first ontworpen; cloud-sync komt pas met expliciete beveiliging.</span>
-          <a className="btn-secondary" href={tabHref("security")}>
+          <button className="btn-secondary" onClick={() => openTab("security")}>
             Veiligheid bekijken
-          </a>
+          </button>
         </div>
       </section>
     </main>
