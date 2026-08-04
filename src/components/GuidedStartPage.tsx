@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
-import { openPamTab, type PamWorkspaceTab } from "../lib/workspaceTabs";
+import type { PamWorkspaceTab } from "../lib/workspaceTabs";
 
 type TargetTab = PamWorkspaceTab;
 
@@ -61,7 +61,6 @@ export default function GuidedStartPage() {
 
   const openTab = React.useCallback(
     (tab: TargetTab) => {
-      openPamTab(tab);
       navigate(`/assets?tab=${encodeURIComponent(tab)}`, { state: { tab } });
     },
     [navigate],
