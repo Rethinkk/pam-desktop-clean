@@ -1,6 +1,8 @@
 /* @ts-nocheck */
 import React from "react";
+import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, documentRepository } from "../storage/repositories";
+import { EmptyState } from "./ui/UI";
 
 type DocRow = {
   id: string;
@@ -123,6 +125,19 @@ export default function DocumentRegisterPanel() {
     <div className="ui-page">
       <div className="ui-section-title">Document register</div>
 
+      {rows.length === 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <EmptyState
+            title="Nog geen documenten in het register"
+            body="Documenten worden waardevoller zodra ze gekoppeld zijn aan assets of personen. Begin met een polis, factuur, contract of garantiebewijs."
+            actionLabel="Document toevoegen"
+            secondaryLabel="Eerst asset toevoegen"
+            onAction={() => openPamTab("docs")}
+            onSecondary={() => openPamTab("assets")}
+          />
+        </div>
+      )}
+
       <div className="ui-toolbar">
         <input placeholder="Zoeken…" value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="spacer" />
@@ -164,7 +179,15 @@ export default function DocumentRegisterPanel() {
               );
             })}
             {filtered.length === 0 && (
-              <tr><td colSpan={8}><em>Geen documenten gevonden.</em></td></tr>
+              <tr>
+                <td colSpan={8}>
+                  <em>
+                    {rows.length === 0
+                      ? "Nog geen documenten vastgelegd."
+                      : "Geen documenten gevonden binnen deze zoekopdracht."}
+                  </em>
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -172,4 +195,3 @@ export default function DocumentRegisterPanel() {
     </div>
   );
 }
-

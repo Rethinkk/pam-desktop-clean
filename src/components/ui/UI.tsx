@@ -100,6 +100,32 @@ export function Style() {
       .ui-h2 { font-size:18px; font-weight:600; margin:0 0 8px; color:#0f172a; }
       .ui-muted { color:#64748b; font-weight:600; }
 
+      /* Empty states */
+      .ui-empty {
+        border: 1px dashed #cbd5e1;
+        border-radius: 14px;
+        background: #f8fafc;
+        padding: 18px;
+        color: #334155;
+      }
+      .ui-empty-title {
+        color: #0f172a;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+      .ui-empty-body {
+        color: #64748b;
+        line-height: 1.6;
+        margin: 0;
+      }
+      .ui-empty-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
       /* Tabs (optioneel voor AssetShell) */
       .ui-tabs { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px; }
       .ui-tab {
@@ -182,6 +208,33 @@ export const KPI: React.FC<{label:string; value:React.ReactNode}> = ({label, val
     <div className="value">{value}</div>
   </div>
 );
+export const EmptyState: React.FC<{
+  title: string;
+  body: React.ReactNode;
+  actionLabel?: string;
+  onAction?: () => void;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
+}> = ({ title, body, actionLabel, onAction, secondaryLabel, onSecondary }) => (
+  <div className="ui-empty">
+    <div className="ui-empty-title">{title}</div>
+    <p className="ui-empty-body">{body}</p>
+    {(actionLabel || secondaryLabel) && (
+      <div className="ui-empty-actions">
+        {actionLabel && (
+          <button className="ui-btn ui-btn--primary" onClick={onAction}>
+            {actionLabel}
+          </button>
+        )}
+        {secondaryLabel && (
+          <button className="ui-btn" onClick={onSecondary}>
+            {secondaryLabel}
+          </button>
+        )}
+      </div>
+    )}
+  </div>
+);
 /** Tabel: jij levert <thead> en <tbody> zelf aan */
 export const Table: React.FC<React.TableHTMLAttributes<HTMLTableElement>> = ({className="", ...p}) => (
   <table className={`ui-table ${className}`} {...p}/>
@@ -231,4 +284,3 @@ export const ToastHost: React.FC = () => {
     </div>
   );
 };
-

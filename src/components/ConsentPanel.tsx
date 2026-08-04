@@ -1,7 +1,9 @@
 import React from "react";
 
 import { downloadJson } from "../lib/downloadJson";
+import { openPamTab } from "../lib/workspaceTabs";
 import { consentRepository } from "../storage/repositories";
+import { EmptyState } from "./ui/UI";
 import type {
   ConsentAccessRight,
   ConsentProfessionalRole,
@@ -323,16 +325,14 @@ export default function ConsentPanel() {
         <div className="ui-section-title">Vastgelegde toestemmingen</div>
 
         {consents.length === 0 ? (
-          <div
-            style={{
-              border: "1px dashed #cbd5e1",
-              borderRadius: 12,
-              color: "#64748b",
-              padding: 16,
-            }}
-          >
-            Er zijn nog geen toestemmingen vastgelegd.
-          </div>
+          <EmptyState
+            title="Nog geen toestemming nodig"
+            body="Toestemming wordt belangrijk zodra een notaris, fiscalist, accountant of adviseur mag meekijken. Leg dan vast wie toegang krijgt, met welk doel en voor welke periode."
+            actionLabel="Toestemming invullen"
+            secondaryLabel="Eerst rapportage bekijken"
+            onAction={() => document.getElementById("consent-professional")?.focus()}
+            onSecondary={() => openPamTab("reporting")}
+          />
         ) : (
           <div style={{ display: "grid", gap: 12 }}>
             {consents.map((consent) => (

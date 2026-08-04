@@ -12,30 +12,16 @@ import ConsentPanel from "./ConsentPanel";
 import SecurityPanel from "./SecurityPanel";
 import AboutPanel from "./AboutPanel"; // ✅ About terug
 import { Style as UIStyle, ToastHost } from "./ui/UI";
+import {
+  PAM_ACTIVE_TAB_STORAGE_KEY,
+  PAM_ALLOWED_TABS,
+  type PamWorkspaceTab,
+} from "../lib/workspaceTabs";
 
-type TabKey =
-  | "assets"
-  | "asset-register"
-  | "docs"
-  | "doc-register"
-  | "people"
-  | "consents"
-  | "reporting"
-  | "about"
-  | "security";
+type TabKey = PamWorkspaceTab;
 
-const TAB_STORAGE_KEY = "pam-active-tab";
-const ALLOWED_TABS: TabKey[] = [
-  "assets",
-  "asset-register",
-  "docs",
-  "doc-register",
-  "people",
-  "consents",
-  "reporting",
-  "about",
-  "security",
-];
+const TAB_STORAGE_KEY = PAM_ACTIVE_TAB_STORAGE_KEY;
+const ALLOWED_TABS: TabKey[] = PAM_ALLOWED_TABS;
 
 /** Injecteer de 'Reporting-look' als algemene UI-stijl (scoped onder .rp) */
 function ReportingLook() {
@@ -104,6 +90,15 @@ export default function AssetShell() {
   const requestedTab = location.state?.tab;
   const initialTab = ALLOWED_TABS.includes(requestedTab) ? requestedTab : "assets";
   const [tab, setTab] = usePersistedTab(initialTab);
+
+  React.useEffect(() => {
+    const handler = (event: Event) => {
+      const nextTab = (event as CustomEvent).detail?.tab;
+      if (ALLOWED_TABS.includes(nextTab)) setTab(nextTab);
+    };
+    window.addEventListener("pam:set-tab", handler);
+    return () => window.removeEventListener("pam:set-tab", handler);
+  }, [setTab]);
   
 
   return (

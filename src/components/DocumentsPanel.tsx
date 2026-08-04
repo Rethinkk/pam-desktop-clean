@@ -1,5 +1,7 @@
 import React from "react";
 import { documentRepository, personRepository } from "../storage/repositories";
+import { openPamTab } from "../lib/workspaceTabs";
+import { EmptyState } from "./ui/UI";
 
 type DocType = "Polis" | "Factuur" | "Garantiebewijs" | "Contract" | "Overig";
 
@@ -27,8 +29,11 @@ export default function DocumentsPanel() {
   });
 
   const [people, setPeople] = React.useState<PersonLite[]>([]);
+  const [docCount, setDocCount] = React.useState(0);
 
   React.useEffect(() => {
+    setDocCount(documentRepository.all().length);
+
     const norm: PersonLite[] = personRepository.all().map((p: any) => ({
       id: p.id ?? String(p.email ?? p.phone ?? Math.random()),
       display: (p.fullName ?? p.name ?? "—").trim(),
@@ -65,6 +70,7 @@ export default function DocumentsPanel() {
     };
 
     documentRepository.saveAll([...documentRepository.all(), doc as any]);
+    setDocCount((current) => current + 1);
 
     window.dispatchEvent(
       new CustomEvent("pam:toast", {
@@ -88,6 +94,19 @@ export default function DocumentsPanel() {
   return (
     <div className="ui-page">
       <div className="ui-section-title">Nieuw document</div>
+
+      {docCount === 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <EmptyState
+            title="Bewaar uw eerste document"
+            body="Voeg een polis, factuur, contract of garantiebewijs toe. PAM helpt zo om bewijsstukken later snel aan assets en betrokken personen te koppelen."
+            actionLabel="Document invullen"
+            secondaryLabel="Naar asset register"
+            onAction={() => document.getElementById("doc-title")?.focus()}
+            onSecondary={() => openPamTab("asset-register")}
+          />
+        </div>
+      )}
 
       <div className="ui-form-grid">
         {/* Titel (verplicht) */}
@@ -201,7 +220,6 @@ export default function DocumentsPanel() {
     </div>
   );
 }
-
 
 
 

@@ -2,7 +2,9 @@
 import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
+import { EmptyState } from "./ui/UI";
 
 
 
@@ -440,6 +442,19 @@ export default function ReportingPanel() {
       `}</style>
 
       <h1>Rapportage</h1>
+
+      {assets.length === 0 && (
+        <div className="card">
+          <EmptyState
+            title="Rapportage ontstaat vanzelf"
+            body="Zodra u assets, documenten en personen vastlegt, maakt PAM hier overzichtelijke rapportages van. Begin met één asset; daarna groeit het overzicht mee."
+            actionLabel="Eerste asset toevoegen"
+            secondaryLabel="Document toevoegen"
+            onAction={() => openPamTab("assets")}
+            onSecondary={() => openPamTab("docs")}
+          />
+        </div>
+      )}
 
       {/* Controls */}
       <div className="card">

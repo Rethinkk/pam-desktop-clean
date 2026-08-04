@@ -1,6 +1,8 @@
 /* @ts-nocheck */
 import React from "react";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
+import { openPamTab } from "../lib/workspaceTabs";
+import { EmptyState } from "./ui/UI";
 
 /** —— ROL-CONFIG —— 
  * Pas alleen HIER de labels aan. Bestaande records tonen dan meteen de nieuwe labels.
@@ -180,6 +182,19 @@ export default function PeoplePanel() {
     <div className="ui-page">
       <div className="ui-section-title">Nieuw persoon</div>
 
+      {rows.length === 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <EmptyState
+            title="Voeg een betrokken persoon toe"
+            body="Denk aan uzelf, een partner, kind, familielid of mede-eigenaar. Personen maken later duidelijk wie bij welk asset, document of toestemming hoort."
+            actionLabel="Persoon invullen"
+            secondaryLabel="Eerst asset toevoegen"
+            onAction={() => document.getElementById("pp-name")?.focus()}
+            onSecondary={() => openPamTab("assets")}
+          />
+        </div>
+      )}
+
       <div className="ui-form-grid">
         {/* Verplicht (links) */}
         <div className="ui-field">
@@ -287,7 +302,15 @@ export default function PeoplePanel() {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={5}><em>Geen personen gevonden.</em></td></tr>
+                <tr>
+                  <td colSpan={5}>
+                    <em>
+                      {rows.length === 0
+                        ? "Nog geen personen vastgelegd."
+                        : "Geen personen gevonden binnen deze zoekopdracht."}
+                    </em>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -296,5 +319,4 @@ export default function PeoplePanel() {
     </div>
   );
 }
-
 

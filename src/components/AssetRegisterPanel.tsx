@@ -6,7 +6,9 @@ import {
   type AssetSchema,
   type AssetTypeDefinition,
 } from "../config/assetSchema";
+import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository } from "../storage/repositories";
+import { EmptyState } from "./ui/UI";
 
 
 
@@ -517,6 +519,19 @@ export default function AssetRegisterPanel() {
     <div className="ui-page">
       <div className="ui-section-title">Asset register ({filtered.length})</div>
 
+      {rows.length === 0 && !typeId && (
+        <div style={{ marginBottom: 16 }}>
+          <EmptyState
+            title="Uw asset register is nog leeg"
+            body="Het register wordt het overzicht waar alles samenkomt. Voeg een eerste asset toe, of gebruik de eenvoudige Assets-tab als u liever stap voor stap begint."
+            actionLabel="Kies asset type"
+            secondaryLabel="Naar eenvoudige invoer"
+            onAction={() => document.querySelector<HTMLSelectElement>(".ui-input")?.focus()}
+            onSecondary={() => openPamTab("assets")}
+          />
+        </div>
+      )}
+
       {/* 🔹 NIEUW: Invoerblok */}
       <div className="ui-card p-4 rounded-2xl border shadow-sm mb-4">
         <div className="grid gap-3 md:grid-cols-2">
@@ -602,7 +617,11 @@ export default function AssetRegisterPanel() {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={TABLE_KEYS.length + 1}>
-                  <em>Geen assets gevonden.</em>
+                  <em>
+                    {rows.length === 0
+                      ? "Nog geen assets vastgelegd."
+                      : "Geen assets gevonden binnen deze zoekopdracht."}
+                  </em>
                 </td>
               </tr>
             )}

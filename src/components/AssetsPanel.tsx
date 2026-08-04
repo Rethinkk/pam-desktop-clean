@@ -2,6 +2,8 @@
 import React from "react";
 import { ASSET_TYPES, ASSET_SCHEMAS } from "../config/assetTypes";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
+import { openPamTab } from "../lib/workspaceTabs";
+import { EmptyState } from "./ui/UI";
 
 // Stabiel type-ID + label
 type AssetTypeId = (typeof ASSET_TYPES)[number]["id"];
@@ -40,11 +42,14 @@ export default function AssetsPanel() {
   });
 
   const [docCount, setDocCount] = React.useState<number>(0);
+  const [assetCount, setAssetCount] = React.useState<number>(0);
   const [people, setPeople] = React.useState<Array<{ id: string; name: string }>>([]);
   const [docs, setDocs]     = React.useState<Array<{ id: string; title: string }>>([]);
 
   // Personen + documenten laden voor selecties
   React.useEffect(() => {
+    setAssetCount(assetRepository.load().assets.length);
+
     const peopleList = personRepository
       .all()
       .map((p: any) => ({ id: p.id, name: p.fullName ?? p.name ?? "" }))
@@ -205,6 +210,7 @@ export default function AssetsPanel() {
         notes: "",
       });
       setDocCount(0);
+      setAssetCount((current) => current + 1);
     } catch (err) {
       console.error("Asset opslaan faalde:", err);
       alert("Opslaan is mislukt. Probeer het opnieuw.");
@@ -324,6 +330,19 @@ export default function AssetsPanel() {
   return (
     <div className="ui-page">
       <div className="ui-section-title">Nieuw asset</div>
+
+      {assetCount === 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <EmptyState
+            title="Begin met uw eerste asset"
+            body="Leg eerst een bezit vast dat belangrijk is om te bewaren of later makkelijk terug te vinden. Documenten en personen kunt u direct koppelen, maar dat hoeft nog niet."
+            actionLabel="Asset invullen"
+            secondaryLabel="Eerst persoon toevoegen"
+            onAction={() => document.getElementById("asset-name")?.focus()}
+            onSecondary={() => openPamTab("people")}
+          />
+        </div>
+      )}
 
       <div className="ui-form-grid">
         {/* Naam */}
