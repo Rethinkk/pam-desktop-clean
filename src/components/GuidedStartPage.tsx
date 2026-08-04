@@ -62,7 +62,7 @@ export default function GuidedStartPage() {
   const openTab = React.useCallback(
     (tab: TargetTab) => {
       openPamTab(tab);
-      navigate(`/assets?tab=${encodeURIComponent(tab)}`, { state: { tab } });
+      navigate("/assets", { state: { tab } });
     },
     [navigate],
   );

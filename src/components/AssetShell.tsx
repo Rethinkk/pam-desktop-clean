@@ -23,10 +23,6 @@ type TabKey = PamWorkspaceTab;
 const TAB_STORAGE_KEY = PAM_ACTIVE_TAB_STORAGE_KEY;
 const ALLOWED_TABS: TabKey[] = PAM_ALLOWED_TABS;
 
-function isAllowedTab(value: unknown): value is TabKey {
-  return typeof value === "string" && ALLOWED_TABS.includes(value as TabKey);
-}
-
 /** Injecteer de 'Reporting-look' als algemene UI-stijl (scoped onder .rp) */
 function ReportingLook() {
   return (
@@ -65,10 +61,8 @@ function ReportingLook() {
 }
 
 /** Slaat de actieve tab op in localStorage en herstelt veilig */
-function usePersistedTab(defaultTab: TabKey = "assets", preferDefault = false) {
+function usePersistedTab(defaultTab: TabKey = "assets") {
   const [tab, setTab] = React.useState<TabKey>(() => {
-    if (preferDefault) return defaultTab;
-
     try {
       const saved = localStorage.getItem(TAB_STORAGE_KEY) as TabKey | null;
       return (saved && ALLOWED_TABS.includes(saved)) ? saved : defaultTab;
@@ -93,18 +87,12 @@ function usePersistedTab(defaultTab: TabKey = "assets", preferDefault = false) {
 export default function AssetShell() {
   const location = useLocation();
   const navigate = useNavigate();
-  const queryTab = new URLSearchParams(location.search).get("tab");
-  const stateTab = location.state?.tab;
-  const requestedTab = isAllowedTab(queryTab)
-    ? queryTab
-    : isAllowedTab(stateTab)
-      ? stateTab
-      : undefined;
-  const initialTab = requestedTab ?? "assets";
-  const [tab, setTab] = usePersistedTab(initialTab, Boolean(requestedTab));
+  const requestedTab = location.state?.tab;
+  const initialTab = ALLOWED_TABS.includes(requestedTab) ? requestedTab : "assets";
+  const [tab, setTab] = usePersistedTab(initialTab);
 
   React.useEffect(() => {
-    if (requestedTab && requestedTab !== tab) {
+    if (ALLOWED_TABS.includes(requestedTab) && requestedTab !== tab) {
       setTab(requestedTab);
     }
   }, [requestedTab, setTab, tab]);
