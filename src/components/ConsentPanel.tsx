@@ -279,7 +279,16 @@ export default function ConsentPanel() {
           />
 
           <label style={{ marginTop: 12 }}>Rechten *</label>
-          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+          <div
+            style={{
+              border: "1px solid #d8e0ea",
+              borderRadius: 12,
+              display: "grid",
+              gap: 8,
+              marginTop: 8,
+              padding: 10,
+            }}
+          >
             {ACCESS_RIGHT_OPTIONS.map((option) => (
               <label
                 key={option.value}
@@ -288,14 +297,17 @@ export default function ConsentPanel() {
                   display: "flex",
                   fontWeight: 500,
                   gap: 8,
+                  lineHeight: 1.4,
+                  margin: 0,
                 }}
               >
                 <input
                   checked={form.accessRights.includes(option.value)}
+                  style={{ flex: "0 0 auto", width: "auto" }}
                   type="checkbox"
                   onChange={() => toggleAccessRight(option.value)}
                 />
-                {option.label}
+                <span>{option.label}</span>
               </label>
             ))}
           </div>
