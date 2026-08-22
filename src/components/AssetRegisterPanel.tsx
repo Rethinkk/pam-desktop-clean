@@ -351,6 +351,22 @@ function normalizeEditData(row: Row, typeId?: string) {
   return next;
 }
 
+function legacyFieldsFromData(typeId: string, data: Record<string, any>) {
+  if (typeId === "ict-apparatuur") {
+    return {
+      name: data.naam,
+      brand: data.merk,
+      serial: data.serienummer,
+      model: data.model,
+      purchaseDate: data.aankoopdatum,
+      warrantyUntil: data.garantie_tot,
+      priceCents: data.aankoopwaarde,
+    };
+  }
+
+  return {};
+}
+
 /** -----------------------------
  *  Type-resolve o.b.v. row
  *  ----------------------------- */
@@ -580,7 +596,12 @@ export default function AssetRegisterPanel() {
   function saveAsset() {
     const errs = validateAsset(schema, typeId, data);
     setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    if (Object.keys(errs).length > 0) {
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: "Vul de verplichte velden aan voordat u opslaat.", tone: "warn" },
+      }));
+      return;
+    }
 
     const existing = editingId
       ? assetRepository.load().assets.find((asset: any) => asset.id === editingId)
@@ -595,12 +616,15 @@ export default function AssetRegisterPanel() {
 
     const primaryPerson = people.find((person) => person.id === selectedPersonIds[0]);
     const assetName = assetNameFromData(data);
+    const legacyFields = legacyFieldsFromData(typeId, data);
+    const wasEditing = !!editingId;
     const rec = {
       ...(existing ?? {}),
+      ...legacyFields,
       id: editingId ?? crypto.randomUUID(),
       typeId,
       typeLabel: typeDef?.label ?? typeId,
-      name: assetName || existing?.name || undefined,
+      name: assetName || (legacyFields as any).name || existing?.name || undefined,
       personId: selectedPersonIds[0] || undefined,
       personName: primaryPerson?.label,
       personIds: selectedPersonIds.length ? selectedPersonIds : undefined,
@@ -626,7 +650,7 @@ export default function AssetRegisterPanel() {
 
     try {
       window.dispatchEvent(new CustomEvent("pam:toast", {
-        detail: { message: editingId ? "Asset aangepast" : "Asset opgeslagen", tone: "success" },
+        detail: { message: wasEditing ? "Asset aangepast" : "Asset opgeslagen", tone: "success" },
       }));
     } catch {}
   }
