@@ -57,13 +57,14 @@ export function Style() {
       /* Buttons (alias voor beide conventies) */
       .ui-btn {
         display:inline-flex; align-items:center; justify-content:center;
-        border-radius:12px; padding:10px 14px; font-size:14px; border:1px solid #d1d5db; background:#fff; cursor:pointer;
+        border-radius:12px; padding:10px 14px; font-size:14px; font-weight:600; white-space:nowrap;
+        border:1px solid #d1d5db; background:#fff; color:#0f172a; cursor:pointer;
       }
       .ui-btn-primary, .ui-btn--primary { background:#0f2d4a; color:#fff; border-color:#0f2d4a; }
       .ui-btn-primary:hover, .ui-btn--primary:hover { filter: brightness(1.06); }
       .ui-btn-primary:disabled, .ui-btn--primary:disabled { opacity:.5; cursor:not-allowed; }
       /* Kleine & rode knoppen */
-.ui-btn--sm { padding: 6px 10px; font-size: 13px; border-radius: 10px; }
+.ui-btn--sm { padding: 6px 10px; font-size: 13px; border-radius: 10px; min-width: 82px; }
 .ui-btn-danger, .ui-btn--danger { background:#8796A5; color:#fff; border-color:#8796A5; }
 .ui-btn-danger:hover, .ui-btn--danger:hover { filter: brightness(1.05); }
 
