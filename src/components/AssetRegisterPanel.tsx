@@ -54,6 +54,18 @@ const PSEUDO_DETAILS = "__details__";
 const PSEUDO_PEOPLE = "__people__";
 const PSEUDO_STATUS = "__status__";
 
+const LEGACY_TYPE_ALIASES: Record<string, string> = {
+  ict: "ict-apparatuur",
+  vastgoed_bezittingen: "vastgoed",
+  verzekeringen: "verzekering",
+  abonnementen: "abonnement",
+  domeinnamen: "domeinnaam",
+  bankrekeningen: "bankrekening",
+  beleggingen: "belegging",
+  pensioenen: "pensioen",
+  service_providers: "serviceprovider",
+};
+
 /** -----------------------------
  *  INLINE dynamisch veldenformulier (geen apart bestand nodig)
  *  ----------------------------- */
@@ -322,6 +334,23 @@ function isFinalized(row: Row) {
   return row.status === "finalized" || !!row.finalizedAt;
 }
 
+function normalizeEditData(row: Row, typeId?: string) {
+  const src: Record<string, any> = { ...(row.data || {}), ...(row as any) };
+  const next = { ...(row.data || {}) };
+
+  if (typeId === "ict-apparatuur") {
+    next.naam = next.naam ?? src.name;
+    next.merk = next.merk ?? src.brand;
+    next.serienummer = next.serienummer ?? src.serial;
+    next.model = next.model ?? src.model;
+    next.aankoopdatum = next.aankoopdatum ?? src.purchaseDate;
+    next.garantie_tot = next.garantie_tot ?? src.warrantyUntil;
+    next.aankoopwaarde = next.aankoopwaarde ?? src.priceCents;
+  }
+
+  return next;
+}
+
 /** -----------------------------
  *  Type-resolve o.b.v. row
  *  ----------------------------- */
@@ -329,6 +358,11 @@ function resolveType(schema: AssetSchema, row: Row): AssetTypeDefinition | undef
   if (row.typeId) {
     const byId = schema.types.find((t) => t.id === row.typeId);
     if (byId) return byId;
+    const alias = LEGACY_TYPE_ALIASES[row.typeId];
+    if (alias) {
+      const byAlias = schema.types.find((t) => t.id === alias);
+      if (byAlias) return byAlias;
+    }
   }
   const label = row.typeLabel || row.type || "";
   if (label) {
@@ -606,9 +640,10 @@ export default function AssetRegisterPanel() {
     }
 
     const resolved = resolveType(schema, row);
+    const nextTypeId = resolved?.id || row.typeId || "";
     setEditingId(row.id);
-    setTypeId(row.typeId || resolved?.id || "");
-    setData({ ...(row.data || {}) });
+    setTypeId(nextTypeId);
+    setData(normalizeEditData(row, nextTypeId));
     setSelectedPersonIds(Array.from(new Set([row.personId, ...(row.personIds ?? [])].filter(Boolean) as string[])));
     setSelectedDocumentIds(Array.isArray(row.documentIds) ? row.documentIds : []);
     setErrors({});
