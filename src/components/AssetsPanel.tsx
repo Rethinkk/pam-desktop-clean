@@ -13,6 +13,7 @@ type FormState = {
   typeId: AssetTypeId | "";
   typeLabel: string;        // afgeleid uit select
   personId: string;
+  personIds: string[];
   documentIds: string[];
   serial: string;
   brand: string;
@@ -30,6 +31,7 @@ export default function AssetsPanel() {
     typeId: "",
     typeLabel: "",
     personId: "",
+    personIds: [],
     documentIds: [],
     serial: "",
     brand: "",
@@ -104,8 +106,18 @@ export default function AssetsPanel() {
     }
   }
 
-  function handleDocsChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+  function toggleId(list: string[], id: string): string[] {
+    return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
+  }
+
+  function togglePerson(id: string) {
+    const selected = toggleId(form.personIds, id);
+    onChange("personIds", selected);
+    onChange("personId", selected[0] ?? "");
+  }
+
+  function toggleDocument(id: string) {
+    const selected = toggleId(form.documentIds, id);
     onChange("documentIds", selected);
     setDocCount(selected.length);
   }
@@ -165,6 +177,7 @@ export default function AssetsPanel() {
       priceCents: form.priceCents > 0 ? form.priceCents : undefined,
       personId: form.personId || undefined,
       personName,
+      personIds: form.personIds?.length ? form.personIds : undefined,
       documentIds: form.documentIds?.length ? form.documentIds : undefined,
       notes: form.notes.trim() || undefined,
 
@@ -187,6 +200,18 @@ export default function AssetsPanel() {
       const reg = assetRepository.load();
       assetRepository.save({ assets: [...reg.assets, asset as any] });
 
+      if (form.documentIds.length) {
+        const nextDocs = documentRepository.all().map((doc: any) => {
+          if (!form.documentIds.includes(doc.id)) return doc;
+          return {
+            ...doc,
+            assetIds: Array.from(new Set([...(doc.assetIds ?? []), id])),
+            updatedAt: new Date().toISOString(),
+          };
+        });
+        documentRepository.saveAll(nextDocs as any);
+      }
+
       try {
         window.dispatchEvent(new CustomEvent("pam:toast", { detail: { message: "Asset opgeslagen", type: "success" } }));
       } catch {}
@@ -199,6 +224,7 @@ export default function AssetsPanel() {
         typeId: "",
         typeLabel: "",
         personId: "",
+        personIds: [],
         documentIds: [],
         serial: "",
         brand: "",
@@ -367,19 +393,43 @@ export default function AssetsPanel() {
           </select>
         </div>
 
-        {/* Persoon (optie) */}
-        <div className="span-2 ui-field">
-          <label htmlFor="asset-person">Koppel aan persoon (optie)</label>
-          <select
+        {/* Mensen (optie) */}
+        <div className="span-2 ui-field" aria-describedby="people-tip">
+          <label htmlFor="asset-person">
+            Koppel mensen (optie){" "}
+            {form.personIds.length > 0 && <span className="ui-count-badge">{form.personIds.length} geselecteerd</span>}
+          </label>
+          <div
             id="asset-person"
-            value={form.personId}
-            onChange={(e) => onChange("personId", e.target.value)}
+            style={{
+              display: "grid",
+              gap: 8,
+              maxHeight: 170,
+              overflow: "auto",
+              border: "1px solid #d8e0ea",
+              borderRadius: 12,
+              padding: 10,
+              background: "#fff",
+            }}
           >
-            <option value="">— Geen —</option>
             {people.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <label key={p.id} style={{ display: "flex", gap: 8, alignItems: "center", margin: 0 }}>
+                <input
+                  type="checkbox"
+                  style={{ width: "auto" }}
+                  checked={form.personIds.includes(p.id)}
+                  onChange={() => togglePerson(p.id)}
+                />
+                <span>{p.name}</span>
+              </label>
             ))}
-          </select>
+            {people.length === 0 && <small>Geen mensen beschikbaar.</small>}
+          </div>
+          <small id="people-tip" className="ui-tip">
+            {people.length
+              ? "Vink één of meer mensen aan die bij dit asset horen."
+              : "Er zijn nog geen mensen om aan dit asset te koppelen."}
+          </small>
         </div>
 
         {/* Documenten (optie) */}
@@ -388,20 +438,34 @@ export default function AssetsPanel() {
             Koppel documenten (optie){" "}
             {docCount > 0 && <span className="ui-count-badge">{docCount} geselecteerd</span>}
           </label>
-          <select
+          <div
             id="asset-docs"
-            multiple
-            className="ui-select-multi"
-            value={form.documentIds}
-            onChange={handleDocsChange}
+            style={{
+              display: "grid",
+              gap: 8,
+              maxHeight: 170,
+              overflow: "auto",
+              border: "1px solid #d8e0ea",
+              borderRadius: 12,
+              padding: 10,
+              background: "#fff",
+            }}
           >
             {docs.map((d) => (
-              <option key={d.id} value={d.id}>{d.title}</option>
+              <label key={d.id} style={{ display: "flex", gap: 8, alignItems: "center", margin: 0 }}>
+                <input
+                  type="checkbox"
+                  style={{ width: "auto" }}
+                  checked={form.documentIds.includes(d.id)}
+                  onChange={() => toggleDocument(d.id)}
+                />
+                <span>{d.title}</span>
+              </label>
             ))}
-          </select>
+            {docs.length === 0 && <small>Geen documenten beschikbaar.</small>}
+          </div>
           <small id="docs-tip" className="ui-tip">
-            <span>ℹ️</span>
-            Meerdere selecties: Shift-klik (bereik) of Cmd/Ctrl-klik (los).
+            Vink één of meer documenten aan die bij dit asset horen.
           </small>
         </div>
 

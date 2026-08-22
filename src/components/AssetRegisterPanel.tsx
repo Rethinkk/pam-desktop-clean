@@ -7,7 +7,7 @@ import {
   type AssetTypeDefinition,
 } from "../config/assetSchema";
 import { openPamTab } from "../lib/workspaceTabs";
-import { assetRepository } from "../storage/repositories";
+import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 import { EmptyState } from "./ui/UI";
 
 
@@ -41,6 +41,11 @@ type Row = {
   data?: Record<string, any>;
   /** laat dynamische toegang toe: row[someKey] */
   [key: string]: any;
+};
+
+type OptionRow = {
+  id: string;
+  label: string;
 };
 
 const PSEUDO_DETAILS = "__details__";
@@ -292,6 +297,22 @@ function flattenRow(r: any): any {
   return merged;
 }
 
+function assetNameFromData(data?: Record<string, any>) {
+  return (
+    data?.naam ??
+    data?.titel ??
+    data?.object ??
+    data?.domein ??
+    data?.domeinnaam ??
+    data?.adres ??
+    data?.merk_model ??
+    data?.apparaat ??
+    data?.bank ??
+    data?.entiteit ??
+    ""
+  );
+}
+
 /** -----------------------------
  *  Type-resolve o.b.v. row
  *  ----------------------------- */
@@ -375,6 +396,10 @@ export default function AssetRegisterPanel() {
   );
   const [data, setData] = React.useState<Record<string, any>>({});
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [selectedPersonIds, setSelectedPersonIds] = React.useState<string[]>([]);
+  const [selectedDocumentIds, setSelectedDocumentIds] = React.useState<string[]>([]);
+  const [people, setPeople] = React.useState<OptionRow[]>([]);
+  const [documents, setDocuments] = React.useState<OptionRow[]>([]);
 
   const [rows, setRows] = React.useState<Row[]>([]);
   const [q, setQ] = React.useState("");
@@ -386,6 +411,7 @@ export default function AssetRegisterPanel() {
 
   React.useEffect(() => {
     load();
+    loadLinkOptions();
     try {
       const id = sessionStorage.getItem("pam-last-created");
       if (id) {
@@ -401,6 +427,30 @@ export default function AssetRegisterPanel() {
       // Flatten ALTIJD: toont ook records met .data
       const normalized = arr.map((r: any) => (r?.data ? flattenRow(r) : r));
       setRows(normalized);
+    } catch {}
+  }
+
+  function loadLinkOptions() {
+    try {
+      const personOptions = personRepository
+        .all()
+        .map((p: any) => ({
+          id: p.id,
+          label: (p.fullName ?? p.name ?? "").trim(),
+        }))
+        .filter((p) => !!p.id && !!p.label);
+      setPeople(personOptions);
+    } catch {}
+
+    try {
+      const docOptions = documentRepository
+        .all()
+        .map((d: any) => ({
+          id: d.id,
+          label: [d.title ?? d.fileName ?? "Document", d.type].filter(Boolean).join(" — "),
+        }))
+        .filter((d) => !!d.id && !!d.label);
+      setDocuments(docOptions);
     } catch {}
   }
 
@@ -441,6 +491,12 @@ export default function AssetRegisterPanel() {
     setData({});
     setErrors({});
     setTypeId("");
+    setSelectedPersonIds([]);
+    setSelectedDocumentIds([]);
+  }
+
+  function toggleId(list: string[], id: string): string[] {
+    return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
   }
 
   function saveNew() {
@@ -448,15 +504,33 @@ export default function AssetRegisterPanel() {
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
+    const primaryPerson = people.find((person) => person.id === selectedPersonIds[0]);
+    const assetName = assetNameFromData(data);
     const rec = {
       id: crypto.randomUUID(),
       typeId,
       typeLabel: typeDef?.label ?? typeId,
+      name: assetName || undefined,
+      personId: selectedPersonIds[0] || undefined,
+      personName: primaryPerson?.label,
+      personIds: selectedPersonIds.length ? selectedPersonIds : undefined,
+      documentIds: selectedDocumentIds.length ? selectedDocumentIds : undefined,
       data,
       createdAt: Date.now(),
     };
 
     persistAdd(rec);
+    if (selectedDocumentIds.length) {
+      const nextDocs = documentRepository.all().map((doc: any) => {
+        if (!selectedDocumentIds.includes(doc.id)) return doc;
+        return {
+          ...doc,
+          assetIds: Array.from(new Set([...(doc.assetIds ?? []), rec.id])),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+      documentRepository.saveAll(nextDocs as any);
+    }
     sessionStorage.setItem("pam-last-created", rec.id);
     // ook direct in UI
     setRows((prev) => [flattenRow(rec), ...prev]);
@@ -551,6 +625,89 @@ export default function AssetRegisterPanel() {
                 Velden voor: <strong>{typeDef.label}</strong>
               </div>
               <DynamicFieldsFormInline fields={typeDef.fields} value={data} errors={errors} onChange={setData} />
+
+              <div className="ui-form-grid" style={{ marginTop: 16 }}>
+                <div className="span-2 ui-field" aria-describedby="asset-register-people-tip">
+                  <label htmlFor="asset-register-people">
+                    Koppel mensen (optie){" "}
+                    {selectedPersonIds.length > 0 && (
+                      <span className="ui-count-badge">{selectedPersonIds.length} geselecteerd</span>
+                    )}
+                  </label>
+                  <div
+                    id="asset-register-people"
+                    style={{
+                      display: "grid",
+                      gap: 8,
+                      maxHeight: 170,
+                      overflow: "auto",
+                      border: "1px solid #d8e0ea",
+                      borderRadius: 12,
+                      padding: 10,
+                      background: "#fff",
+                    }}
+                  >
+                    {people.map((person) => (
+                      <label key={person.id} style={{ display: "flex", gap: 8, alignItems: "center", margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          style={{ width: "auto" }}
+                          checked={selectedPersonIds.includes(person.id)}
+                          onChange={() => setSelectedPersonIds((ids) => toggleId(ids, person.id))}
+                        />
+                        <span>{person.label}</span>
+                      </label>
+                    ))}
+                    {people.length === 0 && <small>Geen mensen beschikbaar.</small>}
+                  </div>
+                  <small id="asset-register-people-tip" className="ui-tip">
+                    {people.length
+                      ? "Vink één of meer mensen aan die bij dit asset horen."
+                      : "Er zijn nog geen mensen om aan dit asset te koppelen."}
+                  </small>
+                </div>
+
+                <div className="span-2 ui-field" aria-describedby="asset-register-docs-tip">
+                  <label htmlFor="asset-register-docs">
+                    Koppel documenten (optie){" "}
+                    {selectedDocumentIds.length > 0 && (
+                      <span className="ui-count-badge">{selectedDocumentIds.length} geselecteerd</span>
+                    )}
+                  </label>
+                  <div
+                    id="asset-register-docs"
+                    style={{
+                      display: "grid",
+                      gap: 8,
+                      maxHeight: 170,
+                      overflow: "auto",
+                      border: "1px solid #d8e0ea",
+                      borderRadius: 12,
+                      padding: 10,
+                      background: "#fff",
+                    }}
+                  >
+                    {documents.map((document) => (
+                      <label key={document.id} style={{ display: "flex", gap: 8, alignItems: "center", margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          style={{ width: "auto" }}
+                          checked={selectedDocumentIds.includes(document.id)}
+                          onChange={() => setSelectedDocumentIds((ids) => toggleId(ids, document.id))}
+                        />
+                        <span>{document.label}</span>
+                      </label>
+                    ))}
+                    {documents.length === 0 && <small>Geen documenten beschikbaar.</small>}
+                  </div>
+                  <small id="asset-register-docs-tip" className="ui-tip">
+                    {documents.length
+                      ? "Vink één of meer documenten aan die bij dit asset horen."
+                      : "Er zijn nog geen documenten om aan dit asset te koppelen."}
+                  </small>
+                </div>
+              </div>
+
               <div className="mt-3 flex justify-end gap-2">
                 <button className="ui-btn" onClick={resetForm}>Annuleren</button>
                 <button className="ui-btn ui-btn--primary" onClick={saveNew}>Opslaan</button>

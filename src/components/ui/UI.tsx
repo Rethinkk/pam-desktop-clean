@@ -18,7 +18,7 @@ export function Style() {
       .ui-select-multi { height: 120px; overflow: auto; resize: vertical; }
       .ui-aside { background:#18324f; color:#fff; border-radius:16px; padding:24px; position: sticky; top: 24px; }
       .ui-aside .ui-btn { width:100%; border-radius:12px; padding:14px 16px; font-weight:600; }
-      .ui-count-badge { background:#0b2034; border:1px solid rgba(255,255,255,.15); padding:2px 8px; border-radius:999px; font-size:12px; }
+      .ui-count-badge { background:#0b2034; color:#fff; border:1px solid rgba(255,255,255,.15); padding:2px 8px; border-radius:999px; font-size:12px; }
       .ui-section-title { font-size:14px; font-weight:600; color:#0b2034; margin: 12px 0 8px; }
       .ui-field small { display:block; margin-top:6px; color:#6b7280; }
       .ui-btn[disabled] { opacity:.5; cursor:not-allowed; }

@@ -1,5 +1,5 @@
 import React from "react";
-import { documentRepository, personRepository } from "../storage/repositories";
+import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 import { openPamTab } from "../lib/workspaceTabs";
 import { EmptyState } from "./ui/UI";
 
@@ -8,6 +8,7 @@ type DocType = "Polis" | "Factuur" | "Garantiebewijs" | "Contract" | "Overig";
 type FormState = {
   title: string;
   type: DocType | "";
+  assetId: string;
   number: string;
   personId: string;
   issuedAt: string;   // yyyy-mm-dd
@@ -16,11 +17,13 @@ type FormState = {
 };
 
 type PersonLite = { id: string; display: string };
+type AssetLite = { id: string; display: string };
 
 export default function DocumentsPanel() {
   const [form, setForm] = React.useState<FormState>({
     title: "",
     type: "",
+    assetId: "",
     number: "",
     personId: "",
     issuedAt: "",
@@ -29,10 +32,20 @@ export default function DocumentsPanel() {
   });
 
   const [people, setPeople] = React.useState<PersonLite[]>([]);
+  const [assets, setAssets] = React.useState<AssetLite[]>([]);
   const [docCount, setDocCount] = React.useState(0);
 
   React.useEffect(() => {
     setDocCount(documentRepository.all().length);
+
+    const assetList: AssetLite[] = assetRepository.load().assets.map((a: any) => ({
+      id: a.id,
+      display: [
+        a.name ?? a.data?.naam ?? a.data?.titel ?? a.assetNumber ?? "Asset",
+        a.typeLabel ?? a.type,
+      ].filter(Boolean).join(" — "),
+    }));
+    setAssets(assetList.filter((a) => !!a.id && !!a.display));
 
     const norm: PersonLite[] = personRepository.all().map((p: any) => ({
       id: p.id ?? String(p.email ?? p.phone ?? Math.random()),
@@ -54,11 +67,14 @@ export default function DocumentsPanel() {
 
     const id = (globalThis as any).crypto?.randomUUID?.() ?? String(Date.now());
     const owner = people.find((p) => p.id === form.personId);
+    const linkedAsset = assets.find((a) => a.id === form.assetId);
 
     const doc = {
       id,
       title: form.title.trim(),
       type: form.type,
+      assetIds: form.assetId ? [form.assetId] : [],
+      assetNames: linkedAsset ? [linkedAsset.display] : undefined,
       number: form.number.trim() || undefined,
       ownerId: form.personId || undefined,
       ownerName: owner?.display || undefined,
@@ -70,6 +86,17 @@ export default function DocumentsPanel() {
     };
 
     documentRepository.saveAll([...documentRepository.all(), doc as any]);
+    if (form.assetId) {
+      const nextAssets = assetRepository.load().assets.map((asset: any) => {
+        if (asset.id !== form.assetId) return asset;
+        return {
+          ...asset,
+          documentIds: Array.from(new Set([...(asset.documentIds ?? []), id])),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+      assetRepository.save({ assets: nextAssets });
+    }
     setDocCount((current) => current + 1);
 
     window.dispatchEvent(
@@ -83,6 +110,7 @@ export default function DocumentsPanel() {
     setForm({
       title: "",
       type: "",
+      assetId: "",
       number: "",
       personId: "",
       issuedAt: "",
@@ -136,6 +164,24 @@ export default function DocumentsPanel() {
             <option>Contract</option>
             <option>Overig</option>
           </select>
+        </div>
+
+        {/* Asset (optie) */}
+        <div className="span-2 ui-field">
+          <label htmlFor="doc-asset">Koppel aan asset (optie)</label>
+          <select
+            id="doc-asset"
+            value={form.assetId}
+            onChange={(e) => onChange("assetId", e.target.value)}
+          >
+            <option value="">— Geen —</option>
+            {assets.map((a) => (
+              <option key={a.id} value={a.id}>{a.display}</option>
+            ))}
+          </select>
+          {assets.length === 0 && (
+            <small>Er zijn nog geen assets om aan te koppelen.</small>
+          )}
         </div>
 
         {/* Persoon (optie) */}
@@ -220,6 +266,5 @@ export default function DocumentsPanel() {
     </div>
   );
 }
-
 
 
