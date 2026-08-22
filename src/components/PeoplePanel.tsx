@@ -31,6 +31,7 @@ type FormState = {
   email: string;
   phone: string;
   notes: string;
+  assetIds: string[];
 };
 
 type Row = {
@@ -45,6 +46,26 @@ type Row = {
   updatedAt: string;
 };
 
+type AssetOption = {
+  id: string;
+  label: string;
+};
+
+function assetLabel(a: any): string {
+  return [
+    a.name ??
+      a.data?.naam ??
+      a.data?.titel ??
+      a.data?.object ??
+      a.data?.adres ??
+      a.assetNumber ??
+      "Asset",
+    a.typeLabel ?? a.type,
+  ]
+    .filter(Boolean)
+    .join(" — ");
+}
+
 export default function PeoplePanel() {
   const [form, setForm] = React.useState<FormState>({
     fullName: "",
@@ -52,9 +73,12 @@ export default function PeoplePanel() {
     email: "",
     phone: "",
     notes: "",
+    assetIds: [],
   });
 
   const [rows, setRows] = React.useState<Row[]>([]);
+  const [assets, setAssets] = React.useState<AssetOption[]>([]);
+  const [assetLinksByPerson, setAssetLinksByPerson] = React.useState<Record<string, string[]>>({});
   const [q, setQ] = React.useState("");
   const [sort, setSort] = React.useState<{ key: keyof Row; dir: "asc" | "desc" }>({
     key: "fullName",
@@ -73,6 +97,29 @@ export default function PeoplePanel() {
       }));
       setRows(norm);
     } catch {}
+
+    try {
+      const assetRows = assetRepository.load().assets;
+      setAssets(
+        assetRows
+          .map((a: any) => ({ id: a.id, label: assetLabel(a) }))
+          .filter((a: AssetOption) => !!a.id && !!a.label),
+      );
+
+      const links: Record<string, string[]> = {};
+      for (const rawAsset of assetRows) {
+        const asset: any = rawAsset;
+        const ids = new Set<string>();
+        if (asset.personId) ids.add(asset.personId);
+        if (Array.isArray(asset.personIds)) {
+          asset.personIds.forEach((id: string) => ids.add(id));
+        }
+        ids.forEach((personId) => {
+          links[personId] = [...(links[personId] ?? []), asset.id];
+        });
+      }
+      setAssetLinksByPerson(links);
+    } catch {}
   }
 
   function onChange<K extends keyof FormState>(key: K, val: FormState[K]) {
@@ -80,6 +127,50 @@ export default function PeoplePanel() {
   }
 
   const requiredOK = form.fullName.trim().length > 1 && !!form.role;
+
+  function toggleId(list: string[], id: string): string[] {
+    return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
+  }
+
+  function toggleFormAsset(assetId: string) {
+    onChange("assetIds", toggleId(form.assetIds, assetId));
+  }
+
+  function updatePersonAssetLinks(personId: string, personName: string, selectedAssetIds: string[]) {
+    const selected = new Set(selectedAssetIds);
+    const nextAssets = assetRepository.load().assets.map((asset: any) => {
+      const currentIds = new Set<string>(Array.isArray(asset.personIds) ? asset.personIds : []);
+      if (asset.personId) currentIds.add(asset.personId);
+
+      if (selected.has(asset.id)) {
+        currentIds.add(personId);
+      } else {
+        currentIds.delete(personId);
+      }
+
+      const nextPersonIds = Array.from(currentIds);
+      const next = {
+        ...asset,
+        personIds: nextPersonIds.length ? nextPersonIds : undefined,
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (asset.personId === personId && !selected.has(asset.id)) {
+        next.personId = nextPersonIds[0] || undefined;
+        next.personName = next.personId === personId ? personName : undefined;
+      } else if (!asset.personId && selected.has(asset.id)) {
+        next.personId = personId;
+        next.personName = personName;
+      } else if (asset.personId === personId) {
+        next.personName = personName;
+      }
+
+      return next;
+    });
+
+    assetRepository.save({ assets: nextAssets });
+    load();
+  }
 
   function save() {
     if (!requiredOK) return;
@@ -99,6 +190,9 @@ export default function PeoplePanel() {
     };
 
     personRepository.saveAll([...personRepository.all(), person as any]);
+    if (form.assetIds.length) {
+      updatePersonAssetLinks(person.id, person.fullName, form.assetIds);
+    }
 
     // ✅ bevestiging alleen hier bij opslaan
     window.dispatchEvent(new CustomEvent("pam:toast", {
@@ -106,17 +200,29 @@ export default function PeoplePanel() {
     }));
 
     // UI bijwerken
-    setRows((r) => [...r, person]);
-    setForm({ fullName: "", role: "", email: "", phone: "", notes: "" });
+    load();
+    setForm({ fullName: "", role: "", email: "", phone: "", notes: "", assetIds: [] });
   }
 
   function unlinkFromAssetsAndDocs(personId: string) {
     // GEEN toasts hier.
     // Assets: personId leegmaken
     try {
-      const nextA = assetRepository
-        .load()
-        .assets.map((a: any) => (a.personId === personId ? { ...a, personId: undefined } : a));
+      const nextA = assetRepository.load().assets.map((a: any) => {
+        const personIds = Array.isArray(a.personIds)
+          ? a.personIds.filter((id: string) => id !== personId)
+          : [];
+        const next = {
+          ...a,
+          personIds: personIds.length ? personIds : undefined,
+          updatedAt: new Date().toISOString(),
+        };
+        if (a.personId === personId) {
+          next.personId = personIds[0] || undefined;
+          next.personName = undefined;
+        }
+        return next;
+      });
       assetRepository.save({ assets: nextA });
     } catch {}
 
@@ -146,6 +252,7 @@ export default function PeoplePanel() {
 
     // 3) UI updaten
     setRows((r) => r.filter((x) => x.id !== id));
+    load();
 
     // 4) Toast alleen hier en alleen bij succes
     if (removed) {
@@ -157,6 +264,16 @@ export default function PeoplePanel() {
 
   function toggleSort(key: keyof Row) {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
+  }
+
+  function toggleExistingPersonAsset(person: Row, assetId: string) {
+    const current = assetLinksByPerson[person.id] ?? [];
+    const next = toggleId(current, assetId);
+    updatePersonAssetLinks(person.id, person.fullName || person.name || "", next);
+
+    window.dispatchEvent(new CustomEvent("pam:toast", {
+      detail: { message: "Assetkoppeling bijgewerkt", tone: "success" }
+    }));
   }
 
   const filtered = React.useMemo(() => {
@@ -251,6 +368,43 @@ export default function PeoplePanel() {
             onChange={(e) => onChange("notes", e.target.value)}
           />
         </div>
+
+        {/* Assets koppelen */}
+        <div className="span-2 ui-field" aria-describedby="pp-assets-tip">
+          <label htmlFor="pp-assets">
+            Koppel aan assets (optie){" "}
+            {form.assetIds.length > 0 && <span className="ui-count-badge">{form.assetIds.length} geselecteerd</span>}
+          </label>
+          <div
+            id="pp-assets"
+            style={{
+              display: "grid",
+              gap: 8,
+              maxHeight: 180,
+              overflow: "auto",
+              border: "1px solid #d8e0ea",
+              borderRadius: 12,
+              padding: 10,
+              background: "#fff",
+            }}
+          >
+            {assets.map((asset) => (
+              <label key={asset.id} style={{ display: "flex", gap: 8, alignItems: "center", margin: 0 }}>
+                <input
+                  type="checkbox"
+                  style={{ width: "auto" }}
+                  checked={form.assetIds.includes(asset.id)}
+                  onChange={() => toggleFormAsset(asset.id)}
+                />
+                <span>{asset.label}</span>
+              </label>
+            ))}
+            {assets.length === 0 && <small>Geen assets beschikbaar.</small>}
+          </div>
+          <small id="pp-assets-tip" className="ui-tip">
+            Vink één of meer assets aan waar deze persoon bij hoort.
+          </small>
+        </div>
       </div>
 
       {/* Acties onderaan formulier */}
@@ -284,6 +438,7 @@ export default function PeoplePanel() {
                 <th onClick={() => toggleSort("role")}>Rol</th>
                 <th onClick={() => toggleSort("email")}>E-mail</th>
                 <th onClick={() => toggleSort("phone")}>Telefoon</th>
+                <th>Assets</th>
                 <th>Acties</th>
               </tr>
             </thead>
@@ -295,6 +450,22 @@ export default function PeoplePanel() {
                   <td>{p.email || ""}</td>
                   <td>{p.phone || ""}</td>
                   <td>
+                    <div style={{ display: "grid", gap: 6, minWidth: 220 }}>
+                      {assets.map((asset) => (
+                        <label key={asset.id} style={{ display: "flex", gap: 8, alignItems: "center", margin: 0 }}>
+                          <input
+                            type="checkbox"
+                            style={{ width: "auto" }}
+                            checked={(assetLinksByPerson[p.id] ?? []).includes(asset.id)}
+                            onChange={() => toggleExistingPersonAsset(p, asset.id)}
+                          />
+                          <span>{asset.label}</span>
+                        </label>
+                      ))}
+                      {assets.length === 0 && <small>Geen assets beschikbaar.</small>}
+                    </div>
+                  </td>
+                  <td>
                     <button className="ui-btn ui-btn--sm ui-btn--danger" onClick={() => handleDelete(p.id)}>
                       Verwijderen
                     </button>
@@ -303,7 +474,7 @@ export default function PeoplePanel() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={6}>
                     <em>
                       {rows.length === 0
                         ? "Nog geen personen vastgelegd."
@@ -319,4 +490,3 @@ export default function PeoplePanel() {
     </div>
   );
 }
-
