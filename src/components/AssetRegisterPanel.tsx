@@ -35,6 +35,8 @@ type Row = {
   notes?: string;
   createdAt?: string | number;
   updatedAt?: string | number;
+  finalizedAt?: string;
+  status?: string;
   // nieuwe structuur
   typeId?: string;
   typeLabel?: string;
@@ -49,6 +51,8 @@ type OptionRow = {
 };
 
 const PSEUDO_DETAILS = "__details__";
+const PSEUDO_PEOPLE = "__people__";
+const PSEUDO_STATUS = "__status__";
 
 /** -----------------------------
  *  INLINE dynamisch veldenformulier (geen apart bestand nodig)
@@ -198,6 +202,8 @@ function buildLabelMap(schema: AssetSchema): Record<string, string> {
   map["personName"] = map["personName"] || "Persoon";
   map["purchaseDate"] = map["purchaseDate"] || "Aankoopdatum";
   map[PSEUDO_DETAILS] = "Details";
+  map[PSEUDO_PEOPLE] = "Mensen";
+  map[PSEUDO_STATUS] = "Status";
   return map;
 }
 
@@ -225,7 +231,6 @@ function computeCandidateKeys(schema: AssetSchema): string[] {
     "purchaseDate",
     "warrantyUntil",
     "priceCents",
-    "personName",
   ];
 
   const BASE = ["name", "typeLabel"];
@@ -313,6 +318,10 @@ function assetNameFromData(data?: Record<string, any>) {
   );
 }
 
+function isFinalized(row: Row) {
+  return row.status === "finalized" || !!row.finalizedAt;
+}
+
 /** -----------------------------
  *  Type-resolve o.b.v. row
  *  ----------------------------- */
@@ -347,7 +356,22 @@ function summarizeRow(schema: AssetSchema, row: Row, labelMap: Record<string, st
   const presentKeys = new Set<string>();
   Object.keys(src).forEach((k) => {
     if (k.startsWith("_")) return;
-    if (["id", "typeId", "type", "typeLabel", "name", "notes", "documentIds", "createdAt", "updatedAt"].includes(k)) return;
+    if ([
+      "id",
+      "typeId",
+      "type",
+      "typeLabel",
+      "name",
+      "notes",
+      "personId",
+      "personIds",
+      "personName",
+      "documentIds",
+      "status",
+      "finalizedAt",
+      "createdAt",
+      "updatedAt",
+    ].includes(k)) return;
     if (src[k] === undefined || src[k] === null || src[k] === "") return;
     presentKeys.add(k);
   });
@@ -400,6 +424,7 @@ export default function AssetRegisterPanel() {
   const [selectedDocumentIds, setSelectedDocumentIds] = React.useState<string[]>([]);
   const [people, setPeople] = React.useState<OptionRow[]>([]);
   const [documents, setDocuments] = React.useState<OptionRow[]>([]);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
 
   const [rows, setRows] = React.useState<Row[]>([]);
   const [q, setQ] = React.useState("");
@@ -493,52 +518,155 @@ export default function AssetRegisterPanel() {
     setTypeId("");
     setSelectedPersonIds([]);
     setSelectedDocumentIds([]);
+    setEditingId(null);
   }
 
   function toggleId(list: string[], id: string): string[] {
     return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
   }
 
-  function saveNew() {
+  function syncDocumentAssetLinks(assetId: string, selectedIds: string[]) {
+    const selected = new Set(selectedIds);
+    const nextDocs = documentRepository.all().map((doc: any) => {
+      const current = new Set<string>(Array.isArray(doc.assetIds) ? doc.assetIds : []);
+      if (selected.has(doc.id)) {
+        current.add(assetId);
+      } else {
+        current.delete(assetId);
+      }
+      return {
+        ...doc,
+        assetIds: Array.from(current),
+        updatedAt: new Date().toISOString(),
+      };
+    });
+    documentRepository.saveAll(nextDocs as any);
+  }
+
+  function saveAsset() {
     const errs = validateAsset(schema, typeId, data);
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
+    const existing = editingId
+      ? assetRepository.load().assets.find((asset: any) => asset.id === editingId)
+      : null;
+    if (existing && isFinalized(existing as Row)) {
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: "Dit asset is vastgelegd en kan niet meer worden aangepast.", tone: "warn" },
+      }));
+      resetForm();
+      return;
+    }
+
     const primaryPerson = people.find((person) => person.id === selectedPersonIds[0]);
     const assetName = assetNameFromData(data);
     const rec = {
-      id: crypto.randomUUID(),
+      ...(existing ?? {}),
+      id: editingId ?? crypto.randomUUID(),
       typeId,
       typeLabel: typeDef?.label ?? typeId,
-      name: assetName || undefined,
+      name: assetName || existing?.name || undefined,
       personId: selectedPersonIds[0] || undefined,
       personName: primaryPerson?.label,
       personIds: selectedPersonIds.length ? selectedPersonIds : undefined,
       documentIds: selectedDocumentIds.length ? selectedDocumentIds : undefined,
       data,
-      createdAt: Date.now(),
+      createdAt: existing?.createdAt ?? Date.now(),
+      updatedAt: new Date().toISOString(),
     };
 
-    persistAdd(rec);
-    if (selectedDocumentIds.length) {
-      const nextDocs = documentRepository.all().map((doc: any) => {
-        if (!selectedDocumentIds.includes(doc.id)) return doc;
-        return {
-          ...doc,
-          assetIds: Array.from(new Set([...(doc.assetIds ?? []), rec.id])),
-          updatedAt: new Date().toISOString(),
-        };
+    if (editingId) {
+      const reg = assetRepository.load();
+      assetRepository.save({
+        assets: reg.assets.map((asset: any) => (asset.id === editingId ? rec : asset)),
       });
-      documentRepository.saveAll(nextDocs as any);
+    } else {
+      persistAdd(rec);
+      sessionStorage.setItem("pam-last-created", rec.id);
     }
-    sessionStorage.setItem("pam-last-created", rec.id);
-    // ook direct in UI
-    setRows((prev) => [flattenRow(rec), ...prev]);
+
+    syncDocumentAssetLinks(rec.id, selectedDocumentIds);
+    load();
     resetForm();
 
     try {
-      window.dispatchEvent(new CustomEvent("pam:toast", { detail: { message: "Asset opgeslagen", tone: "success" } }));
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: editingId ? "Asset aangepast" : "Asset opgeslagen", tone: "success" },
+      }));
     } catch {}
+  }
+
+  function startEdit(row: Row) {
+    if (isFinalized(row)) {
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: "Dit asset is vastgelegd en kan niet meer worden aangepast.", tone: "warn" },
+      }));
+      return;
+    }
+
+    const resolved = resolveType(schema, row);
+    setEditingId(row.id);
+    setTypeId(row.typeId || resolved?.id || "");
+    setData({ ...(row.data || {}) });
+    setSelectedPersonIds(Array.from(new Set([row.personId, ...(row.personIds ?? [])].filter(Boolean) as string[])));
+    setSelectedDocumentIds(Array.isArray(row.documentIds) ? row.documentIds : []);
+    setErrors({});
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function finalizeAsset(id: string) {
+    const row = assetRepository.load().assets.find((asset: any) => asset.id === id);
+    if (!row || isFinalized(row as Row)) return;
+    if (!confirm("Weet u zeker dat u dit asset wilt vastleggen? Daarna kan het niet meer worden aangepast.")) return;
+
+    const now = new Date().toISOString();
+    const next = assetRepository.load().assets.map((asset: any) =>
+      asset.id === id
+        ? { ...asset, status: "finalized", finalizedAt: now, updatedAt: now }
+        : asset,
+    );
+    assetRepository.save({ assets: next });
+    if (editingId === id) resetForm();
+    load();
+    window.dispatchEvent(new CustomEvent("pam:toast", {
+      detail: { message: "Asset vastgelegd", tone: "success" },
+    }));
+  }
+
+  function personNamesForRow(row: Row): string[] {
+    const ids = Array.from(new Set([row.personId, ...(row.personIds ?? [])].filter(Boolean) as string[]));
+    const names = ids
+      .map((id) => people.find((person) => person.id === id)?.label)
+      .filter(Boolean) as string[];
+    if (!names.length && row.personName) return [row.personName];
+    return names;
+  }
+
+  function renderPeople(row: Row) {
+    const names = personNamesForRow(row);
+    if (!names.length) return <span className="text-gray-400">—</span>;
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, minWidth: 160 }}>
+        {names.map((name) => (
+          <span
+            key={name}
+            className="ui-badge"
+            style={{ background: "#eef5ff", borderColor: "#c7d8ee", color: "#0f2d4a" }}
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  function renderStatus(row: Row) {
+    return isFinalized(row) ? (
+      <span className="ui-badge ok">Vastgelegd</span>
+    ) : (
+      <span className="ui-badge">Concept</span>
+    );
   }
 
   // Kolommen: toon kandidaten die voorkomen + altijd name/type + altijd Details
@@ -552,6 +680,8 @@ export default function AssetRegisterPanel() {
     }
     present.add("name");
     present.add("typeLabel");
+    present.add(PSEUDO_STATUS);
+    present.add(PSEUDO_PEOPLE);
     present.add(PSEUDO_DETAILS); // altijd samenvatting
     return Array.from(present);
   }, [rows, CANDIDATE_KEYS]);
@@ -622,7 +752,7 @@ export default function AssetRegisterPanel() {
           {typeDef && (
             <div className="md:col-span-2">
               <div className="text-sm text-gray-600 mb-2">
-                Velden voor: <strong>{typeDef.label}</strong>
+                {editingId ? "Asset aanpassen" : "Velden voor"}: <strong>{typeDef.label}</strong>
               </div>
               <DynamicFieldsFormInline fields={typeDef.fields} value={data} errors={errors} onChange={setData} />
 
@@ -710,7 +840,9 @@ export default function AssetRegisterPanel() {
 
               <div className="mt-3 flex justify-end gap-2">
                 <button className="ui-btn" onClick={resetForm}>Annuleren</button>
-                <button className="ui-btn ui-btn--primary" onClick={saveNew}>Opslaan</button>
+                <button className="ui-btn ui-btn--primary" onClick={saveAsset}>
+                  {editingId ? "Wijzigingen opslaan" : "Opslaan"}
+                </button>
               </div>
             </div>
           )}
@@ -733,7 +865,12 @@ export default function AssetRegisterPanel() {
           <thead>
             <tr>
               {TABLE_KEYS.map((k) => (
-                <th key={String(k)} onClick={() => k !== PSEUDO_DETAILS && toggleSort(k)}>
+                <th
+                  key={String(k)}
+                  onClick={() =>
+                    ![PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_STATUS].includes(k) && toggleSort(k)
+                  }
+                >
                   {colLabel(k)}
                 </th>
               ))}
@@ -747,6 +884,14 @@ export default function AssetRegisterPanel() {
                 className={r.id === highlightId ? "ui-row-highlight" : ""}
               >
                 {TABLE_KEYS.map((k) => {
+                  if (k === PSEUDO_STATUS) {
+                    return <td key={k}>{renderStatus(r)}</td>;
+                  }
+
+                  if (k === PSEUDO_PEOPLE) {
+                    return <td key={k}>{renderPeople(r)}</td>;
+                  }
+
                   if (k === PSEUDO_DETAILS) {
                     return <td key={k}>{summarizeRow(schema, r, LABELS_FROM_SCHEMA)}</td>;
                   }
@@ -762,12 +907,28 @@ export default function AssetRegisterPanel() {
                   return <td key={String(k)}>{cell}</td>;
                 })}
                 <td>
-                  <button
-                    className="ui-btn ui-btn--sm ui-btn--danger"
-                    onClick={() => handleDelete(r.id)}
-                  >
-                    Verwijderen
-                  </button>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minWidth: 220 }}>
+                    <button
+                      className="ui-btn ui-btn--sm"
+                      disabled={isFinalized(r)}
+                      onClick={() => startEdit(r)}
+                    >
+                      Aanpassen
+                    </button>
+                    <button
+                      className="ui-btn ui-btn--sm ui-btn--primary"
+                      disabled={isFinalized(r)}
+                      onClick={() => finalizeAsset(r.id)}
+                    >
+                      {isFinalized(r) ? "Vastgelegd" : "Vastleggen"}
+                    </button>
+                    <button
+                      className="ui-btn ui-btn--sm ui-btn--danger"
+                      onClick={() => handleDelete(r.id)}
+                    >
+                      Verwijderen
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
