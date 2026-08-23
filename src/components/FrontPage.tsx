@@ -57,7 +57,7 @@ export default function FrontPage() {
           PAM helpt u graag verder om uw assets vast te leggen en te beheren.
         </p>
         <button
-          onClick={() => navigate("/start")}
+          onClick={() => navigate("/intro")}
           style={{
             margin: "30px auto 0",
             background: "#fff",
