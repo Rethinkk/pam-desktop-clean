@@ -94,7 +94,7 @@ export default function GuidedStartPage() {
       >
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/intro")}
             style={{
               background: "rgba(255,255,255,0.1)",
               color: "#fff",
@@ -106,7 +106,7 @@ export default function GuidedStartPage() {
               marginBottom: 20,
             }}
           >
-            Terug naar PAM
+            Terug naar introductie
           </button>
           <p
             style={{
