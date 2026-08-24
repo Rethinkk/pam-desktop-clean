@@ -1,4 +1,4 @@
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -12,9 +12,11 @@ const ALLOWED_ORIGIN = process.env.PAM_ALLOWED_ORIGIN ?? "http://127.0.0.1:5174"
 const DATA_DIR = process.env.PAM_DATA_DIR ?? join(__dirname, "data");
 const ALLOW_DEV_LOGIN = process.env.PAM_ALLOW_DEV_LOGIN === "true";
 const COOKIE_NAME = "pam_session";
+const USERS_FILE = join(DATA_DIR, "users.json");
 const RECORDS_FILE = join(DATA_DIR, "encrypted-records.json");
 const EVENTS_FILE = join(DATA_DIR, "sync-events.jsonl");
 const ALLOWED_PROVIDERS = new Set(["ovhcloud-eu", "scaleway-eu", "custom-eu"]);
+const PASSWORD_KEY_LENGTH = 64;
 
 function assertConfigured() {
   if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
@@ -39,7 +41,7 @@ function corsHeaders(request) {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers": "Content-Type, X-PAM-Cloud-Provider, X-PAM-Region-Policy",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     Vary: "Origin",
   };
 }
@@ -63,6 +65,16 @@ function sign(value) {
 function createSessionCookie(session) {
   const payload = base64UrlEncode(session);
   return `${payload}.${sign(payload)}`;
+}
+
+function createSetCookieHeader(session, maxAgeSeconds = 60 * 60 * 8) {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${COOKIE_NAME}=${encodeURIComponent(createSessionCookie(session))}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}${secure}`;
+}
+
+function createExpiredCookieHeader() {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
 }
 
 function verifySessionCookie(value) {
@@ -146,6 +158,45 @@ async function readRecordStore() {
   }
 }
 
+async function readUserStore() {
+  try {
+    return JSON.parse(await readFile(USERS_FILE, "utf8"));
+  } catch {
+    return { users: [] };
+  }
+}
+
+async function saveUserStore(store) {
+  await mkdir(DATA_DIR, { recursive: true });
+  await writeFile(USERS_FILE, `${JSON.stringify(store, null, 2)}\n`);
+}
+
+function normalizeEmail(email) {
+  return String(email ?? "").trim().toLowerCase();
+}
+
+function hashPassword(password, salt = randomBytes(16).toString("base64url")) {
+  const hash = scryptSync(String(password), salt, PASSWORD_KEY_LENGTH).toString("base64url");
+  return { salt, hash };
+}
+
+function isPasswordMatch(password, user) {
+  const { hash } = hashPassword(password, user.passwordSalt);
+  const expected = Buffer.from(user.passwordHash);
+  const actual = Buffer.from(hash);
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
+function publicUser(user) {
+  return {
+    id: user.id,
+    vaultId: user.vaultId,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
+}
+
 async function saveRecordStore(store) {
   await mkdir(DATA_DIR, { recursive: true });
   await writeFile(RECORDS_FILE, `${JSON.stringify(store, null, 2)}\n`);
@@ -176,6 +227,127 @@ async function handleDevLogin(request, response, headers) {
     {
       ...headers,
       "Set-Cookie": `${COOKIE_NAME}=${encodeURIComponent(createSessionCookie(session))}; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800`,
+    },
+  );
+}
+
+async function createAuthSession(user, response, headers) {
+  const now = Date.now();
+  const session = {
+    userId: user.id,
+    vaultId: user.vaultId,
+    exp: now + 1000 * 60 * 60 * 8,
+  };
+
+  jsonResponse(
+    response,
+    200,
+    { ok: true, user: publicUser(user) },
+    {
+      ...headers,
+      "Set-Cookie": createSetCookieHeader(session),
+    },
+  );
+}
+
+async function handleRegister(request, response, headers) {
+  const body = await readJsonBody(request, 50_000);
+  const name = String(body.name ?? "").trim();
+  const email = normalizeEmail(body.email);
+  const password = String(body.password ?? "");
+
+  if (!name) return reject(response, 400, "Name is required.", headers);
+  if (!email.includes("@")) return reject(response, 400, "Valid email is required.", headers);
+  if (password.length < 10) return reject(response, 400, "Password must be at least 10 characters.", headers);
+
+  const store = await readUserStore();
+  if (store.users.some((user) => user.email === email)) {
+    return reject(response, 409, "A user with this email already exists.", headers);
+  }
+
+  const passwordResult = hashPassword(password);
+  const now = new Date().toISOString();
+  const user = {
+    id: randomUUID(),
+    vaultId: randomUUID(),
+    name,
+    email,
+    createdAt: now,
+    passwordSalt: passwordResult.salt,
+    passwordHash: passwordResult.hash,
+  };
+
+  store.users.push(user);
+  await saveUserStore(store);
+  await appendSyncEvent({
+    id: randomUUID(),
+    vaultId: user.vaultId,
+    userId: user.id,
+    type: "auth.register",
+    createdAt: now,
+  });
+  await createAuthSession(user, response, headers);
+}
+
+async function handleLogin(request, response, headers) {
+  const body = await readJsonBody(request, 50_000);
+  const email = normalizeEmail(body.email);
+  const password = String(body.password ?? "");
+  const store = await readUserStore();
+  const user = store.users.find((candidate) => candidate.email === email);
+
+  if (!user || !isPasswordMatch(password, user)) {
+    return reject(response, 401, "Invalid email or password.", headers);
+  }
+
+  await appendSyncEvent({
+    id: randomUUID(),
+    vaultId: user.vaultId,
+    userId: user.id,
+    type: "auth.login",
+    createdAt: new Date().toISOString(),
+  });
+  await createAuthSession(user, response, headers);
+}
+
+async function handleSession(request, response, headers) {
+  const session = getSession(request);
+  if (!session) {
+    jsonResponse(response, 200, { authenticated: false }, headers);
+    return;
+  }
+
+  const store = await readUserStore();
+  const user = store.users.find((candidate) => candidate.id === session.userId);
+  if (!user && session.userId === "dev-user") {
+    jsonResponse(response, 200, {
+      authenticated: true,
+      user: {
+        id: session.userId,
+        vaultId: session.vaultId,
+        name: "PAM Dev User",
+        email: "dev@pam.local",
+        createdAt: new Date().toISOString(),
+      },
+    }, headers);
+    return;
+  }
+  if (!user) {
+    jsonResponse(response, 200, { authenticated: false }, headers);
+    return;
+  }
+
+  jsonResponse(response, 200, { authenticated: true, user: publicUser(user) }, headers);
+}
+
+async function handleLogout(response, headers) {
+  jsonResponse(
+    response,
+    200,
+    { ok: true },
+    {
+      ...headers,
+      "Set-Cookie": createExpiredCookieHeader(),
     },
   );
 }
@@ -257,6 +429,22 @@ async function router(request, response) {
 
     if (request.method === "POST" && url.pathname === "/api/pam/auth/dev-login") {
       await handleDevLogin(request, response, headers);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/pam/auth/register") {
+      await handleRegister(request, response, headers);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/pam/auth/login") {
+      await handleLogin(request, response, headers);
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/pam/auth/session") {
+      await handleSession(request, response, headers);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/pam/auth/logout") {
+      await handleLogout(response, headers);
       return;
     }
 

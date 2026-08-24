@@ -18,6 +18,33 @@ Security rules:
 - Stores only encrypted payloads.
 - Does not receive, derive or store raw vault keys.
 
+### `POST /api/pam/auth/register`
+
+Creates a user and vault, stores a server-side password hash, and sets a signed
+HttpOnly session cookie.
+
+Body:
+
+```json
+{
+  "name": "Pam de Vries",
+  "email": "pam@example.nl",
+  "password": "minimum-10-characters"
+}
+```
+
+### `POST /api/pam/auth/login`
+
+Verifies the password and sets a signed HttpOnly session cookie.
+
+### `GET /api/pam/auth/session`
+
+Returns the current authenticated user if the session cookie is valid.
+
+### `POST /api/pam/auth/logout`
+
+Expires the session cookie.
+
 ### `POST /api/pam/auth/dev-login`
 
 Development-only helper. Enabled only with:
@@ -46,6 +73,7 @@ VITE_SECURE_LOCAL_STORAGE=true
 VITE_CLOUD_SYNC_ENABLED=true
 VITE_CLOUD_PROVIDER=ovhcloud-eu
 VITE_CLOUD_REGION_POLICY=eu-only
+VITE_AUTH_API_URL=http://127.0.0.1:8787
 VITE_CLOUD_SYNC_ENDPOINT=http://127.0.0.1:8787/api/pam/sync/push
 ```
 

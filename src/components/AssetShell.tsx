@@ -12,6 +12,7 @@ import ConsentPanel from "./ConsentPanel";
 import SecurityPanel from "./SecurityPanel";
 import AboutPanel from "./AboutPanel"; // ✅ About terug
 import { Style as UIStyle, ToastHost } from "./ui/UI";
+import { useAuth } from "../auth/AuthContext";
 import {
   PAM_ACTIVE_TAB_STORAGE_KEY,
   PAM_ALLOWED_TABS,
@@ -60,6 +61,7 @@ function ReportingLook() {
       .rp .brand-sep { color:var(--pam-navy); opacity:.95; }
       .rp .brand-tag { color:var(--pam-deep-navy); font-weight:680; font-size:15px; opacity:.98; }
       .rp .brand-actions { align-items:center; display:flex; gap:18px; color:var(--pam-deep-navy); flex:0 0 auto; }
+      .rp .brand-profile-wrap { position:relative; }
       .rp .brand-icon {
         align-items:center;
         background:transparent;
@@ -94,6 +96,20 @@ function ReportingLook() {
       }
       .rp .brand-person { font-size:20px; line-height:1; }
       .rp .brand-chevron { font-size:15px; line-height:1; }
+      .rp .brand-menu {
+        background:var(--pam-soft-white);
+        border:1px solid var(--pam-warm-grey);
+        border-radius:14px;
+        box-shadow:0 14px 32px rgba(18,48,82,0.14);
+        min-width:230px;
+        padding:12px;
+        position:absolute;
+        right:0;
+        top:34px;
+        z-index:20;
+      }
+      .rp .brand-menu-name { font-weight:800; margin-bottom:3px; }
+      .rp .brand-menu-email { color:var(--pam-slate); font-size:13px; margin-bottom:10px; overflow-wrap:anywhere; }
 
       /* Layout & cards */
       .rp {
@@ -196,6 +212,8 @@ function usePersistedTab(defaultTab: TabKey = "assets") {
 export default function AssetShell() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [profileOpen, setProfileOpen] = React.useState(false);
   const requestedTab = location.state?.tab;
   const initialTab = ALLOWED_TABS.includes(requestedTab) ? requestedTab : "assets";
   const [tab, setTab] = usePersistedTab(initialTab);
@@ -212,6 +230,11 @@ export default function AssetShell() {
     window.addEventListener("pam:set-tab", handler);
     return () => window.removeEventListener("pam:set-tab", handler);
   }, [setTab]);
+
+  async function handleLogout() {
+    await logout();
+    navigate("/login", { replace: true });
+  }
   
 
   return (
@@ -230,11 +253,28 @@ export default function AssetShell() {
           <button className="brand-icon" type="button" aria-label="Help">
             ?
           </button>
-          <button className="brand-profile" type="button" aria-label="Profiel">
-            <span className="brand-person" aria-hidden="true">♙</span>
-            <span>Pam de Vries</span>
-            <span className="brand-chevron" aria-hidden="true">⌄</span>
-          </button>
+          <div className="brand-profile-wrap">
+            <button
+              className="brand-profile"
+              type="button"
+              aria-expanded={profileOpen}
+              aria-label="Profiel"
+              onClick={() => setProfileOpen((open) => !open)}
+            >
+              <span className="brand-person" aria-hidden="true">♙</span>
+              <span>{user?.name ?? "PAM gebruiker"}</span>
+              <span className="brand-chevron" aria-hidden="true">⌄</span>
+            </button>
+            {profileOpen && (
+              <div className="brand-menu">
+                <div className="brand-menu-name">{user?.name}</div>
+                <div className="brand-menu-email">{user?.email}</div>
+                <button className="ui-btn ui-btn--secondary" type="button" onClick={handleLogout}>
+                  Uitloggen
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

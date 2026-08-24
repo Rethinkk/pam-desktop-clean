@@ -27,7 +27,7 @@ function close(server) {
 
 async function request(baseUrl, path, options = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
-    method: "POST",
+    method: options.method ?? "POST",
     headers: {
       Origin: "http://127.0.0.1:5174",
       ...options.headers,
@@ -73,6 +73,64 @@ try {
     body: JSON.stringify({ records: [] }),
   });
   assert.equal(noSession.response.status, 401);
+
+  const registered = await request(baseUrl, "/api/pam/auth/register", {
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "Pam Tester",
+      email: "pam.tester@example.nl",
+      password: "veilig-wachtwoord-123",
+    }),
+  });
+  assert.equal(registered.response.status, 200);
+  assert.equal(registered.body.ok, true);
+  assert.equal(registered.body.user.email, "pam.tester@example.nl");
+  assert.match(registered.setCookie ?? "", /pam_session=/);
+  assert.match(registered.setCookie ?? "", /HttpOnly/);
+
+  const registeredCookie = registered.setCookie?.split(";")[0] ?? "";
+  const session = await request(baseUrl, "/api/pam/auth/session", {
+    method: "GET",
+    headers: { Cookie: registeredCookie },
+  });
+  assert.equal(session.response.status, 200);
+  assert.equal(session.body.authenticated, true);
+  assert.equal(session.body.user.name, "Pam Tester");
+
+  const duplicate = await request(baseUrl, "/api/pam/auth/register", {
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "Pam Tester",
+      email: "pam.tester@example.nl",
+      password: "veilig-wachtwoord-123",
+    }),
+  });
+  assert.equal(duplicate.response.status, 409);
+
+  const badPassword = await request(baseUrl, "/api/pam/auth/login", {
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: "pam.tester@example.nl",
+      password: "verkeerd-wachtwoord",
+    }),
+  });
+  assert.equal(badPassword.response.status, 401);
+
+  const logout = await request(baseUrl, "/api/pam/auth/logout", {
+    headers: { Cookie: registeredCookie },
+  });
+  assert.equal(logout.response.status, 200);
+  assert.match(logout.setCookie ?? "", /Max-Age=0/);
+
+  const passwordLogin = await request(baseUrl, "/api/pam/auth/login", {
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: "pam.tester@example.nl",
+      password: "veilig-wachtwoord-123",
+    }),
+  });
+  assert.equal(passwordLogin.response.status, 200);
+  assert.equal(passwordLogin.body.user.name, "Pam Tester");
 
   const login = await request(baseUrl, "/api/pam/auth/dev-login");
   assert.equal(login.response.status, 200);
