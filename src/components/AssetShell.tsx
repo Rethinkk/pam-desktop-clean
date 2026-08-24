@@ -27,35 +27,143 @@ const ALLOWED_TABS: TabKey[] = PAM_ALLOWED_TABS;
 function ReportingLook() {
   return (
     <style>{`
-      .rp { --brand-scale: 1.40; }
+      .rp {
+        --pam-deep-navy: #123052;
+        --pam-navy: #173A61;
+        --pam-olive: #687348;
+        --pam-ivory: #F8F5EE;
+        --pam-soft-white: #FCFBF8;
+        --pam-slate: #60718A;
+        --pam-warm-grey: #DEDCD5;
+        --brand-scale: 1.40;
+      }
 
       /* Brand header */
       .rp .brandwrap {
-        background:#f8fafc;
-        color:#0f172a;
-        border-radius:16px;
-        padding:14px 16px;
-        margin: 0 0 16px;
-        box-shadow:0 6px 20px rgba(0,0,0,0.08);
+        align-items:center;
+        background:rgba(252,251,248,.97);
+        border:1px solid var(--pam-warm-grey);
+        border-radius:14px;
+        box-shadow:0 12px 34px rgba(18,48,82,0.10);
+        color:var(--pam-deep-navy);
+        display:flex;
+        gap:18px;
+        justify-content:space-between;
+        margin:0 0 18px;
+        min-height:76px;
+        padding:18px 28px;
       }
-      .rp .brandbar { display:flex; align-items:baseline; gap:8px; }
+      .rp .brandbar { display:flex; align-items:baseline; gap:10px; min-width:0; }
       .rp .brand-home { appearance:none; border:0; background:transparent; color:inherit; padding:0; box-shadow:none; cursor:pointer; text-align:left; }
       .rp .brand-home:hover { background:transparent; text-decoration:none; }
-      .rp .brand-word { font-weight:800; font-size: calc(16px * var(--brand-scale)); line-height:1.12; letter-spacing:.2px; }
-      .rp .brand-sep { opacity:.9; }
-      .rp .brand-tag { font-weight:600; font-size: calc(16px * var(--brand-scale)); opacity:.95; }
+      .rp .brand-word { color:var(--pam-deep-navy); font-weight:900; font-size:34px; line-height:1; letter-spacing:-.02em; }
+      .rp .brand-sep { color:var(--pam-navy); opacity:.95; }
+      .rp .brand-tag { color:var(--pam-deep-navy); font-weight:750; font-size:18px; opacity:.98; }
+      .rp .brand-actions { align-items:center; display:flex; gap:20px; color:var(--pam-deep-navy); flex:0 0 auto; }
+      .rp .brand-icon {
+        align-items:center;
+        background:transparent;
+        border:2px solid var(--pam-deep-navy);
+        border-radius:999px;
+        box-shadow:none;
+        color:var(--pam-deep-navy);
+        display:inline-flex;
+        font-size:18px;
+        font-weight:850;
+        height:30px;
+        justify-content:center;
+        padding:0;
+        width:30px;
+      }
+      .rp .brand-icon:hover,
+      .rp .brand-profile:hover {
+        background:transparent;
+        color:var(--pam-olive);
+      }
+      .rp .brand-profile {
+        align-items:center;
+        background:transparent;
+        border:0;
+        box-shadow:none;
+        color:var(--pam-deep-navy);
+        display:inline-flex;
+        gap:10px;
+        font-size:16px;
+        font-weight:750;
+        padding:0;
+      }
+      .rp .brand-person { font-size:23px; line-height:1; }
+      .rp .brand-chevron { font-size:17px; line-height:1; }
 
       /* Layout & cards */
-      .rp { padding: 24px 24px 32px 24px; }
-      .rp h1 { font-size: 28px; line-height: 1.2; margin: 0 0 16px; font-weight: 700; }
-      .rp .card { background:#fff; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.08); padding:16px; margin-bottom:16px; }
+      .rp {
+        background:var(--pam-ivory);
+        color:var(--pam-deep-navy);
+        border-radius:18px;
+        box-shadow:0 18px 50px rgba(0,0,0,0.22);
+        margin:0 auto;
+        min-height:calc(100vh - 40px);
+        overflow:hidden;
+        padding:0 32px 34px;
+        width:min(calc(100% - clamp(22px, 8vw, 92px)), 1840px);
+      }
+      .rp h1 { color:var(--pam-deep-navy); font-size:32px; line-height:1.2; margin:0 0 12px; font-weight:850; letter-spacing:-.02em; }
+      .rp h2, .rp h3 { color:var(--pam-deep-navy); }
+      .rp .card {
+        background:rgba(252,251,248,.94);
+        border:1px solid var(--pam-warm-grey);
+        border-radius:20px;
+        box-shadow:0 12px 30px rgba(18,48,82,0.07);
+        color:var(--pam-deep-navy);
+        padding:28px;
+        margin-bottom:18px;
+      }
+      .rp .pam-panel-card {
+        min-height:620px;
+      }
 
       /* Tabs */
-      .rp .tabs { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px; }
-      .rp .tab { border:1px solid #e5e7eb; background:#fff; color:#0f172a; padding:8px 12px; border-radius:12px; font-weight:600; cursor:pointer; }
-      .rp .tab:hover { background:#f8fafc; }
-      .rp .tab.active { background:#0f172a; color:#fff; border-color:#0f172a; }
+      .rp .pam-tabs-shell {
+        margin:0 0 24px;
+        padding:4px 16px;
+      }
+      .rp .tabs { display:flex; gap:16px; flex-wrap:wrap; margin:0; }
+      .rp .tab {
+        border:1px solid var(--pam-warm-grey);
+        background:rgba(252,251,248,.95);
+        border-radius:999px;
+        box-shadow:0 6px 16px rgba(18,48,82,0.08);
+        color:var(--pam-deep-navy);
+        cursor:pointer;
+        font-weight:750;
+        padding:11px 22px;
+      }
+      .rp .tab:hover { background:#fff; border-color:var(--pam-olive); color:var(--pam-deep-navy); }
+      .rp .tab.active {
+        background:linear-gradient(180deg, #74815a 0%, #4f5c36 100%);
+        border-color:#4f5c36;
+        box-shadow:0 10px 24px rgba(79,92,54,0.22);
+        color:#fff;
+      }
       .rp .tab-spacer { flex:1 1 auto; }
+
+      @media (max-width: 760px) {
+        .rp {
+          padding:0 14px 22px;
+          width:100%;
+        }
+        .rp .brandwrap {
+          align-items:flex-start;
+          flex-direction:column;
+          padding:16px 18px;
+        }
+        .rp .brand-word { font-size:30px; }
+        .rp .brand-tag { font-size:14px; }
+        .rp .brand-actions { justify-content:space-between; width:100%; }
+        .rp .pam-tabs-shell { overflow-x:auto; padding:2px 2px 16px; }
+        .rp .tabs { flex-wrap:nowrap; }
+        .rp .card { border-radius:16px; padding:18px; }
+      }
     `}</style>
   );
 }
@@ -107,17 +215,26 @@ export default function AssetShell() {
       <UIStyle />
       <ToastHost />
 
-      {/* Brand (donkere balk, witte tekst) */}
       <div className="brandwrap">
         <button className="brandbar brand-home" onClick={() => navigate("/start")} aria-label="Terug naar PAM startpagina">
           <span className="brand-word">PAM</span>
-          <span className="brand-sep">—</span>
+          <span className="brand-sep">-</span>
           <span className="brand-tag">Your Personal Asset Manager</span>
         </button>
+        <div className="brand-actions" aria-label="Profiel en hulp">
+          <button className="brand-icon" type="button" aria-label="Help">
+            ?
+          </button>
+          <button className="brand-profile" type="button" aria-label="Profiel">
+            <span className="brand-person" aria-hidden="true">♙</span>
+            <span>Pam de Vries</span>
+            <span className="brand-chevron" aria-hidden="true">⌄</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="card" style={{ marginBottom: 8 }}>
+      <div className="pam-tabs-shell">
         <div className="tabs">
           <button className={`tab ${tab === "assets" ? "active" : ""}`} onClick={() => setTab("assets")}>
             Assets
@@ -152,55 +269,55 @@ export default function AssetShell() {
 
       {/* Panels */}
       {tab === "assets" && (
-        <div className="card">
+        <div className="card pam-panel-card">
           <AssetsPanel />
         </div>
       )}
 
       {tab === "asset-register" && (
-        <div className="card">
+        <div className="card pam-panel-card">
           <AssetRegisterPanel />
         </div>
       )}
 
       {tab === "docs" && (
-        <div className="card">
+        <div className="card pam-panel-card">
           <DocumentsPanel />
         </div>
       )}
 
       {tab === "doc-register" && (
-        <div className="card">
+        <div className="card pam-panel-card">
           <DocumentRegisterPanel />
         </div>
       )}
 
       {tab === "people" && (
-        <div className="card">
+        <div className="card pam-panel-card">
           <PeoplePanel />
         </div>
       )}
 
       {tab === "consents" && (
-        <div className="card">
+        <div className="card pam-panel-card">
           <ConsentPanel />
         </div>
       )}
 
       {tab === "reporting" && (
-        <div className="card" style={{ padding: 0 }}>
+        <div className="card pam-panel-card" style={{ padding: 0 }}>
           <ReportingPanel />
         </div>
       )}
 
       {tab === "about" && (
-        <div className="card">
+        <div className="card pam-panel-card">
           <AboutPanel />
         </div>
       )}
 
       {tab === "security" && (
-        <div className="card">
+        <div className="card pam-panel-card">
           <SecurityPanel />
         </div>
       )}

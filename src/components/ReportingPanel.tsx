@@ -409,36 +409,46 @@ export default function ReportingPanel() {
     <div className="rp">
       {/* Scoped styles – onafhankelijk van Tailwind/andere CSS */}
       <style>{`
-        .rp { padding: 24px 24px 32px 24px; }
-        .rp h1 { font-size: 28px; line-height: 1.2; margin: 0 0 16px; font-weight: 700; }
-        .rp .card { background: #ffffff; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); padding: 16px; margin-bottom: 16px; }
+        .rp {
+          --pam-deep-navy:#123052;
+          --pam-navy:#173A61;
+          --pam-olive:#687348;
+          --pam-soft-white:#FCFBF8;
+          --pam-slate:#60718A;
+          --pam-warm-grey:#DEDCD5;
+          color:var(--pam-deep-navy);
+          padding: 24px 24px 32px 24px;
+        }
+        .rp h1 { color:var(--pam-deep-navy); font-size: 32px; line-height: 1.2; margin: 0 0 16px; font-weight: 850; letter-spacing:-.02em; }
+        .rp .card { background: var(--pam-soft-white); border:1px solid var(--pam-warm-grey); border-radius: 18px; box-shadow: 0 12px 30px rgba(18,48,82,0.07); padding: 20px; margin-bottom: 18px; }
         .rp .controls { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
         .rp .field { grid-column: span 6; }
         .rp .field--quarter { grid-column: span 3; }
         .rp .field--full { grid-column: 1 / -1; }
         @media (max-width: 900px){ .rp .field, .rp .field--quarter { grid-column: 1 / -1; } }
-        .rp label { display:block; font-size: 12px; color:#64748b; margin-bottom:6px; }
-        .rp select, .rp input[type="email"] { width:100%; border:1px solid #d1d5db; border-radius:12px; padding:10px 12px; font-size:14px; outline: none; }
-        .rp .btn { display:inline-flex; align-items:center; justify-content:center; border-radius:12px; padding:10px 14px; font-size:14px; border:1px solid #d1d5db; background:#fff; cursor:pointer; }
-        .rp .btn:hover { background:#f8fafc; }
-        .rp .btn--primary { background:#0f172a; color:#fff; border-color:#0f172a; }
-        .rp .btn--primary:hover { background:#111827; }
+        .rp label { display:block; font-size: 14px; color:var(--pam-deep-navy); font-weight:850; margin-bottom:8px; }
+        .rp select, .rp input[type="email"] { width:100%; border:1px solid #D5D8DD; border-radius:13px; padding:12px 14px; font-size:15px; outline: none; color:var(--pam-deep-navy); background:rgba(255,255,255,.82); }
+        .rp select:focus, .rp input[type="email"]:focus { border-color:var(--pam-navy); box-shadow:0 0 0 4px rgba(23,58,97,.12); background:#fff; }
+        .rp .btn { display:inline-flex; align-items:center; justify-content:center; border-radius:13px; padding:11px 15px; font-size:14px; font-weight:850; border:1px solid var(--pam-warm-grey); background:var(--pam-soft-white); color:var(--pam-deep-navy); cursor:pointer; box-shadow:0 5px 14px rgba(18,48,82,.06); }
+        .rp .btn:hover { background:#fff; border-color:var(--pam-olive); }
+        .rp .btn--primary { background:linear-gradient(180deg, #74815a 0%, #4f5c36 100%); color:#fff; border-color:#4f5c36; }
+        .rp .btn--primary:hover { filter:brightness(1.04); }
         .rp .btn:disabled { opacity:.5; cursor:not-allowed; }
         .rp .actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
         .rp .actions--between { justify-content: space-between; }
         .rp .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; }
         @media (max-width: 900px){ .rp .kpis { grid-template-columns: repeat(2,1fr); } }
-        .rp .kpi { border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
-        .rp .kpi .label { font-size:12px; color:#64748b; }
-        .rp .kpi .value { font-size:22px; font-weight:600; }
+        .rp .kpi { background:#F3F1EA; border:1px solid var(--pam-warm-grey); border-radius:16px; padding:16px; }
+        .rp .kpi .label { font-size:12px; color:var(--pam-slate); font-weight:750; }
+        .rp .kpi .value { color:var(--pam-deep-navy); font-size:24px; font-weight:850; }
         .rp .twocol { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
         @media (max-width: 900px){ .rp .twocol { grid-template-columns: 1fr; } }
-        .rp .tablewrap { border:1px solid #e5e7eb; border-radius:12px; overflow:auto; }
-        .rp table { width:100%; border-collapse:separate; border-spacing:0; font-size:14px; }
-        .rp thead th { position:sticky; top:0; background:#f8fafc; text-align:left; font-weight:600; border-bottom:1px solid #e5e7eb; padding:10px 12px; }
-        .rp tbody td { border-bottom:1px solid #f1f5f9; padding:10px 12px; }
-        .rp tbody tr:nth-child(even) td { background:#fafafa; }
-        .rp .muted { color:#64748b; font-weight:600; }
+        .rp .tablewrap { border:1px solid var(--pam-warm-grey); border-radius:16px; overflow:auto; background:var(--pam-soft-white); }
+        .rp table { width:100%; border-collapse:separate; border-spacing:0; color:var(--pam-deep-navy); font-size:14px; }
+        .rp thead th { position:sticky; top:0; background:#F3F1EA; color:var(--pam-deep-navy); text-align:left; font-weight:850; border-bottom:1px solid var(--pam-warm-grey); padding:12px 14px; }
+        .rp tbody td { border-bottom:1px solid #ECEAE3; padding:12px 14px; }
+        .rp tbody tr:nth-child(even) td { background:#FAF8F2; }
+        .rp .muted { color:var(--pam-slate); font-weight:700; }
       `}</style>
 
       <h1>Rapportage</h1>
