@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/assets",
+      "destination": "/workspace",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -128,7 +128,7 @@ export default function App() {
         <Route path="/" element={<FrontPage />} />
         <Route path="/intro" element={<IntroPage />} />
         <Route path="/start" element={<GuidedStartPage />} />
-        <Route path="/assets" element={<AssetShell />} />
+        <Route path="/workspace" element={<AssetShell />} />
         <Route path="/legacy" element={<LegacyAssetShell />} />
         <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
       </Routes>

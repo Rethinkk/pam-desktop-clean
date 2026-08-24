@@ -71,7 +71,7 @@ export default function GuidedStartPage() {
 
   const openTab = React.useCallback(
     (tab: TargetTab) => {
-      navigate("/assets", { state: { tab } });
+      navigate("/workspace", { state: { tab } });
     },
     [navigate],
   );
