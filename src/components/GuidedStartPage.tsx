@@ -50,7 +50,7 @@ const actionCards: ActionCard[] = [
     icon: "▥",
     title: "Bekijk je overzicht",
     text: "Zie in één oogopslag wat je al hebt vastgelegd en wat nog aandacht verdient.",
-    tab: "assets",
+    tab: "asset-register",
   },
 ];
 
@@ -251,7 +251,7 @@ export default function GuidedStartPage() {
           </button>
 
           <button
-            onClick={() => openTab("assets")}
+            onClick={() => openTab("asset-register")}
             style={{
               alignItems: "center",
               background: "transparent",
