@@ -52,6 +52,11 @@ export default function IntroPage() {
     >
       <style>{`
         @media (max-width: 680px) {
+          .pam-intro-content {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+          }
+
           .pam-intro-card {
             grid-template-columns: 1fr !important;
             padding: 16px !important;
@@ -60,84 +65,92 @@ export default function IntroPage() {
       `}</style>
       <section
         style={{
-          maxWidth: contentWidth,
-          margin: "0 auto",
-          padding: `34px ${pagePadding} 28px`,
+          padding: "34px 0 28px",
         }}
       >
-        <button
-          onClick={() => navigate("/")}
+        <div
+          className="pam-intro-content"
           style={{
-            alignItems: "center",
-            background: "transparent",
-            border: `1px solid ${pamNavy}`,
-            borderRadius: 999,
-            color: pamNavy,
-            display: "inline-flex",
-            gap: 10,
-            padding: "9px 18px",
-            fontSize: 16,
-            fontWeight: 680,
+            maxWidth: contentWidth,
+            margin: "0 auto",
+            paddingLeft: pagePadding,
+            paddingRight: pagePadding,
           }}
         >
-          <span style={{ fontSize: 22, lineHeight: 1 }}>←</span>
-          Terug naar PAM
-        </button>
-
-        <div style={{ marginTop: "clamp(34px, 5vw, 50px)", maxWidth: 720 }}>
-          <p
+          <button
+            onClick={() => navigate("/")}
             style={{
-              color: olive,
-              fontSize: "clamp(12px, 1.3vw, 15px)",
-              fontWeight: 760,
-              letterSpacing: "0.28em",
-              margin: "0 0 16px",
-              textTransform: "uppercase",
+              alignItems: "center",
+              background: "transparent",
+              border: `1px solid ${pamNavy}`,
+              borderRadius: 999,
+              color: pamNavy,
+              display: "inline-flex",
+              gap: 10,
+              padding: "9px 18px",
+              fontSize: 16,
+              fontWeight: 680,
             }}
           >
-            Waarom PAM bestaat
-          </p>
-          <h1
-            style={{
-              color: deepNavy,
-              fontFamily: "Georgia, 'Times New Roman', serif",
-              fontSize: "clamp(42px, 5.8vw, 68px)",
-              fontWeight: 560,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.03,
-              margin: 0,
-            }}
-          >
-            Grip op wat waarde heeft, juist op momenten dat overzicht telt.
-          </h1>
+            <span style={{ fontSize: 22, lineHeight: 1 }}>←</span>
+            Terug naar PAM
+          </button>
 
-          <div
-            style={{
-              background: olive,
-              height: 2,
-              margin: "32px 0 26px",
-              width: 58,
-            }}
-          />
-
-          <div
-            style={{
-              color: deepNavy,
-              fontSize: "clamp(16px, 1.9vw, 20px)",
-              lineHeight: 1.55,
-              maxWidth: 700,
-            }}
-          >
-            <p style={{ margin: "0 0 20px" }}>
-              Het leven loopt niet altijd zoals gepland. Soms verandert er iets,
-              soms heb je even andere dingen aan je hoofd. En soms wil je
-              gewoon weten dat alles goed geregeld is.
+          <div style={{ marginTop: "clamp(34px, 5vw, 50px)", maxWidth: 720 }}>
+            <p
+              style={{
+                color: olive,
+                fontSize: "clamp(12px, 1.3vw, 15px)",
+                fontWeight: 760,
+                letterSpacing: "0.28em",
+                margin: "0 0 16px",
+                textTransform: "uppercase",
+              }}
+            >
+              Waarom PAM bestaat
             </p>
-            <p style={{ margin: 0 }}>
-              PAM brengt wat belangrijk is bij elkaar. Voor jezelf, voor de
-              mensen om je heen en voor de momenten waarop je wel wat overzicht
-              kunt gebruiken.
-            </p>
+            <h1
+              style={{
+                color: deepNavy,
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontSize: "clamp(42px, 5.8vw, 68px)",
+                fontWeight: 560,
+                letterSpacing: "-0.025em",
+                lineHeight: 1.03,
+                margin: 0,
+              }}
+            >
+              Grip op wat waarde heeft, juist op momenten dat overzicht telt.
+            </h1>
+
+            <div
+              style={{
+                background: olive,
+                height: 2,
+                margin: "32px 0 26px",
+                width: 58,
+              }}
+            />
+
+            <div
+              style={{
+                color: deepNavy,
+                fontSize: "clamp(16px, 1.9vw, 20px)",
+                lineHeight: 1.55,
+                maxWidth: 700,
+              }}
+            >
+              <p style={{ margin: "0 0 20px" }}>
+                Het leven loopt niet altijd zoals gepland. Soms verandert er
+                iets, soms heb je even andere dingen aan je hoofd. En soms wil
+                je gewoon weten dat alles goed geregeld is.
+              </p>
+              <p style={{ margin: 0 }}>
+                PAM brengt wat belangrijk is bij elkaar. Voor jezelf, voor de
+                mensen om je heen en voor de momenten waarop je wel wat overzicht
+                kunt gebruiken.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -145,10 +158,18 @@ export default function IntroPage() {
       <section
         style={{
           borderTop: `1px solid ${warmGrey}`,
-          padding: `28px ${pagePadding} 42px`,
+          padding: "28px 0 42px",
         }}
       >
-        <div style={{ maxWidth: contentWidth, margin: "0 auto" }}>
+        <div
+          className="pam-intro-content"
+          style={{
+            maxWidth: contentWidth,
+            margin: "0 auto",
+            paddingLeft: pagePadding,
+            paddingRight: pagePadding,
+          }}
+        >
           <h2
             style={{
               color: deepNavy,
