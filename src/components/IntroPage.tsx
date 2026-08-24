@@ -1,29 +1,34 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const blue = "#1E3A5F";
-const accent = "#24508c";
-const border = "#d8e0ea";
+const deepNavy = "#123052";
+const pamNavy = "#173A61";
+const olive = "#687348";
+const warmIvory = "#F8F5EE";
+const softWhite = "#FCFBF8";
+const slateBlue = "#60718A";
+const warmGrey = "#DEDCD5";
 
-const needs = [
-  "Rust krijgen in alles wat belangrijk is.",
-  "Assets, documenten en betrokken mensen op één plek bij elkaar brengen.",
-  "Familie, adviseurs of executeurs later duidelijkheid geven.",
-  "Zelf eigenaar blijven van gevoelige informatie en toestemming.",
-];
-
-const promises = [
+const cards = [
   {
-    title: "PAM brengt orde",
-    text: "U begint met uw assets. Daarna koppelt u documenten, personen en toestemming op een manier die logisch blijft.",
+    icon: "□",
+    title: "Alles wat belangrijk is overzichtelijk bij elkaar.",
+    text: "Van documenten en bezittingen tot belangrijke informatie en wensen. Op één veilige plek.",
   },
   {
-    title: "PAM blijft menselijk",
-    text: "Niet alles hoeft in één keer. PAM helpt stap voor stap, zonder dat het voelt als zware administratie.",
+    icon: "◎",
+    title: "Jij bepaalt wie wat mag zien.",
+    text: "Je kiest zelf wie toegang krijgt en tot welke informatie. Altijd onder jouw regie.",
   },
   {
-    title: "PAM is gebouwd voor vertrouwen",
-    text: "De basis is local-first, met cloud alleen waar dat bewust, veilig en controleerbaar wordt ingericht.",
+    icon: "✎",
+    title: "Makkelijk aanpassen als je leven verandert.",
+    text: "Nieuwe situatie? Pas het eenvoudig aan. PAM groeit mee met jouw leven.",
+  },
+  {
+    icon: "♡",
+    title: "Duidelijkheid voor de mensen die je vertrouwt.",
+    text: "Wanneer het jou even niet lukt, weten zij wat belangrijk is en wat er moet gebeuren.",
   },
 ];
 
@@ -34,181 +39,211 @@ export default function IntroPage() {
     <main
       style={{
         minHeight: "calc(100vh - 40px)",
-        background: "#f7f9fb",
-        color: blue,
+        background: warmIvory,
+        color: deepNavy,
         borderRadius: 18,
         boxShadow: "0 18px 50px rgba(0,0,0,0.22)",
         overflow: "hidden",
       }}
     >
+      <style>{`
+        @media (max-width: 680px) {
+          .pam-intro-card {
+            grid-template-columns: 1fr !important;
+            padding: 18px !important;
+          }
+        }
+      `}</style>
       <section
         style={{
-          background: blue,
-          color: "#fff",
-          padding: "34px clamp(20px, 5vw, 58px)",
+          maxWidth: 1060,
+          margin: "0 auto",
+          padding: "44px clamp(22px, 6vw, 72px) 36px",
         }}
       >
-        <div style={{ maxWidth: 1040, margin: "0 auto" }}>
-          <button
-            onClick={() => navigate("/")}
-            style={{
-              background: "rgba(255,255,255,0.1)",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.28)",
-              borderRadius: 999,
-              padding: "8px 13px",
-              fontSize: 13,
-              fontWeight: 700,
-              marginBottom: 24,
-            }}
-          >
-            Terug naar PAM
-          </button>
+        <button
+          onClick={() => navigate("/")}
+          style={{
+            alignItems: "center",
+            background: "transparent",
+            border: `1px solid ${pamNavy}`,
+            borderRadius: 999,
+            color: pamNavy,
+            display: "inline-flex",
+            gap: 10,
+            padding: "11px 24px",
+            fontSize: 18,
+            fontWeight: 650,
+          }}
+        >
+          <span style={{ fontSize: 24, lineHeight: 1 }}>←</span>
+          Terug naar PAM
+        </button>
+
+        <div style={{ marginTop: "clamp(42px, 7vw, 72px)", maxWidth: 760 }}>
           <p
             style={{
-              margin: "0 0 12px",
+              color: olive,
+              fontSize: "clamp(16px, 2vw, 22px)",
+              fontWeight: 800,
+              letterSpacing: "0.32em",
+              margin: "0 0 22px",
               textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              fontWeight: 700,
-              fontSize: 13,
-              opacity: 0.9,
             }}
           >
             Waarom PAM bestaat
           </p>
           <h1
             style={{
+              color: deepNavy,
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: "clamp(52px, 8vw, 92px)",
+              fontWeight: 650,
+              letterSpacing: "-0.035em",
+              lineHeight: 0.98,
               margin: 0,
-              maxWidth: 860,
-              fontSize: "clamp(34px, 6vw, 68px)",
-              lineHeight: 1.04,
-              letterSpacing: 0,
             }}
           >
             Grip op wat waarde heeft, juist op momenten dat overzicht telt.
           </h1>
-          <p
+
+          <div
             style={{
-              margin: "20px 0 0",
+              background: olive,
+              height: 3,
+              margin: "42px 0 34px",
+              width: 72,
+            }}
+          />
+
+          <div
+            style={{
+              color: deepNavy,
+              fontSize: "clamp(18px, 2.5vw, 25px)",
+              lineHeight: 1.55,
               maxWidth: 760,
-              color: "#dbeafe",
-              fontSize: "clamp(17px, 2.2vw, 22px)",
-              lineHeight: 1.6,
             }}
           >
-            PAM is geschreven vanuit een herkenbare behoefte: weten wat er is,
-            waar het staat, wie erbij hoort en wie er later op mag vertrouwen.
-            Voor uzelf, voor uw naasten en voor professionals die u helpen.
-          </p>
+            <p style={{ margin: "0 0 24px" }}>
+              Het leven loopt niet altijd zoals gepland. Soms verandert er iets,
+              soms heb je even andere dingen aan je hoofd. En soms wil je
+              gewoon weten dat alles goed geregeld is.
+            </p>
+            <p style={{ margin: 0 }}>
+              PAM brengt wat belangrijk is bij elkaar. Voor jezelf, voor de
+              mensen om je heen en voor de momenten waarop je wel wat overzicht
+              kunt gebruiken.
+            </p>
+          </div>
         </div>
       </section>
 
-      <section style={{ maxWidth: 1040, margin: "0 auto", padding: "30px clamp(16px, 4vw, 40px)" }}>
-        <div
-          style={{
-            background: "#fff",
-            border: `1px solid ${border}`,
-            borderRadius: 12,
-            padding: "20px 22px",
-            marginBottom: 18,
-          }}
-        >
-          <h2 style={{ margin: "0 0 10px", fontSize: 24 }}>Welke behoefte vervult PAM?</h2>
-          <p style={{ margin: 0, color: "#475569", lineHeight: 1.7, fontSize: 16 }}>
-            Veel belangrijke informatie leeft verspreid: in mappen, mailboxen,
-            bankomgevingen, hoofden van familieleden of dossiers van adviseurs.
-            PAM maakt daar een persoonlijk overzicht van. Niet om alles complexer
-            te maken, maar juist om rust, continuïteit en vertrouwen te geven.
-          </p>
-          <div
+      <section
+        style={{
+          borderTop: `1px solid ${warmGrey}`,
+          padding: "34px clamp(22px, 6vw, 72px) 44px",
+        }}
+      >
+        <div style={{ maxWidth: 1060, margin: "0 auto" }}>
+          <h2
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 10,
-              marginTop: 18,
+              color: deepNavy,
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: "clamp(30px, 4vw, 44px)",
+              lineHeight: 1.1,
+              margin: "0 0 24px",
             }}
           >
-            {needs.map((need) => (
+            Wat PAM voor je doet
+          </h2>
+
+          <div style={{ display: "grid", gap: 14 }}>
+            {cards.map((card) => (
               <div
-                key={need}
+                key={card.title}
+                className="pam-intro-card"
                 style={{
-                  background: "#f8fafc",
-                  border: `1px solid ${border}`,
-                  borderRadius: 10,
-                  padding: "12px 14px",
-                  color: "#334155",
-                  lineHeight: 1.45,
-                  fontWeight: 650,
+                  alignItems: "center",
+                  background: softWhite,
+                  border: `1px solid ${warmGrey}`,
+                  borderRadius: 16,
+                  display: "grid",
+                  gap: 22,
+                  gridTemplateColumns: "112px 1fr",
+                  padding: "22px 28px",
                 }}
               >
-                {need}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    alignItems: "center",
+                    background: "#EFEEE8",
+                    borderRadius: "50%",
+                    color: olive,
+                    display: "flex",
+                    fontSize: 42,
+                    height: 76,
+                    justifyContent: "center",
+                    width: 76,
+                  }}
+                >
+                  {card.icon}
+                </div>
+                <div>
+                  <h3
+                    style={{
+                      color: deepNavy,
+                      fontSize: "clamp(20px, 2.4vw, 28px)",
+                      lineHeight: 1.2,
+                      margin: "0 0 6px",
+                    }}
+                  >
+                    {card.title}
+                  </h3>
+                  <p
+                    style={{
+                      color: slateBlue,
+                      fontSize: "clamp(17px, 2vw, 22px)",
+                      lineHeight: 1.45,
+                      margin: 0,
+                    }}
+                  >
+                    {card.text}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
-        </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-            gap: 14,
-            marginBottom: 22,
-          }}
-        >
-          {promises.map((item) => (
-            <div
-              key={item.title}
-              style={{
-                background: "#fff",
-                border: `1px solid ${border}`,
-                borderRadius: 12,
-                padding: 18,
-                boxShadow: "0 4px 14px rgba(15,23,42,0.08)",
-              }}
-            >
-              <h3 style={{ margin: "0 0 8px", fontSize: 19 }}>{item.title}</h3>
-              <p style={{ margin: 0, color: "#52677d", lineHeight: 1.6 }}>
-                {item.text}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div
-          style={{
-            alignItems: "center",
-            background: "#eef5ff",
-            border: `1px solid #c7d8ee`,
-            borderRadius: 12,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 14,
-            justifyContent: "space-between",
-            padding: "18px 20px",
-          }}
-        >
-          <div>
-            <strong style={{ display: "block", fontSize: 18, marginBottom: 4 }}>
-              Klaar om PAM in te richten?
-            </strong>
-            <span style={{ color: "#52677d", lineHeight: 1.5 }}>
-              Begin rustig. Eén asset is genoeg om overzicht op te bouwen.
-            </span>
-          </div>
-          <button
-            onClick={() => navigate("/start")}
+          <div
             style={{
-              background: accent,
-              color: "#fff",
-              border: 0,
-              borderRadius: 999,
-              padding: "13px 20px",
-              fontWeight: 800,
-              boxShadow: "0 8px 20px rgba(36,80,140,0.22)",
+              alignItems: "center",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+              justifyContent: "space-between",
+              marginTop: 30,
             }}
           >
-            Verder met PAM
-          </button>
+            <p style={{ color: slateBlue, fontSize: 18, lineHeight: 1.5, margin: 0 }}>
+              Begin rustig. Eén asset is genoeg om overzicht op te bouwen.
+            </p>
+            <button
+              onClick={() => navigate("/start")}
+              style={{
+                background: pamNavy,
+                border: 0,
+                borderRadius: 999,
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: 800,
+                padding: "14px 24px",
+                boxShadow: "0 10px 24px rgba(18,48,82,0.18)",
+              }}
+            >
+              Verder met PAM
+            </button>
+          </div>
         </div>
       </section>
     </main>
