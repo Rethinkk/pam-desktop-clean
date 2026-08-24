@@ -316,8 +316,8 @@ export default function PublicFooter() {
                   minWidth: 220,
                   padding: "8px 0",
                   position: "absolute",
+                  bottom: "calc(100% + 8px)",
                   right: 0,
-                  top: "calc(100% + 6px)",
                   zIndex: 30,
                 }}
               >
