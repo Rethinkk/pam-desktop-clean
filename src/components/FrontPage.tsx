@@ -44,18 +44,6 @@ export default function FrontPage() {
         >
           your personal asset manager
         </p>
-        <p
-          style={{
-            margin: "22px auto 0",
-            maxWidth: 560,
-            fontSize: "clamp(16px, 2.2vw, 22px)",
-            lineHeight: 1.55,
-            fontWeight: 500,
-            opacity: 0.86,
-          }}
-        >
-          PAM helpt u graag verder om uw assets vast te leggen en te beheren.
-        </p>
         <button
           onClick={() => navigate("/intro")}
           style={{
@@ -70,7 +58,7 @@ export default function FrontPage() {
             boxShadow: "0 10px 28px rgba(0,0,0,0.18)",
           }}
         >
-          PAM nodigt u uit
+          Maak kennis met PAM
         </button>
       </section>
     </main>
