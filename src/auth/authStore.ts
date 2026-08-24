@@ -36,35 +36,49 @@ async function remoteRegister(input: {
   email: string;
   password: string;
 }): Promise<PamUser> {
-  const response = await fetch(authApiPath("/api/pam/auth/register"), {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  return readAuthResponse(response);
+  try {
+    const response = await fetch(authApiPath("/api/pam/auth/register"), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    return readAuthResponse(response);
+  } catch (error) {
+    if (error instanceof Error && error.message !== "Load failed") throw error;
+    throw new Error("De auth-server is niet bereikbaar. Controleer VITE_AUTH_API_URL of gebruik local-first modus.");
+  }
 }
 
 async function remoteLogin(input: {
   email: string;
   password: string;
 }): Promise<PamUser> {
-  const response = await fetch(authApiPath("/api/pam/auth/login"), {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  return readAuthResponse(response);
+  try {
+    const response = await fetch(authApiPath("/api/pam/auth/login"), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    return readAuthResponse(response);
+  } catch (error) {
+    if (error instanceof Error && error.message !== "Load failed") throw error;
+    throw new Error("De auth-server is niet bereikbaar. Controleer VITE_AUTH_API_URL of gebruik local-first modus.");
+  }
 }
 
 async function remoteSession(): Promise<PamUser | null> {
-  const response = await fetch(authApiPath("/api/pam/auth/session"), {
-    credentials: "include",
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || !payload.authenticated) return null;
-  return payload.user ?? null;
+  try {
+    const response = await fetch(authApiPath("/api/pam/auth/session"), {
+      credentials: "include",
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.authenticated) return null;
+    return payload.user ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function remoteLogout() {
