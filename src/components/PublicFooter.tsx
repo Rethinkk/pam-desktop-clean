@@ -56,9 +56,9 @@ export const publicFooterGroups: Array<{
         ],
       },
       {
-        label: "Corporate information",
+        label: "Bedrijfsinformatie",
         slug: "corporate-information",
-        title: "Corporate information",
+        title: "Bedrijfsinformatie",
         intro: "Hier komt de formele bedrijfsinformatie van PAM te staan.",
         sections: [
           {
@@ -74,12 +74,12 @@ export const publicFooterGroups: Array<{
     ],
   },
   {
-    heading: "Service",
+    heading: "Diensten",
     items: [
       {
-        label: "Pricing",
+        label: "Tarieven",
         slug: "pricing",
-        title: "Pricing",
+        title: "Tarieven",
         intro: "PAM werkt toe naar een helder prijsmodel dat past bij persoonlijk gebruik en professionele begeleiding.",
         sections: [
           {
@@ -109,9 +109,9 @@ export const publicFooterGroups: Array<{
         ],
       },
       {
-        label: "FAQ",
+        label: "Veelgestelde vragen",
         slug: "faq",
-        title: "FAQ",
+        title: "Veelgestelde vragen",
         intro: "Veelgestelde vragen over PAM, accounts, data, toegang en gebruik.",
         sections: [
           {
@@ -127,12 +127,12 @@ export const publicFooterGroups: Array<{
     ],
   },
   {
-    heading: "Security",
+    heading: "Veiligheid",
     items: [
       {
-        label: "Security",
+        label: "Beveiliging",
         slug: "security",
-        title: "Security",
+        title: "Beveiliging",
         intro: "PAM wordt ontworpen vanuit het principe dat gevoelige informatie bescherming, controle en duidelijke grenzen nodig heeft.",
         sections: [
           {
@@ -184,12 +184,12 @@ export const publicFooterGroups: Array<{
     ],
   },
   {
-    heading: "Legal",
+    heading: "Juridisch",
     items: [
       {
-        label: "Privacy Statement",
+        label: "Privacyverklaring",
         slug: "privacy-statement",
-        title: "Privacy Statement",
+        title: "Privacyverklaring",
         intro: "Deze pagina wordt het formele privacy statement van PAM.",
         sections: [
           {
@@ -203,9 +203,9 @@ export const publicFooterGroups: Array<{
         ],
       },
       {
-        label: "Terms of Use",
+        label: "Gebruiksvoorwaarden",
         slug: "terms-of-use",
-        title: "Terms of Use",
+        title: "Gebruiksvoorwaarden",
         intro: "Deze pagina wordt de formele gebruiksvoorwaarden van PAM.",
         sections: [
           {
@@ -219,9 +219,9 @@ export const publicFooterGroups: Array<{
         ],
       },
       {
-        label: "Cookie Statement",
+        label: "Cookieverklaring",
         slug: "cookie-statement",
-        title: "Cookie Statement",
+        title: "Cookieverklaring",
         intro: "Deze pagina wordt het cookie statement van PAM.",
         sections: [
           {
