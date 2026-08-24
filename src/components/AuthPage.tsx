@@ -14,7 +14,10 @@ export default function AuthPage() {
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mode, setMode] = React.useState<"login" | "register">("register");
+  const initialMode = (location.state as { mode?: "login" | "register" } | null)?.mode;
+  const [mode, setMode] = React.useState<"login" | "register">(
+    initialMode === "login" ? "login" : "register",
+  );
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -80,7 +83,7 @@ export default function AuthPage() {
           <div>
             <button
               type="button"
-              onClick={() => navigate("/start")}
+              onClick={() => navigate("/account")}
               style={{
                 background: "transparent",
                 border: `1px solid ${pamNavy}`,

@@ -125,7 +125,7 @@ export default function GuidedStartPage() {
           }}
         >
           <button
-            onClick={() => navigate("/intro")}
+            onClick={() => navigate("/account")}
             style={{
               alignItems: "center",
               background: "transparent",
@@ -139,7 +139,7 @@ export default function GuidedStartPage() {
             }}
           >
             <span style={{ fontSize: 28, lineHeight: 1 }}>←</span>
-            Terug naar introductie
+            Terug naar account
           </button>
 
           <button

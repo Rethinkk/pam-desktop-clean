@@ -12,6 +12,7 @@ import AssetShell from "./components/AssetShell";
 // Overige imports die je lokaal gebruikte in je (oude) shell en routes:
 import FrontPage from "./components/FrontPage";
 import IntroPage from "./components/IntroPage";
+import AccountAccessPage from "./components/AccountAccessPage";
 import GuidedStartPage from "./components/GuidedStartPage";
 import AuthGate from "./components/AuthGate";
 import AuthPage from "./components/AuthPage";
@@ -131,7 +132,15 @@ export default function App() {
         <Routes>
           <Route path="/" element={<FrontPage />} />
           <Route path="/intro" element={<IntroPage />} />
-          <Route path="/start" element={<GuidedStartPage />} />
+          <Route path="/account" element={<AccountAccessPage />} />
+          <Route
+            path="/start"
+            element={(
+              <AuthGate>
+                <GuidedStartPage />
+              </AuthGate>
+            )}
+          />
           <Route path="/login" element={<AuthPage />} />
           <Route
             path="/workspace"

@@ -253,7 +253,7 @@ export default function IntroPage() {
             }}
           >
             <button
-              onClick={() => navigate("/start")}
+              onClick={() => navigate("/account")}
               style={{
                 background: pamNavy,
                 border: 0,
@@ -265,7 +265,7 @@ export default function IntroPage() {
                 boxShadow: "0 8px 18px rgba(18,48,82,0.16)",
               }}
             >
-              Verder met PAM
+              Begin rustig met PAM
             </button>
           </div>
         </div>
