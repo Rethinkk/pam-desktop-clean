@@ -190,7 +190,7 @@ export default function DocLinker() {
                       </option>
                     ))}
                   </select>
-                  <button className="btn" type="button" onClick={() => handleLinkAsset(d.id)}>
+                  <button className="ui-btn ui-btn--primary" type="button" onClick={() => handleLinkAsset(d.id)}>
                     Koppel aan asset
                   </button>
                 </div>

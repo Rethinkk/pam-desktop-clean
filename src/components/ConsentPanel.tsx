@@ -323,7 +323,7 @@ export default function ConsentPanel() {
           />
 
           <button
-            className="btn"
+            className="ui-btn ui-btn--primary"
             disabled={!requiredOk}
             style={{ marginTop: 16 }}
             onClick={saveConsent}
@@ -374,14 +374,14 @@ export default function ConsentPanel() {
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button
-                      className="btn"
+                      className="ui-btn ui-btn--secondary"
                       onClick={() => downloadConsentReceipt(consent)}
                     >
                       Bewijs downloaden
                     </button>
                     {consent.status === "active" && (
                       <button
-                        className="btn"
+                        className="ui-btn ui-btn--secondary"
                         onClick={() => revokeConsent(consent.id)}
                       >
                         Intrekken

@@ -108,6 +108,11 @@ export function Style() {
         box-shadow:0 5px 14px rgba(18,48,82,.06);
       }
       .ui-btn:hover { background:#fff; border-color:var(--pam-olive); }
+      .ui-btn-secondary, .ui-btn--secondary {
+        background:var(--pam-soft-white);
+        border-color:var(--pam-warm-grey);
+        color:var(--pam-deep-navy);
+      }
       .ui-btn-primary, .ui-btn--primary {
         background:linear-gradient(180deg, #74815a 0%, #4f5c36 100%);
         color:#fff;
@@ -117,8 +122,16 @@ export function Style() {
       .ui-btn-primary:disabled, .ui-btn--primary:disabled { opacity:.5; cursor:not-allowed; }
       /* Kleine & rode knoppen */
 .ui-btn--sm { padding: 7px 11px; font-size: 13px; border-radius: 11px; min-width: 82px; }
-.ui-btn-danger, .ui-btn--danger { background:#8796A5; color:#fff; border-color:#8796A5; }
-.ui-btn-danger:hover, .ui-btn--danger:hover { filter: brightness(1.05); }
+.ui-btn-danger, .ui-btn--danger {
+  background:#FCFBF8;
+  color:#60718A;
+  border-color:#DEDCD5;
+}
+.ui-btn-danger:hover, .ui-btn--danger:hover {
+  background:#F3F1EA;
+  border-color:#60718A;
+  color:#123052;
+}
 
 
       /* Controls bar / Toolbar */

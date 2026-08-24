@@ -182,13 +182,13 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
       <div className="flex gap-2">
         <button
           type="submit"
-          className="btn primary"
+          className="ui-btn ui-btn--primary"
           disabled={hasErrors || !fullName.trim() || !role}
         >
           Opslaan
         </button>
         {editing && (
-          <button type="button" className="btn" onClick={onCancel}>
+          <button type="button" className="ui-btn ui-btn--secondary" onClick={onCancel}>
             Annuleren
           </button>
         )}
@@ -196,4 +196,3 @@ export default function PeopleForm({ editing, onSaved, onCancel }: Props) {
     </form>
   );
 }
-

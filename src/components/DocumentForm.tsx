@@ -89,7 +89,7 @@ export default function DocumentForm({ onCreated }: Props) {
         </div>
       </div>
 
-      <button type="submit" className="btn primary">Opslaan in documentregister</button>
+      <button type="submit" className="ui-btn ui-btn--primary">Opslaan in documentregister</button>
     </form>
   );
 }

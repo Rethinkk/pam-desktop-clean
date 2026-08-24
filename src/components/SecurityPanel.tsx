@@ -188,7 +188,7 @@ export default function SecurityPanel() {
           migreert. Dit JSON-bestand bevat gevoelige gegevens; bewaar het in een
           digitale kluis of op een versleutelde schijf.
         </p>
-        <ExportButton className="btn" />
+        <ExportButton className="ui-btn" />
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
@@ -235,10 +235,10 @@ export default function SecurityPanel() {
         )}
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button className="btn" onClick={runMigration} disabled={busy}>
+          <button className="ui-btn ui-btn--primary" onClick={runMigration} disabled={busy}>
             Start encrypted migratie
           </button>
-          <button className="btn btn-secondary" onClick={runVerification} disabled={busy}>
+          <button className="ui-btn ui-btn--secondary" onClick={runVerification} disabled={busy}>
             Controleer encrypted opslag
           </button>
         </div>
@@ -306,10 +306,10 @@ export default function SecurityPanel() {
         )}
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button className="btn" onClick={queueCloudSync} disabled={cloudBusy}>
+          <button className="ui-btn ui-btn--primary" onClick={queueCloudSync} disabled={cloudBusy}>
             Zet lokale data klaar
           </button>
-          <button className="btn btn-secondary" onClick={syncNow} disabled={cloudBusy}>
+          <button className="ui-btn ui-btn--secondary" onClick={syncNow} disabled={cloudBusy}>
             Sync nu
           </button>
         </div>
