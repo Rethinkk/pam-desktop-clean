@@ -196,6 +196,26 @@ function DynamicFieldsFormInline({
   );
 }
 
+function DetailBlock({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        background: "#FCFBF8",
+        border: "1px solid #DEDCD5",
+        borderRadius: 12,
+        padding: "11px 13px",
+      }}
+    >
+      <div style={{ color: "#60718A", fontSize: 12, fontWeight: 720, marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{ color: "#123052", fontSize: 14, lineHeight: 1.45, overflowWrap: "anywhere" }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
 /** -----------------------------
  *  Labels uit schema
  *  ----------------------------- */
@@ -367,6 +387,83 @@ function legacyFieldsFromData(typeId: string, data: Record<string, any>) {
   return {};
 }
 
+function isFileLike(value: any) {
+  return value && typeof value === "object" && value.name;
+}
+
+function formatDetailValue(value: any, fieldType?: string, key?: string) {
+  if (value === undefined || value === null || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Ja" : "Nee";
+  if (isFileLike(value)) {
+    const size = value.size ? ` (${Math.round(Number(value.size) / 1024)} kB)` : "";
+    return `${value.name}${size}`;
+  }
+  if (key === "priceCents") return formatPrice(value);
+  if (fieldType === "currency" && !isNaN(Number(value))) {
+    try {
+      return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(Number(value));
+    } catch {
+      return `€ ${Number(value).toFixed(2)}`;
+    }
+  }
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "—";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+function formatMetaDate(value: any) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat("nl-NL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function detailEntriesForRow(schema: AssetSchema, row: Row, labelMap: Record<string, string>) {
+  const type = resolveType(schema, row);
+  const src: Record<string, any> = { ...(row.data || {}), ...(row as any) };
+  const hidden = new Set([
+    "id",
+    "typeId",
+    "type",
+    "typeLabel",
+    "name",
+    "personId",
+    "personName",
+    "personIds",
+    "documentIds",
+    "status",
+    "finalizedAt",
+    "createdAt",
+    "updatedAt",
+    "data",
+  ]);
+  const fieldByKey = new Map((type?.fields ?? []).map((field) => [field.key, field]));
+  const orderedKeys = [
+    ...(type?.fields ?? []).map((field) => field.key),
+    ...Object.keys(src).filter((key) => !fieldByKey.has(key)),
+  ];
+  const seen = new Set<string>();
+
+  return orderedKeys
+    .filter((key) => {
+      if (seen.has(key) || hidden.has(key) || key.startsWith("_")) return false;
+      seen.add(key);
+      const value = src[key];
+      return value !== undefined && value !== null && value !== "";
+    })
+    .map((key) => {
+      const field = fieldByKey.get(key);
+      return {
+        key,
+        label: field?.label || labelMap[key] || key,
+        value: formatDetailValue(src[key], field?.type, key),
+      };
+    });
+}
+
 /** -----------------------------
  *  Type-resolve o.b.v. row
  *  ----------------------------- */
@@ -483,6 +580,7 @@ export default function AssetRegisterPanel() {
     dir: "asc",
   });
   const [highlightId, setHighlightId] = React.useState<string | null>(null);
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     load();
@@ -544,6 +642,7 @@ export default function AssetRegisterPanel() {
     } catch {}
 
     setRows((r) => r.filter((x) => x.id !== id));
+    if (expandedId === id) setExpandedId(null);
 
     try {
       window.dispatchEvent(
@@ -716,6 +815,79 @@ export default function AssetRegisterPanel() {
             {name}
           </span>
         ))}
+      </div>
+    );
+  }
+
+  function documentNamesForRow(row: Row): string[] {
+    const ids = Array.isArray(row.documentIds) ? row.documentIds : [];
+    return ids
+      .map((id) => documents.find((document) => document.id === id)?.label)
+      .filter(Boolean) as string[];
+  }
+
+  function renderAssetDetails(row: Row) {
+    const entries = detailEntriesForRow(schema, row, LABELS_FROM_SCHEMA);
+    const typeLabel = resolveType(schema, row)?.label || row.typeLabel || row.type || "Onbekend type";
+    const peopleNames = personNamesForRow(row);
+    const documentNames = documentNamesForRow(row);
+
+    return (
+      <div
+        style={{
+          background: "#F3F1EA",
+          border: "1px solid #DEDCD5",
+          borderRadius: 14,
+          padding: 18,
+        }}
+      >
+        <div
+          style={{
+            alignItems: "flex-start",
+            display: "flex",
+            gap: 12,
+            justifyContent: "space-between",
+            marginBottom: 16,
+          }}
+        >
+          <div>
+            <strong style={{ color: "#123052", display: "block", fontSize: 18 }}>
+              {row.name || "Asset zonder naam"}
+            </strong>
+            <span style={{ color: "#60718A", display: "block", marginTop: 3 }}>
+              {typeLabel} · {isFinalized(row) ? "Vastgelegd" : "Concept"}
+            </span>
+          </div>
+          <button className="ui-btn ui-btn--sm" onClick={() => setExpandedId(null)}>
+            Sluiten
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 12,
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          }}
+        >
+          <DetailBlock label="Mensen" value={peopleNames.length ? peopleNames.join(", ") : "Geen mensen gekoppeld"} />
+          <DetailBlock
+            label="Documenten"
+            value={documentNames.length ? documentNames.join(", ") : "Geen documenten gekoppeld"}
+          />
+          {row.createdAt && <DetailBlock label="Aangemaakt" value={formatMetaDate(row.createdAt)} />}
+          {row.updatedAt && <DetailBlock label="Laatst aangepast" value={formatMetaDate(row.updatedAt)} />}
+          {row.finalizedAt && <DetailBlock label="Vastgelegd op" value={formatMetaDate(row.finalizedAt)} />}
+          {entries.map((entry) => (
+            <DetailBlock key={entry.key} label={entry.label} value={entry.value} />
+          ))}
+        </div>
+
+        {entries.length === 0 && (
+          <p style={{ color: "#60718A", margin: "14px 0 0" }}>
+            Er zijn nog geen extra velden ingevuld voor dit asset.
+          </p>
+        )}
       </div>
     );
   }
@@ -938,58 +1110,69 @@ export default function AssetRegisterPanel() {
           </thead>
           <tbody>
             {filtered.map((r) => (
-              <tr
-                key={r.id}
-                className={r.id === highlightId ? "ui-row-highlight" : ""}
-              >
-                {TABLE_KEYS.map((k) => {
-                  if (k === PSEUDO_STATUS) {
-                    return <td key={k}>{renderStatus(r)}</td>;
-                  }
+              <React.Fragment key={r.id}>
+                <tr
+                  className={r.id === highlightId ? "ui-row-highlight" : ""}
+                  onClick={() => setExpandedId((current) => (current === r.id ? null : r.id))}
+                  style={{ cursor: "pointer" }}
+                  title="Klik om alle gegevens te bekijken"
+                >
+                  {TABLE_KEYS.map((k) => {
+                    if (k === PSEUDO_STATUS) {
+                      return <td key={k}>{renderStatus(r)}</td>;
+                    }
 
-                  if (k === PSEUDO_PEOPLE) {
-                    return <td key={k}>{renderPeople(r)}</td>;
-                  }
+                    if (k === PSEUDO_PEOPLE) {
+                      return <td key={k}>{renderPeople(r)}</td>;
+                    }
 
-                  if (k === PSEUDO_DETAILS) {
-                    return <td key={k}>{summarizeRow(schema, r, LABELS_FROM_SCHEMA)}</td>;
-                  }
+                    if (k === PSEUDO_DETAILS) {
+                      return <td key={k}>{summarizeRow(schema, r, LABELS_FROM_SCHEMA)}</td>;
+                    }
 
-                  const rawVal = valueFromRow(r, k);
-                  let cell = rawVal ?? "";
+                    const rawVal = valueFromRow(r, k);
+                    let cell = rawVal ?? "";
 
-                  if (k === "priceCents") cell = formatPrice(rawVal);
-                  if (rawVal && typeof rawVal === "object" && rawVal.name && rawVal.size) {
-                    cell = `${rawVal.name} (${Math.round(rawVal.size / 1024)} kB)`;
-                  }
+                    if (k === "priceCents") cell = formatPrice(rawVal);
+                    if (rawVal && typeof rawVal === "object" && rawVal.name && rawVal.size) {
+                      cell = `${rawVal.name} (${Math.round(rawVal.size / 1024)} kB)`;
+                    }
 
-                  return <td key={String(k)}>{cell}</td>;
-                })}
-                <td>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minWidth: 220 }}>
-                    <button
-                      className="ui-btn ui-btn--sm"
-                      disabled={isFinalized(r)}
-                      onClick={() => startEdit(r)}
-                    >
-                      Aanpassen
-                    </button>
-                    <button
-                      className="ui-btn ui-btn--sm ui-btn--primary"
-                      disabled={isFinalized(r)}
-                      onClick={() => finalizeAsset(r.id)}
-                    >
-                      {isFinalized(r) ? "Vastgelegd" : "Vastleggen"}
-                    </button>
-                    <button
-                      className="ui-btn ui-btn--sm ui-btn--danger"
-                      onClick={() => handleDelete(r.id)}
-                    >
-                      Verwijderen
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                    return <td key={String(k)}>{cell}</td>;
+                  })}
+                  <td onClick={(event) => event.stopPropagation()}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minWidth: 220 }}>
+                      <button
+                        className="ui-btn ui-btn--sm"
+                        disabled={isFinalized(r)}
+                        onClick={() => startEdit(r)}
+                      >
+                        Aanpassen
+                      </button>
+                      <button
+                        className="ui-btn ui-btn--sm ui-btn--primary"
+                        disabled={isFinalized(r)}
+                        onClick={() => finalizeAsset(r.id)}
+                      >
+                        {isFinalized(r) ? "Vastgelegd" : "Vastleggen"}
+                      </button>
+                      <button
+                        className="ui-btn ui-btn--sm ui-btn--danger"
+                        onClick={() => handleDelete(r.id)}
+                      >
+                        Verwijderen
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {expandedId === r.id && (
+                  <tr>
+                    <td colSpan={TABLE_KEYS.length + 1} style={{ background: "#FCFBF8", padding: 14 }}>
+                      {renderAssetDetails(r)}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
             {filtered.length === 0 && (
               <tr>
