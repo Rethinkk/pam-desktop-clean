@@ -8,8 +8,8 @@ const warmIvory = "#F8F5EE";
 const softWhite = "#FCFBF8";
 const slateBlue = "#60718A";
 const warmGrey = "#DEDCD5";
-const contentWidth = 980;
-const pagePadding = "clamp(28px, 7vw, 86px)";
+const contentWidth = 900;
+const pagePadding = "clamp(24px, 5vw, 64px)";
 
 const cards = [
   {
@@ -40,7 +40,7 @@ export default function IntroPage() {
   return (
     <main
       style={{
-        width: "min(calc(100% - clamp(22px, 8vw, 92px)), 1120px)",
+        width: "min(calc(100% - clamp(22px, 8vw, 92px)), 1040px)",
         minHeight: "calc(100vh - 40px)",
         margin: "0 auto",
         background: warmIvory,
@@ -54,7 +54,7 @@ export default function IntroPage() {
         @media (max-width: 680px) {
           .pam-intro-card {
             grid-template-columns: 1fr !important;
-            padding: 18px !important;
+            padding: 16px !important;
           }
         }
       `}</style>
@@ -62,7 +62,7 @@ export default function IntroPage() {
         style={{
           maxWidth: contentWidth,
           margin: "0 auto",
-          padding: `44px ${pagePadding} 36px`,
+          padding: `34px ${pagePadding} 28px`,
         }}
       >
         <button
@@ -75,23 +75,23 @@ export default function IntroPage() {
             color: pamNavy,
             display: "inline-flex",
             gap: 10,
-            padding: "11px 24px",
-            fontSize: 18,
-            fontWeight: 650,
+            padding: "9px 18px",
+            fontSize: 16,
+            fontWeight: 680,
           }}
         >
-          <span style={{ fontSize: 24, lineHeight: 1 }}>←</span>
+          <span style={{ fontSize: 22, lineHeight: 1 }}>←</span>
           Terug naar PAM
         </button>
 
-        <div style={{ marginTop: "clamp(42px, 7vw, 72px)", maxWidth: 760 }}>
+        <div style={{ marginTop: "clamp(34px, 5vw, 50px)", maxWidth: 720 }}>
           <p
             style={{
               color: olive,
-              fontSize: "clamp(16px, 2vw, 22px)",
-              fontWeight: 800,
-              letterSpacing: "0.32em",
-              margin: "0 0 22px",
+              fontSize: "clamp(12px, 1.3vw, 15px)",
+              fontWeight: 760,
+              letterSpacing: "0.28em",
+              margin: "0 0 16px",
               textTransform: "uppercase",
             }}
           >
@@ -101,10 +101,10 @@ export default function IntroPage() {
             style={{
               color: deepNavy,
               fontFamily: "Georgia, 'Times New Roman', serif",
-              fontSize: "clamp(52px, 8vw, 92px)",
-              fontWeight: 650,
-              letterSpacing: "-0.035em",
-              lineHeight: 0.98,
+              fontSize: "clamp(42px, 5.8vw, 68px)",
+              fontWeight: 560,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.03,
               margin: 0,
             }}
           >
@@ -114,21 +114,21 @@ export default function IntroPage() {
           <div
             style={{
               background: olive,
-              height: 3,
-              margin: "42px 0 34px",
-              width: 72,
+              height: 2,
+              margin: "32px 0 26px",
+              width: 58,
             }}
           />
 
           <div
             style={{
               color: deepNavy,
-              fontSize: "clamp(18px, 2.5vw, 25px)",
+              fontSize: "clamp(16px, 1.9vw, 20px)",
               lineHeight: 1.55,
-              maxWidth: 760,
+              maxWidth: 700,
             }}
           >
-            <p style={{ margin: "0 0 24px" }}>
+            <p style={{ margin: "0 0 20px" }}>
               Het leven loopt niet altijd zoals gepland. Soms verandert er iets,
               soms heb je even andere dingen aan je hoofd. En soms wil je
               gewoon weten dat alles goed geregeld is.
@@ -145,7 +145,7 @@ export default function IntroPage() {
       <section
         style={{
           borderTop: `1px solid ${warmGrey}`,
-          padding: `34px ${pagePadding} 44px`,
+          padding: `28px ${pagePadding} 42px`,
         }}
       >
         <div style={{ maxWidth: contentWidth, margin: "0 auto" }}>
@@ -153,9 +153,10 @@ export default function IntroPage() {
             style={{
               color: deepNavy,
               fontFamily: "Georgia, 'Times New Roman', serif",
-              fontSize: "clamp(30px, 4vw, 44px)",
+              fontSize: "clamp(25px, 3vw, 34px)",
+              fontWeight: 560,
               lineHeight: 1.1,
-              margin: "0 0 24px",
+              margin: "0 0 22px",
             }}
           >
             Wat PAM voor je doet
@@ -170,11 +171,11 @@ export default function IntroPage() {
                   alignItems: "center",
                   background: softWhite,
                   border: `1px solid ${warmGrey}`,
-                  borderRadius: 16,
+                  borderRadius: 15,
                   display: "grid",
-                  gap: 22,
-                  gridTemplateColumns: "112px 1fr",
-                  padding: "22px 28px",
+                  gap: 18,
+                  gridTemplateColumns: "76px 1fr",
+                  padding: "18px 24px",
                 }}
               >
                 <div
@@ -185,10 +186,10 @@ export default function IntroPage() {
                     borderRadius: "50%",
                     color: olive,
                     display: "flex",
-                    fontSize: 42,
-                    height: 76,
+                    fontSize: 30,
+                    height: 58,
                     justifyContent: "center",
-                    width: 76,
+                    width: 58,
                   }}
                 >
                   {card.icon}
@@ -197,7 +198,8 @@ export default function IntroPage() {
                   <h3
                     style={{
                       color: deepNavy,
-                      fontSize: "clamp(20px, 2.4vw, 28px)",
+                      fontSize: "clamp(18px, 2vw, 22px)",
+                      fontWeight: 740,
                       lineHeight: 1.2,
                       margin: "0 0 6px",
                     }}
@@ -207,7 +209,7 @@ export default function IntroPage() {
                   <p
                     style={{
                       color: slateBlue,
-                      fontSize: "clamp(17px, 2vw, 22px)",
+                      fontSize: "clamp(15px, 1.7vw, 18px)",
                       lineHeight: 1.45,
                       margin: 0,
                     }}
@@ -226,10 +228,10 @@ export default function IntroPage() {
               flexWrap: "wrap",
               gap: 16,
               justifyContent: "space-between",
-              marginTop: 30,
+              marginTop: 26,
             }}
           >
-            <p style={{ color: slateBlue, fontSize: 18, lineHeight: 1.5, margin: 0 }}>
+            <p style={{ color: slateBlue, fontSize: 16, lineHeight: 1.5, margin: 0 }}>
               Begin rustig. Eén asset is genoeg om overzicht op te bouwen.
             </p>
             <button
@@ -239,10 +241,10 @@ export default function IntroPage() {
                 border: 0,
                 borderRadius: 999,
                 color: "#fff",
-                fontSize: 18,
-                fontWeight: 800,
-                padding: "14px 24px",
-                boxShadow: "0 10px 24px rgba(18,48,82,0.18)",
+                fontSize: 16,
+                fontWeight: 760,
+                padding: "11px 20px",
+                boxShadow: "0 8px 18px rgba(18,48,82,0.16)",
               }}
             >
               Verder met PAM
