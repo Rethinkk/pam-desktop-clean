@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
+import { assetRepository, documentRepository } from "../storage/repositories";
 
 type TargetTab =
   | "assets"
@@ -12,42 +12,45 @@ type TargetTab =
   | "security";
 
 type ActionCard = {
+  icon: string;
   title: string;
   text: string;
-  cta: string;
   tab: TargetTab;
-  primary?: boolean;
 };
 
-const blue = "#1E3A5F";
-const accent = "#24508c";
-const border = "#d8e0ea";
+const deepNavy = "#123052";
+const pamNavy = "#173A61";
+const olive = "#687348";
+const warmIvory = "#F8F5EE";
+const softWhite = "#FCFBF8";
+const warmGrey = "#DEDCD5";
+const contentWidth = 980;
+const pagePadding = "clamp(28px, 7vw, 86px)";
 
 const actionCards: ActionCard[] = [
   {
-    title: "Begin met uw assets",
-    text: "Leg eerst een woning, voertuig, rekening, verzekering of ander belangrijk bezit vast.",
-    cta: "Asset toevoegen",
+    icon: "⌂",
+    title: "Begin met je assets",
+    text: "Leg een woning, voertuig, rekening, verzekering of ander belangrijk bezit vast.",
     tab: "asset-register",
-    primary: true,
   },
   {
+    icon: "□",
     title: "Koppel documenten",
-    text: "Bewaar contracten, polissen, facturen en scans bij de assets waar ze bij horen.",
-    cta: "Document toevoegen",
+    text: "Voeg contracten, polissen, facturen en andere documenten toe waar ze thuishoren.",
     tab: "docs",
   },
   {
+    icon: "◎",
     title: "Voeg mensen toe",
-    text: "Noteer familie, adviseurs, executeurs of andere personen die bij uw assets horen.",
-    cta: "Persoon toevoegen",
+    text: "Leg vast wie bij een asset betrokken is of wie je vertrouwt.",
     tab: "people",
   },
   {
-    title: "Bekijk overzicht",
-    text: "Controleer wat al is ingevuld en maak een rapport of export voor jezelf.",
-    cta: "Naar rapportage",
-    tab: "reporting",
+    icon: "▥",
+    title: "Bekijk je overzicht",
+    text: "Zie in één oogopslag wat je al hebt vastgelegd en wat nog aandacht verdient.",
+    tab: "assets",
   },
 ];
 
@@ -56,10 +59,9 @@ function safeCounts() {
     return {
       assets: assetRepository.load().assets.length,
       documents: documentRepository.all().length,
-      people: personRepository.all().length,
     };
   } catch {
-    return { assets: 0, documents: 0, people: 0 };
+    return { assets: 0, documents: 0 };
   }
 }
 
@@ -77,222 +79,426 @@ export default function GuidedStartPage() {
   return (
     <main
       style={{
+        width: "min(calc(100% - clamp(22px, 8vw, 92px)), 1120px)",
         minHeight: "calc(100vh - 40px)",
-        background: "#f7f9fb",
-        color: blue,
+        margin: "0 auto",
+        background: warmIvory,
+        color: deepNavy,
         borderRadius: 18,
         boxShadow: "0 18px 50px rgba(0,0,0,0.22)",
         overflow: "hidden",
       }}
     >
+      <style>{`
+        @media (max-width: 680px) {
+          .pam-start-actions,
+          .pam-start-stats {
+            grid-template-columns: 1fr !important;
+          }
+
+          .pam-start-card {
+            grid-template-columns: 72px 1fr 22px !important;
+            padding: 18px !important;
+          }
+
+          .pam-start-stat + .pam-start-stat {
+            border-left: 0 !important;
+            border-top: 1px solid ${warmGrey};
+          }
+        }
+      `}</style>
+
       <section
         style={{
-          background: blue,
-          color: "#fff",
-          padding: "34px clamp(20px, 5vw, 56px)",
+          maxWidth: contentWidth,
+          margin: "0 auto",
+          padding: `38px ${pagePadding} 28px`,
         }}
       >
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+        <nav
+          style={{
+            alignItems: "center",
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 16,
+            marginBottom: "clamp(44px, 7vw, 72px)",
+          }}
+        >
           <button
             onClick={() => navigate("/intro")}
             style={{
-              background: "rgba(255,255,255,0.1)",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.28)",
-              borderRadius: 999,
-              padding: "8px 13px",
-              fontSize: 13,
-              fontWeight: 700,
-              marginBottom: 20,
+              alignItems: "center",
+              background: "transparent",
+              border: 0,
+              color: pamNavy,
+              display: "inline-flex",
+              gap: 14,
+              padding: 0,
+              fontSize: 20,
+              fontWeight: 750,
             }}
           >
+            <span style={{ fontSize: 36, lineHeight: 1 }}>←</span>
             Terug naar introductie
           </button>
-          <p
+
+          <button
+            aria-label="Bekijk veiligheid"
+            onClick={() => openTab("security")}
             style={{
-              margin: "0 0 12px",
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
+              alignItems: "center",
+              background: "transparent",
+              border: `2px solid ${pamNavy}`,
+              borderRadius: "50%",
+              color: pamNavy,
+              display: "flex",
+              fontSize: 24,
               fontWeight: 700,
-              fontSize: 13,
-              opacity: 0.9,
+              height: 48,
+              justifyContent: "center",
+              width: 48,
             }}
           >
-            PAM - Personal Asset Manager
-          </p>
-          <h1
+            ?
+          </button>
+        </nav>
+
+        <p
+          style={{
+            color: pamNavy,
+            fontSize: "clamp(14px, 1.7vw, 20px)",
+            fontWeight: 850,
+            letterSpacing: "0.34em",
+            margin: "0 0 20px",
+            textTransform: "uppercase",
+          }}
+        >
+          PAM - Personal Asset Manager
+        </p>
+
+        <h1
+          style={{
+            color: pamNavy,
+            fontSize: "clamp(58px, 9vw, 104px)",
+            fontWeight: 850,
+            letterSpacing: "-0.04em",
+            lineHeight: 0.96,
+            margin: 0,
+            maxWidth: 790,
+          }}
+        >
+          Begin met wat waarde heeft.
+        </h1>
+
+        <p
+          style={{
+            color: pamNavy,
+            fontSize: "clamp(20px, 2.5vw, 28px)",
+            lineHeight: 1.45,
+            margin: "32px 0 0",
+            maxWidth: 800,
+          }}
+        >
+          PAM helpt je belangrijke assets stap voor stap vast te leggen. Daarna
+          koppel je eenvoudig documenten en mensen aan wat voor jou waarde
+          heeft. Zo ontstaat rust en overzicht.
+        </p>
+
+        <div
+          className="pam-start-actions"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.1fr 0.95fr",
+            gap: 24,
+            marginTop: 38,
+            maxWidth: 860,
+          }}
+        >
+          <button
+            onClick={() => openTab("asset-register")}
             style={{
-              margin: 0,
-              maxWidth: 820,
-              fontSize: "clamp(34px, 6vw, 70px)",
-              lineHeight: 1.04,
-              letterSpacing: 0,
+              alignItems: "center",
+              background: pamNavy,
+              border: 0,
+              borderRadius: 18,
+              boxShadow: "0 14px 30px rgba(18,48,82,0.22)",
+              color: "#fff",
+              display: "inline-flex",
+              gap: 18,
+              justifyContent: "center",
+              minHeight: 84,
+              padding: "18px 28px",
+              fontSize: "clamp(19px, 2vw, 25px)",
+              fontWeight: 850,
             }}
           >
-            Begin met wat waarde heeft.
-          </h1>
-          <p
-            style={{
-              margin: "18px 0 0",
-              maxWidth: 720,
-              fontSize: "clamp(17px, 2.2vw, 22px)",
-              lineHeight: 1.55,
-              color: "#dbeafe",
-            }}
-          >
-            PAM helpt u belangrijke assets stap voor stap vast te leggen. Daarna
-            koppelt u eenvoudig documenten en mensen aan wat voor u waarde heeft.
-            Zo ontstaat rust en overzicht.
-          </p>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 26 }}>
-            <button
-              onClick={() => openTab("asset-register")}
+            <span
+              aria-hidden="true"
               style={{
-                background: "#fff",
-                color: blue,
-                border: 0,
-                borderRadius: 10,
-                padding: "13px 18px",
-                fontWeight: 800,
+                alignItems: "center",
+                border: "2px solid rgba(255,255,255,0.9)",
+                borderRadius: "50%",
+                display: "flex",
+                fontSize: 24,
+                height: 34,
+                justifyContent: "center",
+                width: 34,
               }}
             >
-              Eerste asset vastleggen
-            </button>
-            <button
-              onClick={() => openTab("assets")}
-              style={{
-                background: "rgba(255,255,255,0.12)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.35)",
-                borderRadius: 10,
-                padding: "13px 18px",
-                fontWeight: 800,
-              }}
-            >
-              Bekijk mijn overzicht
-            </button>
-          </div>
+              +
+            </span>
+            Eerste asset vastleggen
+          </button>
+
+          <button
+            onClick={() => openTab("assets")}
+            style={{
+              alignItems: "center",
+              background: "transparent",
+              border: `2px solid ${pamNavy}`,
+              borderRadius: 18,
+              color: pamNavy,
+              display: "inline-flex",
+              gap: 18,
+              justifyContent: "center",
+              minHeight: 84,
+              padding: "18px 28px",
+              fontSize: "clamp(19px, 2vw, 25px)",
+              fontWeight: 850,
+            }}
+          >
+            <span aria-hidden="true" style={{ color: pamNavy, fontSize: 34 }}>
+              ◔
+            </span>
+            Bekijk mijn overzicht
+          </button>
+        </div>
+
+        <div
+          className="pam-start-stats"
+          style={{
+            background: softWhite,
+            border: `1px solid ${warmGrey}`,
+            borderRadius: 20,
+            boxShadow: "0 16px 38px rgba(18,48,82,0.08)",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            marginTop: 42,
+            overflow: "hidden",
+          }}
+        >
+          <StatBlock icon="□" count={counts.assets} label="assets vastgelegd" />
+          <StatBlock
+            icon="▤"
+            count={counts.documents}
+            label="documenten gekoppeld"
+            withDivider
+          />
         </div>
       </section>
 
-      <section style={{ maxWidth: 1080, margin: "0 auto", padding: "28px clamp(16px, 4vw, 40px)" }}>
-        <div
+      <section
+        style={{
+          maxWidth: contentWidth,
+          margin: "0 auto",
+          padding: `8px ${pagePadding} 54px`,
+        }}
+      >
+        <h2
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: 12,
-            marginBottom: 18,
+            color: pamNavy,
+            fontSize: "clamp(30px, 4vw, 42px)",
+            lineHeight: 1.1,
+            margin: "0 0 14px",
           }}
         >
-          <div style={statStyle}>
-            <strong style={statNumberStyle}>{counts.assets}</strong>
-            <span>assets vastgelegd</span>
-          </div>
-          <div style={statStyle}>
-            <strong style={statNumberStyle}>{counts.documents}</strong>
-            <span>documenten gekoppeld</span>
-          </div>
-          <div style={statStyle}>
-            <strong style={statNumberStyle}>{counts.people}</strong>
-            <span>mensen toegevoegd</span>
-          </div>
-        </div>
+          Bouw je overzicht stap voor stap
+        </h2>
+        <p
+          style={{
+            color: pamNavy,
+            fontSize: "clamp(18px, 2.1vw, 24px)",
+            lineHeight: 1.45,
+            margin: "0 0 36px",
+            maxWidth: 840,
+          }}
+        >
+          Niet alles hoeft vandaag compleet. Begin met één asset. Later vul je
+          documenten, personen en extra details aan. Zo groeit je persoonlijke
+          overzicht zonder dat het als administratie voelt.
+        </p>
 
-        <div
-          style={{
-            background: "#fff",
-            border: `1px solid ${border}`,
-            borderRadius: 12,
-            padding: "18px 20px",
-            marginBottom: 18,
-          }}
-        >
-          <h2 style={{ margin: "0 0 8px", fontSize: 22 }}>Waar helpt PAM bij?</h2>
-          <p style={{ margin: 0, color: "#475569", lineHeight: 1.6 }}>
-            Niet alles hoeft vandaag compleet. Begin met één asset. Later vult u
-            documenten, personen en extra details aan. Zo groeit uw persoonlijke
-            overzicht zonder dat het als administratie voelt.
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-            gap: 14,
-          }}
-        >
+        <div style={{ display: "grid", gap: 16 }}>
           {actionCards.map((card) => (
             <button
               key={card.title}
+              className="pam-start-card"
               onClick={() => openTab(card.tab)}
               style={{
-                display: "block",
-                textAlign: "left",
-                background: card.primary ? "#eef5ff" : "#fff",
-                color: blue,
-                border: card.primary ? `2px solid ${accent}` : `1px solid ${border}`,
-                borderRadius: 12,
-                padding: 18,
-                boxShadow: card.primary
-                  ? "0 7px 20px rgba(36,80,140,0.16)"
-                  : "0 4px 14px rgba(15,23,42,0.08)",
+                alignItems: "center",
+                background: softWhite,
+                border: `1px solid ${warmGrey}`,
+                borderRadius: 20,
+                boxShadow: "0 12px 30px rgba(18,48,82,0.07)",
+                color: pamNavy,
                 cursor: "pointer",
+                display: "grid",
+                gap: 24,
+                gridTemplateColumns: "100px 1fr 34px",
+                padding: "28px 34px",
+                textAlign: "left",
               }}
             >
-              <strong style={{ display: "block", fontSize: 19, marginBottom: 8 }}>
-                {card.title}
-              </strong>
-              <span style={{ display: "block", color: "#52677d", lineHeight: 1.55 }}>
-                {card.text}
+              <IconBubble icon={card.icon} />
+              <span>
+                <strong
+                  style={{
+                    display: "block",
+                    fontSize: "clamp(22px, 2.7vw, 31px)",
+                    lineHeight: 1.15,
+                    marginBottom: 8,
+                  }}
+                >
+                  {card.title}
+                </strong>
+                <span
+                  style={{
+                    color: pamNavy,
+                    display: "block",
+                    fontSize: "clamp(17px, 2.1vw, 24px)",
+                    lineHeight: 1.38,
+                    maxWidth: 620,
+                  }}
+                >
+                  {card.text}
+                </span>
               </span>
               <span
+                aria-hidden="true"
                 style={{
-                  display: "inline-flex",
-                  marginTop: 14,
-                  color: accent,
-                  fontWeight: 800,
+                  color: pamNavy,
+                  fontSize: 54,
+                  fontWeight: 300,
+                  justifySelf: "end",
+                  lineHeight: 1,
                 }}
               >
-                {card.cta}
+                ›
               </span>
             </button>
           ))}
         </div>
 
-        <div
+        <button
+          onClick={() => openTab("security")}
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
             alignItems: "center",
-            marginTop: 22,
-            color: "#52677d",
-            fontSize: 14,
+            background: "#F3F1EA",
+            border: `1px solid ${warmGrey}`,
+            borderRadius: 20,
+            color: pamNavy,
+            cursor: "pointer",
+            display: "grid",
+            gap: 24,
+            gridTemplateColumns: "100px 1fr",
+            marginTop: 32,
+            padding: "30px 34px",
+            textAlign: "left",
+            width: "100%",
           }}
         >
-          <span>PAM is local-first ontworpen. Cloud-sync komt pas met expliciete beveiliging.</span>
-          <button className="btn-secondary" onClick={() => openTab("security")}>
-            Veiligheid bekijken
-          </button>
-        </div>
+          <IconBubble icon="◇" />
+          <span>
+            <strong
+              style={{
+                display: "block",
+                fontSize: "clamp(22px, 2.7vw, 31px)",
+                lineHeight: 1.15,
+                marginBottom: 8,
+              }}
+            >
+              Jouw informatie blijft van jou
+            </strong>
+            <span
+              style={{
+                color: pamNavy,
+                display: "block",
+                fontSize: "clamp(17px, 2.1vw, 24px)",
+                lineHeight: 1.45,
+                maxWidth: 690,
+              }}
+            >
+              PAM is local-first ontworpen. Jij houdt de controle over je
+              gegevens en bepaalt wat je deelt en met wie.
+            </span>
+          </span>
+        </button>
       </section>
     </main>
   );
 }
 
-const statStyle: React.CSSProperties = {
-  background: "#fff",
-  border: `1px solid ${border}`,
-  borderRadius: 12,
-  padding: "16px 18px",
-  color: blue,
-};
+function StatBlock({
+  icon,
+  count,
+  label,
+  withDivider = false,
+}: {
+  icon: string;
+  count: number;
+  label: string;
+  withDivider?: boolean;
+}) {
+  return (
+    <div
+      className="pam-start-stat"
+      style={{
+        alignItems: "center",
+        borderLeft: withDivider ? `1px solid ${warmGrey}` : 0,
+        display: "grid",
+        gap: 22,
+        gridTemplateColumns: "90px 1fr",
+        padding: "34px 32px",
+      }}
+    >
+      <IconBubble icon={icon} />
+      <div>
+        <strong
+          style={{
+            color: pamNavy,
+            display: "block",
+            fontSize: "clamp(44px, 6vw, 58px)",
+            lineHeight: 0.95,
+            marginBottom: 12,
+          }}
+        >
+          {count}
+        </strong>
+        <span style={{ color: pamNavy, fontSize: "clamp(18px, 2vw, 24px)" }}>
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
 
-const statNumberStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: 28,
-  lineHeight: 1,
-  marginBottom: 6,
-};
+function IconBubble({ icon }: { icon: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        alignItems: "center",
+        background: "#EFEEE8",
+        borderRadius: "50%",
+        color: olive,
+        display: "flex",
+        fontSize: 42,
+        height: 78,
+        justifyContent: "center",
+        width: 78,
+      }}
+    >
+      {icon}
+    </span>
+  );
+}
