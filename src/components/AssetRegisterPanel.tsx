@@ -66,6 +66,14 @@ const LEGACY_TYPE_ALIASES: Record<string, string> = {
   service_providers: "serviceprovider",
 };
 
+const LEGACY_FIELD_ALIASES: Record<string, string> = {
+  brand: "merk",
+  serial: "serienummer",
+  purchaseDate: "aankoopdatum",
+  warrantyUntil: "garantie_tot",
+  priceCents: "aankoopwaarde",
+};
+
 /** -----------------------------
  *  INLINE dynamisch veldenformulier (geen apart bestand nodig)
  *  ----------------------------- */
@@ -257,12 +265,12 @@ function computeCandidateKeys(schema: AssetSchema): string[] {
     .slice(0, 8);
 
   const LEGACY_HINTS = [
-    "serial",
-    "brand",
+    "serienummer",
+    "merk",
     "model",
-    "purchaseDate",
-    "warrantyUntil",
-    "priceCents",
+    "aankoopdatum",
+    "garantie_tot",
+    "aankoopwaarde",
   ];
 
   const BASE = ["name", "typeLabel"];
@@ -281,6 +289,17 @@ function formatPrice(cents?: number) {
   }
 }
 
+function currencyToCents(value: any) {
+  if (value == null || value === "") return undefined;
+  const normalized =
+    typeof value === "string"
+      ? value.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "")
+      : value;
+  const amount = Number(normalized);
+  if (Number.isNaN(amount)) return undefined;
+  return Math.round(amount * 100);
+}
+
 function valueFromRow(row: Row, key: string) {
   // vlakke property
   const flat = (row as Record<string, any>)[key];
@@ -293,6 +312,14 @@ function valueFromRow(row: Row, key: string) {
   // fallback voor type
   if (key === "typeLabel") return row.typeLabel || row.type || "";
   return "";
+}
+
+function fieldTypeForKey(schema: AssetSchema, key: string) {
+  for (const type of schema.types) {
+    const field = type.fields.find((item) => item.key === key);
+    if (field) return field.type;
+  }
+  return undefined;
 }
 
 function cmp(a: any, b: any, dir: "asc" | "desc") {
@@ -330,6 +357,13 @@ function flattenRow(r: any): any {
   if (!merged.name) merged.name = name;
   if (!merged.type) merged.type = typeLabel;
   if (!merged.typeLabel) merged.typeLabel = typeLabel;
+  if (!merged.merk && merged.brand) merged.merk = merged.brand;
+  if (!merged.serienummer && merged.serial) merged.serienummer = merged.serial;
+  if (!merged.aankoopdatum && merged.purchaseDate) merged.aankoopdatum = merged.purchaseDate;
+  if (!merged.garantie_tot && merged.warrantyUntil) merged.garantie_tot = merged.warrantyUntil;
+  if ((merged.aankoopwaarde === undefined || merged.aankoopwaarde === "") && merged.priceCents) {
+    merged.aankoopwaarde = Number(merged.priceCents) / 100;
+  }
 
   return merged;
 }
@@ -380,7 +414,7 @@ function legacyFieldsFromData(typeId: string, data: Record<string, any>) {
       model: data.model,
       purchaseDate: data.aankoopdatum,
       warrantyUntil: data.garantie_tot,
-      priceCents: data.aankoopwaarde,
+      priceCents: currencyToCents(data.aankoopwaarde),
     };
   }
 
@@ -439,6 +473,7 @@ function detailEntriesForRow(schema: AssetSchema, row: Row, labelMap: Record<str
     "createdAt",
     "updatedAt",
     "data",
+    ...Object.keys(LEGACY_FIELD_ALIASES),
   ]);
   const fieldByKey = new Map((type?.fields ?? []).map((field) => [field.key, field]));
   const orderedKeys = [
@@ -451,6 +486,10 @@ function detailEntriesForRow(schema: AssetSchema, row: Row, labelMap: Record<str
     .filter((key) => {
       if (seen.has(key) || hidden.has(key) || key.startsWith("_")) return false;
       seen.add(key);
+      const canonicalKey = LEGACY_FIELD_ALIASES[key];
+      if (canonicalKey && src[canonicalKey] !== undefined && src[canonicalKey] !== null && src[canonicalKey] !== "") {
+        return false;
+      }
       const value = src[key];
       return value !== undefined && value !== null && value !== "";
     })
@@ -503,6 +542,7 @@ function summarizeRow(schema: AssetSchema, row: Row, labelMap: Record<string, st
   const presentKeys = new Set<string>();
   Object.keys(src).forEach((k) => {
     if (k.startsWith("_")) return;
+    if (LEGACY_FIELD_ALIASES[k]) return;
     if ([
       "id",
       "typeId",
@@ -536,7 +576,8 @@ function summarizeRow(schema: AssetSchema, row: Row, labelMap: Record<string, st
     <div className="flex flex-wrap gap-2">
       {take.map((k) => {
         let v = src[k];
-        if (k === "priceCents") v = formatPrice(v);
+        const fieldType = t?.fields.find((field) => field.key === k)?.type;
+        if (fieldType === "currency") v = formatDetailValue(v, fieldType, k);
         if (v && typeof v === "object" && v.name) v = v.name; // file-achtig object → naam
         const label = labelMap[k] || k;
         return (
@@ -1132,8 +1173,10 @@ export default function AssetRegisterPanel() {
 
                     const rawVal = valueFromRow(r, k);
                     let cell = rawVal ?? "";
+                    const fieldType = fieldTypeForKey(schema, k);
 
                     if (k === "priceCents") cell = formatPrice(rawVal);
+                    if (fieldType === "currency") cell = formatDetailValue(rawVal, fieldType, k);
                     if (rawVal && typeof rawVal === "object" && rawVal.name && rawVal.size) {
                       cell = `${rawVal.name} (${Math.round(rawVal.size / 1024)} kB)`;
                     }
