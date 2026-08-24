@@ -248,13 +248,10 @@ export default function IntroPage() {
               display: "flex",
               flexWrap: "wrap",
               gap: 16,
-              justifyContent: "space-between",
+              justifyContent: "flex-start",
               marginTop: 26,
             }}
           >
-            <p style={{ color: slateBlue, fontSize: 16, lineHeight: 1.5, margin: 0 }}>
-              Begin rustig. Eén asset is genoeg om overzicht op te bouwen.
-            </p>
             <button
               onClick={() => navigate("/start")}
               style={{
