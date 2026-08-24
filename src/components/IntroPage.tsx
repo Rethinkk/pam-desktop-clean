@@ -8,6 +8,8 @@ const warmIvory = "#F8F5EE";
 const softWhite = "#FCFBF8";
 const slateBlue = "#60718A";
 const warmGrey = "#DEDCD5";
+const contentWidth = 980;
+const pagePadding = "clamp(28px, 7vw, 86px)";
 
 const cards = [
   {
@@ -38,7 +40,9 @@ export default function IntroPage() {
   return (
     <main
       style={{
+        width: "min(calc(100% - clamp(22px, 8vw, 92px)), 1120px)",
         minHeight: "calc(100vh - 40px)",
+        margin: "0 auto",
         background: warmIvory,
         color: deepNavy,
         borderRadius: 18,
@@ -56,9 +60,9 @@ export default function IntroPage() {
       `}</style>
       <section
         style={{
-          maxWidth: 1060,
+          maxWidth: contentWidth,
           margin: "0 auto",
-          padding: "44px clamp(22px, 6vw, 72px) 36px",
+          padding: `44px ${pagePadding} 36px`,
         }}
       >
         <button
@@ -141,10 +145,10 @@ export default function IntroPage() {
       <section
         style={{
           borderTop: `1px solid ${warmGrey}`,
-          padding: "34px clamp(22px, 6vw, 72px) 44px",
+          padding: `34px ${pagePadding} 44px`,
         }}
       >
-        <div style={{ maxWidth: 1060, margin: "0 auto" }}>
+        <div style={{ maxWidth: contentWidth, margin: "0 auto" }}>
           <h2
             style={{
               color: deepNavy,
