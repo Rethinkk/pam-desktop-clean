@@ -201,6 +201,10 @@ export default function AssetShell() {
   const [tab, setTab] = usePersistedTab(initialTab);
 
   React.useEffect(() => {
+    if (ALLOWED_TABS.includes(requestedTab)) setTab(requestedTab);
+  }, [requestedTab, setTab]);
+
+  React.useEffect(() => {
     const handler = (event: Event) => {
       const nextTab = (event as CustomEvent).detail?.tab;
       if (ALLOWED_TABS.includes(nextTab)) setTab(nextTab);
