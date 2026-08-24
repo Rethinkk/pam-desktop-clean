@@ -14,21 +14,25 @@ const pagePadding = "clamp(24px, 5vw, 64px)";
 const cards = [
   {
     icon: "□",
+    label: "1. Overzicht",
     title: "Alles wat belangrijk is overzichtelijk bij elkaar.",
     text: "Van documenten en bezittingen tot belangrijke informatie en wensen. Op één veilige plek.",
   },
   {
     icon: "◎",
+    label: "2. Controle",
     title: "Jij bepaalt wie wat mag zien.",
     text: "Je kiest zelf wie toegang krijgt en tot welke informatie. Altijd onder jouw regie.",
   },
   {
-    icon: "✎",
+    icon: "↻",
+    label: "3. Continuïteit",
     title: "Makkelijk aanpassen als je leven verandert.",
     text: "Nieuwe situatie? Pas het eenvoudig aan. PAM groeit mee met jouw leven.",
   },
   {
     icon: "♡",
+    label: "4. Duidelijkheid",
     title: "Duidelijkheid voor de mensen die je vertrouwt.",
     text: "Wanneer het jou even niet lukt, weten zij wat belangrijk is en wat er moet gebeuren.",
   },
@@ -60,6 +64,16 @@ export default function IntroPage() {
           .pam-intro-card {
             grid-template-columns: 1fr !important;
             padding: 16px !important;
+          }
+
+          .pam-intro-card-label,
+          .pam-intro-card-copy {
+            border-left: 0 !important;
+            padding-left: 0 !important;
+          }
+
+          .pam-intro-card-label {
+            padding-top: 2px !important;
           }
         }
       `}</style>
@@ -180,7 +194,7 @@ export default function IntroPage() {
               margin: "0 0 22px",
             }}
           >
-            Wat PAM voor je doet
+            Wat PAM je brengt
           </h2>
 
           <div style={{ display: "grid", gap: 14 }}>
@@ -194,8 +208,8 @@ export default function IntroPage() {
                   border: `1px solid ${warmGrey}`,
                   borderRadius: 15,
                   display: "grid",
-                  gap: 18,
-                  gridTemplateColumns: "76px 1fr",
+                  gap: 20,
+                  gridTemplateColumns: "94px minmax(150px, 210px) 1fr",
                   padding: "18px 24px",
                 }}
               >
@@ -215,11 +229,31 @@ export default function IntroPage() {
                 >
                   {card.icon}
                 </div>
-                <div>
+                <div
+                  className="pam-intro-card-label"
+                  style={{
+                    borderLeft: `1px solid ${warmGrey}`,
+                    color: olive,
+                    fontSize: "clamp(17px, 1.8vw, 20px)",
+                    fontWeight: 780,
+                    letterSpacing: "0.015em",
+                    paddingLeft: 20,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {card.label}
+                </div>
+                <div
+                  className="pam-intro-card-copy"
+                  style={{
+                    borderLeft: `1px solid ${warmGrey}`,
+                    paddingLeft: 20,
+                  }}
+                >
                   <h3
                     style={{
                       color: deepNavy,
-                      fontSize: "clamp(18px, 2vw, 22px)",
+                      fontSize: "clamp(17px, 1.8vw, 20px)",
                       fontWeight: 740,
                       lineHeight: 1.2,
                       margin: "0 0 6px",
@@ -229,8 +263,8 @@ export default function IntroPage() {
                   </h3>
                   <p
                     style={{
-                      color: slateBlue,
-                      fontSize: "clamp(15px, 1.7vw, 18px)",
+                      color: deepNavy,
+                      fontSize: "clamp(15px, 1.6vw, 17px)",
                       lineHeight: 1.45,
                       margin: 0,
                     }}
