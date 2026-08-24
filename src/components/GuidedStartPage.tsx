@@ -173,7 +173,7 @@ export default function GuidedStartPage() {
             textTransform: "uppercase",
           }}
         >
-          PAM - Personal Asset Manager
+          PAM - your personal asset manager
         </p>
 
         <h1
