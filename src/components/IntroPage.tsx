@@ -265,7 +265,7 @@ export default function IntroPage() {
                 boxShadow: "0 8px 18px rgba(18,48,82,0.16)",
               }}
             >
-              Begin rustig met PAM
+              leer PAM kennen
             </button>
           </div>
         </div>
