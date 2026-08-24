@@ -47,7 +47,7 @@ export default function FrontPage() {
         <button
           onClick={() => navigate("/intro")}
           style={{
-            margin: "30px auto 0",
+            margin: "84px auto 0",
             background: "#fff",
             color: blue,
             border: "1px solid rgba(255,255,255,0.8)",
