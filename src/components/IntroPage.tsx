@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import PublicFooter from "./PublicFooter";
 
 const deepNavy = "#123052";
 const pamNavy = "#173A61";
@@ -42,6 +43,7 @@ export default function IntroPage() {
   const navigate = useNavigate();
 
   return (
+    <>
     <main
       style={{
         width: "min(calc(100% - clamp(22px, 8vw, 92px)), 1040px)",
@@ -305,5 +307,7 @@ export default function IntroPage() {
         </div>
       </section>
     </main>
+    <PublicFooter />
+    </>
   );
 }

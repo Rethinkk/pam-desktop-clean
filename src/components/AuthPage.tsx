@@ -1,6 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import PublicFooter from "./PublicFooter";
 
 const deepNavy = "#123052";
 const pamNavy = "#173A61";
@@ -48,6 +49,7 @@ export default function AuthPage() {
   }
 
   return (
+    <>
     <main
       style={{
         alignItems: "center",
@@ -245,5 +247,7 @@ export default function AuthPage() {
         </div>
       </section>
     </main>
+    <PublicFooter />
+    </>
   );
 }

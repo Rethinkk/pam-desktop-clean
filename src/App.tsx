@@ -16,6 +16,7 @@ import AccountAccessPage from "./components/AccountAccessPage";
 import GuidedStartPage from "./components/GuidedStartPage";
 import AuthGate from "./components/AuthGate";
 import AuthPage from "./components/AuthPage";
+import PublicInfoPage from "./components/PublicInfoPage";
 import AssetRegisterPanel from "./components/AssetRegisterPanel";
 import AssetsPanel from "./components/AssetsPanel";
 import DocumentsPanel from "./components/DocumentsPanel";
@@ -133,6 +134,7 @@ export default function App() {
           <Route path="/" element={<FrontPage />} />
           <Route path="/intro" element={<IntroPage />} />
           <Route path="/account" element={<AccountAccessPage />} />
+          <Route path="/info/:slug" element={<PublicInfoPage />} />
           <Route
             path="/start"
             element={(
