@@ -44,22 +44,22 @@ function ReportingLook() {
         background:rgba(252,251,248,.97);
         border:1px solid var(--pam-warm-grey);
         border-radius:14px;
-        box-shadow:0 12px 34px rgba(18,48,82,0.10);
+        box-shadow:0 8px 22px rgba(18,48,82,0.08);
         color:var(--pam-deep-navy);
         display:flex;
         gap:18px;
         justify-content:space-between;
-        margin:0 0 18px;
-        min-height:76px;
-        padding:18px 28px;
+        margin:0 0 16px;
+        min-height:64px;
+        padding:14px 24px;
       }
       .rp .brandbar { display:flex; align-items:baseline; gap:10px; min-width:0; }
       .rp .brand-home { appearance:none; border:0; background:transparent; color:inherit; padding:0; box-shadow:none; cursor:pointer; text-align:left; }
       .rp .brand-home:hover { background:transparent; text-decoration:none; }
-      .rp .brand-word { color:var(--pam-deep-navy); font-weight:900; font-size:34px; line-height:1; letter-spacing:-.02em; }
+      .rp .brand-word { color:var(--pam-deep-navy); font-weight:850; font-size:28px; line-height:1; letter-spacing:-.02em; }
       .rp .brand-sep { color:var(--pam-navy); opacity:.95; }
-      .rp .brand-tag { color:var(--pam-deep-navy); font-weight:750; font-size:18px; opacity:.98; }
-      .rp .brand-actions { align-items:center; display:flex; gap:20px; color:var(--pam-deep-navy); flex:0 0 auto; }
+      .rp .brand-tag { color:var(--pam-deep-navy); font-weight:680; font-size:15px; opacity:.98; }
+      .rp .brand-actions { align-items:center; display:flex; gap:18px; color:var(--pam-deep-navy); flex:0 0 auto; }
       .rp .brand-icon {
         align-items:center;
         background:transparent;
@@ -68,12 +68,12 @@ function ReportingLook() {
         box-shadow:none;
         color:var(--pam-deep-navy);
         display:inline-flex;
-        font-size:18px;
-        font-weight:850;
-        height:30px;
+        font-size:15px;
+        font-weight:780;
+        height:26px;
         justify-content:center;
         padding:0;
-        width:30px;
+        width:26px;
       }
       .rp .brand-icon:hover,
       .rp .brand-profile:hover {
@@ -88,61 +88,62 @@ function ReportingLook() {
         color:var(--pam-deep-navy);
         display:inline-flex;
         gap:10px;
-        font-size:16px;
-        font-weight:750;
+        font-size:14px;
+        font-weight:700;
         padding:0;
       }
-      .rp .brand-person { font-size:23px; line-height:1; }
-      .rp .brand-chevron { font-size:17px; line-height:1; }
+      .rp .brand-person { font-size:20px; line-height:1; }
+      .rp .brand-chevron { font-size:15px; line-height:1; }
 
       /* Layout & cards */
       .rp {
         background:var(--pam-ivory);
         color:var(--pam-deep-navy);
         border-radius:18px;
-        box-shadow:0 18px 50px rgba(0,0,0,0.22);
+        box-shadow:0 14px 38px rgba(0,0,0,0.18);
         margin:0 auto;
         min-height:calc(100vh - 40px);
         overflow:hidden;
-        padding:0 32px 34px;
+        padding:0 26px 30px;
         width:min(calc(100% - clamp(22px, 8vw, 92px)), 1840px);
       }
-      .rp h1 { color:var(--pam-deep-navy); font-size:32px; line-height:1.2; margin:0 0 12px; font-weight:850; letter-spacing:-.02em; }
+      .rp h1 { color:var(--pam-deep-navy); font-size:26px; line-height:1.2; margin:0 0 12px; font-weight:780; letter-spacing:-.01em; }
       .rp h2, .rp h3 { color:var(--pam-deep-navy); }
       .rp .card {
         background:rgba(252,251,248,.94);
         border:1px solid var(--pam-warm-grey);
-        border-radius:20px;
-        box-shadow:0 12px 30px rgba(18,48,82,0.07);
+        border-radius:16px;
+        box-shadow:0 8px 22px rgba(18,48,82,0.055);
         color:var(--pam-deep-navy);
-        padding:28px;
-        margin-bottom:18px;
+        padding:22px;
+        margin-bottom:16px;
       }
       .rp .pam-panel-card {
-        min-height:620px;
+        min-height:560px;
       }
 
       /* Tabs */
       .rp .pam-tabs-shell {
-        margin:0 0 24px;
-        padding:4px 16px;
+        margin:0 0 18px;
+        padding:2px 12px;
       }
-      .rp .tabs { display:flex; gap:16px; flex-wrap:wrap; margin:0; }
+      .rp .tabs { display:flex; gap:12px; flex-wrap:wrap; margin:0; }
       .rp .tab {
         border:1px solid var(--pam-warm-grey);
         background:rgba(252,251,248,.95);
         border-radius:999px;
-        box-shadow:0 6px 16px rgba(18,48,82,0.08);
+        box-shadow:0 4px 12px rgba(18,48,82,0.06);
         color:var(--pam-deep-navy);
         cursor:pointer;
-        font-weight:750;
-        padding:11px 22px;
+        font-size:14px;
+        font-weight:700;
+        padding:9px 17px;
       }
       .rp .tab:hover { background:#fff; border-color:var(--pam-olive); color:var(--pam-deep-navy); }
       .rp .tab.active {
         background:linear-gradient(180deg, #74815a 0%, #4f5c36 100%);
         border-color:#4f5c36;
-        box-shadow:0 10px 24px rgba(79,92,54,0.22);
+        box-shadow:0 8px 18px rgba(79,92,54,0.18);
         color:#fff;
       }
       .rp .tab-spacer { flex:1 1 auto; }

@@ -24,8 +24,8 @@ const olive = "#687348";
 const warmIvory = "#F8F5EE";
 const softWhite = "#FCFBF8";
 const warmGrey = "#DEDCD5";
-const contentWidth = 980;
-const pagePadding = "clamp(28px, 7vw, 86px)";
+const contentWidth = 900;
+const pagePadding = "clamp(24px, 5vw, 64px)";
 
 const actionCards: ActionCard[] = [
   {
@@ -79,7 +79,7 @@ export default function GuidedStartPage() {
   return (
     <main
       style={{
-        width: "min(calc(100% - clamp(22px, 8vw, 92px)), 1120px)",
+        width: "min(calc(100% - clamp(22px, 8vw, 92px)), 1040px)",
         minHeight: "calc(100vh - 40px)",
         margin: "0 auto",
         background: warmIvory,
@@ -97,8 +97,8 @@ export default function GuidedStartPage() {
           }
 
           .pam-start-card {
-            grid-template-columns: 72px 1fr 22px !important;
-            padding: 18px !important;
+            grid-template-columns: 56px 1fr 18px !important;
+            padding: 16px !important;
           }
 
           .pam-start-stat + .pam-start-stat {
@@ -112,7 +112,7 @@ export default function GuidedStartPage() {
         style={{
           maxWidth: contentWidth,
           margin: "0 auto",
-          padding: `38px ${pagePadding} 28px`,
+          padding: `34px ${pagePadding} 24px`,
         }}
       >
         <nav
@@ -121,7 +121,7 @@ export default function GuidedStartPage() {
             display: "flex",
             justifyContent: "space-between",
             gap: 16,
-            marginBottom: "clamp(44px, 7vw, 72px)",
+            marginBottom: "clamp(34px, 5vw, 46px)",
           }}
         >
           <button
@@ -134,11 +134,11 @@ export default function GuidedStartPage() {
               display: "inline-flex",
               gap: 14,
               padding: 0,
-              fontSize: 20,
-              fontWeight: 750,
+              fontSize: 16,
+              fontWeight: 720,
             }}
           >
-            <span style={{ fontSize: 36, lineHeight: 1 }}>←</span>
+            <span style={{ fontSize: 28, lineHeight: 1 }}>←</span>
             Terug naar introductie
           </button>
 
@@ -152,11 +152,11 @@ export default function GuidedStartPage() {
               borderRadius: "50%",
               color: pamNavy,
               display: "flex",
-              fontSize: 24,
+              fontSize: 19,
               fontWeight: 700,
-              height: 48,
+              height: 38,
               justifyContent: "center",
-              width: 48,
+              width: 38,
             }}
           >
             ?
@@ -166,10 +166,10 @@ export default function GuidedStartPage() {
         <p
           style={{
             color: pamNavy,
-            fontSize: "clamp(14px, 1.7vw, 20px)",
-            fontWeight: 850,
-            letterSpacing: "0.34em",
-            margin: "0 0 20px",
+            fontSize: "clamp(12px, 1.3vw, 15px)",
+            fontWeight: 780,
+            letterSpacing: "0.28em",
+            margin: "0 0 16px",
             textTransform: "uppercase",
           }}
         >
@@ -179,12 +179,12 @@ export default function GuidedStartPage() {
         <h1
           style={{
             color: pamNavy,
-            fontSize: "clamp(58px, 9vw, 104px)",
-            fontWeight: 850,
-            letterSpacing: "-0.04em",
-            lineHeight: 0.96,
+            fontSize: "clamp(44px, 6.2vw, 72px)",
+            fontWeight: 780,
+            letterSpacing: "-0.035em",
+            lineHeight: 1.02,
             margin: 0,
-            maxWidth: 790,
+            maxWidth: 700,
           }}
         >
           Begin met wat waarde heeft.
@@ -193,10 +193,10 @@ export default function GuidedStartPage() {
         <p
           style={{
             color: pamNavy,
-            fontSize: "clamp(20px, 2.5vw, 28px)",
-            lineHeight: 1.45,
-            margin: "32px 0 0",
-            maxWidth: 800,
+            fontSize: "clamp(17px, 2vw, 21px)",
+            lineHeight: 1.48,
+            margin: "24px 0 0",
+            maxWidth: 720,
           }}
         >
           PAM helpt je belangrijke assets stap voor stap vast te leggen. Daarna
@@ -209,9 +209,9 @@ export default function GuidedStartPage() {
           style={{
             display: "grid",
             gridTemplateColumns: "1.1fr 0.95fr",
-            gap: 24,
-            marginTop: 38,
-            maxWidth: 860,
+            gap: 16,
+            marginTop: 30,
+            maxWidth: 760,
           }}
         >
           <button
@@ -220,16 +220,16 @@ export default function GuidedStartPage() {
               alignItems: "center",
               background: pamNavy,
               border: 0,
-              borderRadius: 18,
-              boxShadow: "0 14px 30px rgba(18,48,82,0.22)",
+              borderRadius: 14,
+              boxShadow: "0 10px 22px rgba(18,48,82,0.18)",
               color: "#fff",
               display: "inline-flex",
-              gap: 18,
+              gap: 12,
               justifyContent: "center",
-              minHeight: 84,
-              padding: "18px 28px",
-              fontSize: "clamp(19px, 2vw, 25px)",
-              fontWeight: 850,
+              minHeight: 62,
+              padding: "14px 22px",
+              fontSize: "clamp(16px, 1.6vw, 19px)",
+              fontWeight: 760,
             }}
           >
             <span
@@ -239,10 +239,10 @@ export default function GuidedStartPage() {
                 border: "2px solid rgba(255,255,255,0.9)",
                 borderRadius: "50%",
                 display: "flex",
-                fontSize: 24,
-                height: 34,
+                fontSize: 18,
+                height: 27,
                 justifyContent: "center",
-                width: 34,
+                width: 27,
               }}
             >
               +
@@ -256,18 +256,18 @@ export default function GuidedStartPage() {
               alignItems: "center",
               background: "transparent",
               border: `2px solid ${pamNavy}`,
-              borderRadius: 18,
+              borderRadius: 14,
               color: pamNavy,
               display: "inline-flex",
-              gap: 18,
+              gap: 12,
               justifyContent: "center",
-              minHeight: 84,
-              padding: "18px 28px",
-              fontSize: "clamp(19px, 2vw, 25px)",
-              fontWeight: 850,
+              minHeight: 62,
+              padding: "14px 22px",
+              fontSize: "clamp(16px, 1.6vw, 19px)",
+              fontWeight: 760,
             }}
           >
-            <span aria-hidden="true" style={{ color: pamNavy, fontSize: 34 }}>
+            <span aria-hidden="true" style={{ color: pamNavy, fontSize: 25 }}>
               ◔
             </span>
             Bekijk mijn overzicht
@@ -279,11 +279,11 @@ export default function GuidedStartPage() {
           style={{
             background: softWhite,
             border: `1px solid ${warmGrey}`,
-            borderRadius: 20,
-            boxShadow: "0 16px 38px rgba(18,48,82,0.08)",
+            borderRadius: 16,
+            boxShadow: "0 12px 28px rgba(18,48,82,0.06)",
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            marginTop: 42,
+            marginTop: 32,
             overflow: "hidden",
           }}
         >
@@ -301,15 +301,16 @@ export default function GuidedStartPage() {
         style={{
           maxWidth: contentWidth,
           margin: "0 auto",
-          padding: `8px ${pagePadding} 54px`,
+          padding: `4px ${pagePadding} 46px`,
         }}
       >
         <h2
           style={{
             color: pamNavy,
-            fontSize: "clamp(30px, 4vw, 42px)",
+            fontSize: "clamp(25px, 3vw, 33px)",
+            fontWeight: 780,
             lineHeight: 1.1,
-            margin: "0 0 14px",
+            margin: "0 0 12px",
           }}
         >
           Bouw je overzicht stap voor stap
@@ -317,10 +318,10 @@ export default function GuidedStartPage() {
         <p
           style={{
             color: pamNavy,
-            fontSize: "clamp(18px, 2.1vw, 24px)",
-            lineHeight: 1.45,
-            margin: "0 0 36px",
-            maxWidth: 840,
+            fontSize: "clamp(16px, 1.8vw, 19px)",
+            lineHeight: 1.48,
+            margin: "0 0 28px",
+            maxWidth: 760,
           }}
         >
           Niet alles hoeft vandaag compleet. Begin met één asset. Later vul je
@@ -338,14 +339,14 @@ export default function GuidedStartPage() {
                 alignItems: "center",
                 background: softWhite,
                 border: `1px solid ${warmGrey}`,
-                borderRadius: 20,
-                boxShadow: "0 12px 30px rgba(18,48,82,0.07)",
+                borderRadius: 16,
+                boxShadow: "0 9px 22px rgba(18,48,82,0.055)",
                 color: pamNavy,
                 cursor: "pointer",
                 display: "grid",
-                gap: 24,
-                gridTemplateColumns: "100px 1fr 34px",
-                padding: "28px 34px",
+                gap: 18,
+                gridTemplateColumns: "74px 1fr 28px",
+                padding: "20px 26px",
                 textAlign: "left",
               }}
             >
@@ -354,9 +355,10 @@ export default function GuidedStartPage() {
                 <strong
                   style={{
                     display: "block",
-                    fontSize: "clamp(22px, 2.7vw, 31px)",
+                    fontSize: "clamp(19px, 2vw, 23px)",
+                    fontWeight: 780,
                     lineHeight: 1.15,
-                    marginBottom: 8,
+                    marginBottom: 6,
                   }}
                 >
                   {card.title}
@@ -365,8 +367,8 @@ export default function GuidedStartPage() {
                   style={{
                     color: pamNavy,
                     display: "block",
-                    fontSize: "clamp(17px, 2.1vw, 24px)",
-                    lineHeight: 1.38,
+                    fontSize: "clamp(15px, 1.7vw, 18px)",
+                    lineHeight: 1.42,
                     maxWidth: 620,
                   }}
                 >
@@ -377,7 +379,7 @@ export default function GuidedStartPage() {
                 aria-hidden="true"
                 style={{
                   color: pamNavy,
-                  fontSize: 54,
+                  fontSize: 38,
                   fontWeight: 300,
                   justifySelf: "end",
                   lineHeight: 1,
@@ -395,14 +397,14 @@ export default function GuidedStartPage() {
             alignItems: "center",
             background: "#F3F1EA",
             border: `1px solid ${warmGrey}`,
-            borderRadius: 20,
+            borderRadius: 16,
             color: pamNavy,
             cursor: "pointer",
             display: "grid",
-            gap: 24,
-            gridTemplateColumns: "100px 1fr",
-            marginTop: 32,
-            padding: "30px 34px",
+            gap: 18,
+            gridTemplateColumns: "74px 1fr",
+            marginTop: 26,
+            padding: "22px 26px",
             textAlign: "left",
             width: "100%",
           }}
@@ -412,9 +414,10 @@ export default function GuidedStartPage() {
             <strong
               style={{
                 display: "block",
-                fontSize: "clamp(22px, 2.7vw, 31px)",
+                fontSize: "clamp(19px, 2vw, 23px)",
+                fontWeight: 780,
                 lineHeight: 1.15,
-                marginBottom: 8,
+                marginBottom: 6,
               }}
             >
               Jouw informatie blijft van jou
@@ -423,7 +426,7 @@ export default function GuidedStartPage() {
               style={{
                 color: pamNavy,
                 display: "block",
-                fontSize: "clamp(17px, 2.1vw, 24px)",
+                fontSize: "clamp(15px, 1.7vw, 18px)",
                 lineHeight: 1.45,
                 maxWidth: 690,
               }}
@@ -456,9 +459,9 @@ function StatBlock({
         alignItems: "center",
         borderLeft: withDivider ? `1px solid ${warmGrey}` : 0,
         display: "grid",
-        gap: 22,
-        gridTemplateColumns: "90px 1fr",
-        padding: "34px 32px",
+        gap: 18,
+        gridTemplateColumns: "68px 1fr",
+        padding: "24px 28px",
       }}
     >
       <IconBubble icon={icon} />
@@ -467,14 +470,15 @@ function StatBlock({
           style={{
             color: pamNavy,
             display: "block",
-            fontSize: "clamp(44px, 6vw, 58px)",
+            fontSize: "clamp(34px, 4vw, 42px)",
+            fontWeight: 780,
             lineHeight: 0.95,
-            marginBottom: 12,
+            marginBottom: 8,
           }}
         >
           {count}
         </strong>
-        <span style={{ color: pamNavy, fontSize: "clamp(18px, 2vw, 24px)" }}>
+        <span style={{ color: pamNavy, fontSize: "clamp(15px, 1.6vw, 18px)" }}>
           {label}
         </span>
       </div>
@@ -492,10 +496,10 @@ function IconBubble({ icon }: { icon: string }) {
         borderRadius: "50%",
         color: olive,
         display: "flex",
-        fontSize: 42,
-        height: 78,
+        fontSize: 30,
+        height: 58,
         justifyContent: "center",
-        width: 78,
+        width: 58,
       }}
     >
       {icon}
