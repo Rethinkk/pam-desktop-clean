@@ -127,7 +127,7 @@ export const publicFooterGroups: Array<{
     ],
   },
   {
-    heading: "Vertrouwen",
+    heading: "Security",
     items: [
       {
         label: "Security",
@@ -245,79 +245,103 @@ export function findPublicFooterItem(slug = "") {
 }
 
 export default function PublicFooter() {
+  const [openGroup, setOpenGroup] = React.useState<string | null>(null);
+
   return (
     <footer
       style={{
-        background: softWhite,
-        border: `1px solid ${warmGrey}`,
-        borderRadius: 16,
+        background: "transparent",
         color: deepNavy,
-        margin: "22px auto 0",
+        margin: "18px auto 0",
         maxWidth: 1040,
-        overflow: "hidden",
+        position: "relative",
         width: "min(calc(100% - clamp(22px, 8vw, 92px)), 1040px)",
       }}
     >
       <style>{`
         @media (max-width: 760px) {
-          .pam-public-footer-grid {
-            grid-template-columns: 1fr 1fr !important;
+          .pam-public-footer-nav {
+            justify-content: space-between !important;
+            gap: 12px !important;
           }
         }
         @media (max-width: 520px) {
-          .pam-public-footer-grid {
-            grid-template-columns: 1fr !important;
+          .pam-public-footer-nav {
+            align-items: stretch !important;
+            flex-direction: column !important;
+          }
+          .pam-public-footer-menu {
+            left: 0 !important;
+            right: auto !important;
           }
         }
       `}</style>
       <div
-        className="pam-public-footer-grid"
+        className="pam-public-footer-nav"
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          alignItems: "center",
+          display: "flex",
+          gap: "clamp(26px, 8vw, 120px)",
+          justifyContent: "center",
+          minHeight: 40,
+          padding: "8px 0 4px",
         }}
       >
         {publicFooterGroups.map((group) => (
-          <div key={group.heading}>
-            <div
+          <div key={group.heading} style={{ position: "relative" }}>
+            <button
+              onClick={() => setOpenGroup((current) => current === group.heading ? null : group.heading)}
               style={{
-                borderBottom: `1px solid ${warmGrey}`,
-                fontWeight: 800,
-                padding: "14px 24px 10px",
+                background: "transparent",
+                border: 0,
+                boxShadow: "none",
+                color: olive,
+                fontSize: 13,
+                fontWeight: 760,
+                letterSpacing: "0.08em",
+                padding: "6px 0",
+                textTransform: "uppercase",
               }}
             >
               {group.heading}
-            </div>
-            {group.items.map((item) => (
-              <Link
-                key={item.slug}
-                to={`/info/${item.slug}`}
+            </button>
+            {openGroup === group.heading && (
+              <div
+                className="pam-public-footer-menu"
                 style={{
-                  borderBottom: `1px solid ${warmGrey}`,
-                  color: deepNavy,
-                  display: "block",
-                  padding: "13px 24px",
-                  textDecoration: "none",
+                  background: softWhite,
+                  border: `1px solid ${warmGrey}`,
+                  borderRadius: 12,
+                  boxShadow: "0 12px 28px rgba(18,48,82,0.14)",
+                  minWidth: 220,
+                  padding: "8px 0",
+                  position: "absolute",
+                  right: 0,
+                  top: "calc(100% + 6px)",
+                  zIndex: 30,
                 }}
               >
-                {item.label}
-              </Link>
-            ))}
+                {group.items.map((item) => (
+                  <Link
+                    key={item.slug}
+                    to={`/info/${item.slug}`}
+                    onClick={() => setOpenGroup(null)}
+                    style={{
+                      color: deepNavy,
+                      display: "block",
+                      fontSize: 14,
+                      padding: "9px 14px",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
-      <p
-        style={{
-          color: deepNavy,
-          fontSize: 16,
-          lineHeight: 1.5,
-          margin: 0,
-          padding: "18px 24px 22px",
-        }}
-      >
-        Elke link krijgt vervolgens een <strong>eigen rustige PAM-pagina</strong>,
-        in dezelfde ivory/navy/olive huisstijl.
-      </p>
     </footer>
   );
 }
