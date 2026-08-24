@@ -406,55 +406,103 @@ export default function ReportingPanel() {
 
   /** ---------------- UI ---------------- **/
   return (
-    <div className="rp">
+    <div className="ui-page reporting-panel">
       {/* Scoped styles – onafhankelijk van Tailwind/andere CSS */}
       <style>{`
-        .rp {
-          --pam-deep-navy:#123052;
-          --pam-navy:#173A61;
-          --pam-olive:#687348;
-          --pam-soft-white:#FCFBF8;
-          --pam-slate:#60718A;
-          --pam-warm-grey:#DEDCD5;
-          color:var(--pam-deep-navy);
-          padding: 24px 24px 32px 24px;
+        .reporting-panel h1 {
+          color: var(--pam-deep-navy);
+          font-size: 26px;
+          font-weight: 780;
+          letter-spacing: -.01em;
+          line-height: 1.2;
+          margin: 0 0 16px;
         }
-        .rp h1 { color:var(--pam-deep-navy); font-size: 26px; line-height: 1.2; margin: 0 0 16px; font-weight: 780; letter-spacing:-.01em; }
-        .rp .card { background: var(--pam-soft-white); border:1px solid var(--pam-warm-grey); border-radius: 16px; box-shadow: 0 8px 22px rgba(18,48,82,0.055); padding: 18px; margin-bottom: 16px; }
-        .rp .controls { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
-        .rp .field { grid-column: span 6; }
-        .rp .field--quarter { grid-column: span 3; }
-        .rp .field--full { grid-column: 1 / -1; }
-        @media (max-width: 900px){ .rp .field, .rp .field--quarter { grid-column: 1 / -1; } }
-        .rp label { display:block; font-size: 13px; color:var(--pam-deep-navy); font-weight:760; margin-bottom:7px; }
-        .rp select, .rp input[type="email"] { width:100%; border:1px solid #D5D8DD; border-radius:12px; padding:10px 13px; font-size:14px; outline: none; color:var(--pam-deep-navy); background:rgba(255,255,255,.82); }
-        .rp select:focus, .rp input[type="email"]:focus { border-color:var(--pam-navy); box-shadow:0 0 0 4px rgba(23,58,97,.12); background:#fff; }
-        .rp .btn { display:inline-flex; align-items:center; justify-content:center; border-radius:12px; padding:10px 14px; font-size:14px; font-weight:760; border:1px solid var(--pam-warm-grey); background:var(--pam-soft-white); color:var(--pam-deep-navy); cursor:pointer; box-shadow:0 5px 14px rgba(18,48,82,.06); }
-        .rp .btn:hover { background:#fff; border-color:var(--pam-olive); }
-        .rp .btn--primary { background:linear-gradient(180deg, #74815a 0%, #4f5c36 100%); color:#fff; border-color:#4f5c36; }
-        .rp .btn--primary:hover { filter:brightness(1.04); }
-        .rp .btn:disabled { opacity:.5; cursor:not-allowed; }
-        .rp .actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-        .rp .actions--between { justify-content: space-between; }
-        .rp .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; }
-        @media (max-width: 900px){ .rp .kpis { grid-template-columns: repeat(2,1fr); } }
-        .rp .kpi { background:#F3F1EA; border:1px solid var(--pam-warm-grey); border-radius:14px; padding:15px; }
-        .rp .kpi .label { font-size:12px; color:var(--pam-slate); font-weight:680; }
-        .rp .kpi .value { color:var(--pam-deep-navy); font-size:22px; font-weight:760; }
-        .rp .twocol { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
-        @media (max-width: 900px){ .rp .twocol { grid-template-columns: 1fr; } }
-        .rp .tablewrap { border:1px solid var(--pam-warm-grey); border-radius:14px; overflow:auto; background:var(--pam-soft-white); }
-        .rp table { width:100%; border-collapse:separate; border-spacing:0; color:var(--pam-deep-navy); font-size:14px; }
-        .rp thead th { position:sticky; top:0; background:#F3F1EA; color:var(--pam-deep-navy); text-align:left; font-weight:760; border-bottom:1px solid var(--pam-warm-grey); padding:10px 12px; }
-        .rp tbody td { border-bottom:1px solid #ECEAE3; padding:10px 12px; }
-        .rp tbody tr:nth-child(even) td { background:#FAF8F2; }
-        .rp .muted { color:var(--pam-slate); font-weight:650; }
+        .reporting-card {
+          background: #FCFBF8;
+          border: 1px solid var(--pam-warm-grey);
+          border-radius: 14px;
+          box-shadow: none;
+          margin-bottom: 16px;
+          padding: 18px;
+        }
+        .reporting-controls { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+        .reporting-field { grid-column: span 6; }
+        .reporting-field--quarter { grid-column: span 3; }
+        .reporting-field--full { grid-column: 1 / -1; }
+        @media (max-width: 900px){
+          .reporting-field,
+          .reporting-field--quarter { grid-column: 1 / -1; }
+        }
+        .reporting-panel label {
+          color: var(--pam-deep-navy);
+          display: block;
+          font-size: 13px;
+          font-weight: 760;
+          margin-bottom: 7px;
+        }
+        .reporting-panel select,
+        .reporting-panel input[type="email"] {
+          background: rgba(255,255,255,.82);
+          border: 1px solid #D5D8DD;
+          border-radius: 12px;
+          color: var(--pam-deep-navy);
+          font-size: 14px;
+          outline: none;
+          padding: 10px 13px;
+          width: 100%;
+        }
+        .reporting-panel select:focus,
+        .reporting-panel input[type="email"]:focus {
+          background: #fff;
+          border-color: var(--pam-navy);
+          box-shadow: 0 0 0 4px rgba(23,58,97,.12);
+        }
+        .reporting-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+        .reporting-actions--between { justify-content: space-between; }
+        .reporting-kpis { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); }
+        @media (max-width: 900px){ .reporting-kpis { grid-template-columns: repeat(2,1fr); } }
+        .reporting-kpi {
+          background: #F3F1EA;
+          border: 1px solid var(--pam-warm-grey);
+          border-radius: 14px;
+          padding: 15px;
+        }
+        .reporting-kpi .label { color: var(--pam-slate); font-size: 12px; font-weight: 680; }
+        .reporting-kpi .value { color: var(--pam-deep-navy); font-size: 22px; font-weight: 760; }
+        .reporting-twocol { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+        @media (max-width: 900px){ .reporting-twocol { grid-template-columns: 1fr; } }
+        .reporting-tablewrap {
+          background: #FCFBF8;
+          border: 1px solid var(--pam-warm-grey);
+          border-radius: 14px;
+          overflow: auto;
+        }
+        .reporting-panel table {
+          border-collapse: separate;
+          border-spacing: 0;
+          color: var(--pam-deep-navy);
+          font-size: 14px;
+          width: 100%;
+        }
+        .reporting-panel thead th {
+          background: #F3F1EA;
+          border-bottom: 1px solid var(--pam-warm-grey);
+          color: var(--pam-deep-navy);
+          font-weight: 760;
+          padding: 10px 12px;
+          position: sticky;
+          text-align: left;
+          top: 0;
+        }
+        .reporting-panel tbody td { border-bottom: 1px solid #ECEAE3; padding: 10px 12px; }
+        .reporting-panel tbody tr:nth-child(even) td { background: #FAF8F2; }
+        .reporting-muted { color: var(--pam-slate); font-weight: 650; }
       `}</style>
 
       <h1>Rapportage</h1>
 
       {assets.length === 0 && (
-        <div className="card">
+        <div className="reporting-card">
           <EmptyState
             title="Rapportage ontstaat vanzelf"
             body="Zodra u assets, documenten en personen vastlegt, maakt PAM hier overzichtelijke rapportages van. Begin met één asset; daarna groeit het overzicht mee."
@@ -467,9 +515,9 @@ export default function ReportingPanel() {
       )}
 
       {/* Controls */}
-      <div className="card">
-        <div className="controls">
-          <div className="field">
+      <div className="reporting-card">
+        <div className="reporting-controls">
+          <div className="reporting-field">
             <label>Periode</label>
             <select value={String(days)} onChange={(e)=>setDays(e.target.value==="all"?"all":Number(e.target.value))}>
               <option value="7">Laatste 7 dagen</option>
@@ -479,7 +527,7 @@ export default function ReportingPanel() {
             </select>
           </div>
 
-          <div className="field">
+          <div className="reporting-field">
             <label>Asset type</label>
             <select value={typeFilter} onChange={(e)=>setTypeFilter(e.target.value)}>
               <option value="all">Alle types</option>
@@ -487,56 +535,56 @@ export default function ReportingPanel() {
             </select>
           </div>
 
-          <div className="field field--quarter">
+          <div className="reporting-field reporting-field--quarter">
             <label>Sortering</label>
-            <button className="btn" onClick={()=>setSortDesc(s=>!s)}>
+            <button className="ui-btn" onClick={()=>setSortDesc(s=>!s)}>
               Sort: {sortDesc ? "Nieuw → Oud" : "Oud → Nieuw"}
             </button>
           </div>
 
-          <div className="field field--quarter">
+          <div className="reporting-field reporting-field--quarter">
             <label>Export</label>
-            <button className="btn" onClick={exportCsv}>Export CSV</button>
+            <button className="ui-btn" onClick={exportCsv}>Export CSV</button>
           </div>
 
-          <div className="field field--full">
+          <div className="reporting-field reporting-field--full">
             <label>Ontvanger (e-mail, optioneel)</label>
             <input type="email" value={recipient} onChange={(e)=>setRecipient(e.target.value)} placeholder="ontvanger@domein.com" />
           </div>
         </div>
 
-        <div className="actions actions--between" style={{ marginTop: 12 }}>
-          <div className="actions">
-            <button className="btn btn--primary" onClick={makeTypePdf}>PDF: Per type</button>
-            <button className="btn btn--primary" onClick={makeSelectedPdf} disabled={!selectedIds.length} title={!selectedIds.length ? "Selecteer eerst assets" : ""}>
+        <div className="reporting-actions reporting-actions--between" style={{ marginTop: 12 }}>
+          <div className="reporting-actions">
+            <button className="ui-btn ui-btn--primary" onClick={makeTypePdf}>PDF: Per type</button>
+            <button className="ui-btn ui-btn--primary" onClick={makeSelectedPdf} disabled={!selectedIds.length} title={!selectedIds.length ? "Selecteer eerst assets" : ""}>
               PDF: Geselecteerde
             </button>
-            <button className="btn btn--primary" onClick={makeTotalPdf}>PDF: Totaal</button>
+            <button className="ui-btn ui-btn--primary" onClick={makeTotalPdf}>PDF: Totaal</button>
           </div>
-          <div className="actions">
-            <button className="btn" onClick={sendTypePdf} disabled={!recipient}>Verzend type</button>
-            <button className="btn" onClick={sendSelectedPdf} disabled={!recipient || !selectedIds.length}>Verzend geselecteerde</button>
-            <button className="btn" onClick={sendTotalPdf} disabled={!recipient}>Verzend totaal</button>
+          <div className="reporting-actions">
+            <button className="ui-btn" onClick={sendTypePdf} disabled={!recipient}>Verzend type</button>
+            <button className="ui-btn" onClick={sendSelectedPdf} disabled={!recipient || !selectedIds.length}>Verzend geselecteerde</button>
+            <button className="ui-btn" onClick={sendTotalPdf} disabled={!recipient}>Verzend totaal</button>
           </div>
         </div>
       </div>
 
       {/* KPIs */}
-      <div className="card">
-        <div className="kpis">
-          <div className="kpi">
+      <div className="reporting-card">
+        <div className="reporting-kpis">
+          <div className="reporting-kpi">
             <div className="label">Totaal assets</div>
             <div className="value">{total}</div>
           </div>
-          <div className="kpi">
+          <div className="reporting-kpi">
             <div className="label">In geselecteerde periode</div>
             <div className="value">{totalInWindow}</div>
           </div>
-          <div className="kpi">
+          <div className="reporting-kpi">
             <div className="label">Unieke types</div>
             <div className="value">{uniqueTypeCount}</div>
           </div>
-          <div className="kpi">
+          <div className="reporting-kpi">
             <div className="label">Unieke owners</div>
             <div className="value">{uniqueOwners}</div>
           </div>
@@ -544,10 +592,10 @@ export default function ReportingPanel() {
       </div>
 
       {/* Overzichten */}
-      <div className="twocol">
-        <div className="card">
-          <div className="muted" style={{marginBottom:8}}>Per type</div>
-          <div className="tablewrap">
+      <div className="reporting-twocol">
+        <div className="reporting-card">
+          <div className="reporting-muted" style={{marginBottom:8}}>Per type</div>
+          <div className="reporting-tablewrap">
             <table>
               <thead><tr><th>Type</th><th>Aantal</th></tr></thead>
               <tbody>
@@ -559,9 +607,9 @@ export default function ReportingPanel() {
           </div>
         </div>
 
-        <div className="card">
-          <div className="muted" style={{marginBottom:8}}>Per owner</div>
-          <div className="tablewrap">
+        <div className="reporting-card">
+          <div className="reporting-muted" style={{marginBottom:8}}>Per owner</div>
+          <div className="reporting-tablewrap">
             <table>
               <thead><tr><th>Owner</th><th>Aantal</th></tr></thead>
               <tbody>
@@ -578,9 +626,9 @@ export default function ReportingPanel() {
 
 
       {/* Details */}
-      <div className="card">
-        <div className="muted" style={{marginBottom:8}}>Details</div>
-        <div className="tablewrap">
+      <div className="reporting-card">
+        <div className="reporting-muted" style={{marginBottom:8}}>Details</div>
+        <div className="reporting-tablewrap">
           <table>
             <thead>
               <tr>

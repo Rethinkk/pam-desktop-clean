@@ -310,7 +310,7 @@ export default function AssetShell() {
       )}
 
       {tab === "reporting" && (
-        <div className="card pam-panel-card" style={{ padding: 0 }}>
+        <div className="card pam-panel-card">
           <ReportingPanel />
         </div>
       )}
