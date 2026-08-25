@@ -48,10 +48,12 @@ type Row = {
 type OptionRow = {
   id: string;
   label: string;
+  assetIds?: string[];
 };
 
 const PSEUDO_DETAILS = "__details__";
 const PSEUDO_PEOPLE = "__people__";
+const PSEUDO_DOCUMENTS = "__documents__";
 const PSEUDO_STATUS = "__status__";
 
 const LEGACY_TYPE_ALIASES: Record<string, string> = {
@@ -468,6 +470,7 @@ function detailEntriesForRow(schema: AssetSchema, row: Row, labelMap: Record<str
     "personName",
     "personIds",
     "documentIds",
+    PSEUDO_DOCUMENTS,
     "status",
     "finalizedAt",
     "createdAt",
@@ -554,6 +557,7 @@ function summarizeRow(schema: AssetSchema, row: Row, labelMap: Record<string, st
       "personIds",
       "personName",
       "documentIds",
+      PSEUDO_DOCUMENTS,
       "status",
       "finalizedAt",
       "createdAt",
@@ -662,6 +666,7 @@ export default function AssetRegisterPanel() {
         .map((d: any) => ({
           id: d.id,
           label: [d.title ?? d.fileName ?? "Document", d.type].filter(Boolean).join(" — "),
+          assetIds: Array.isArray(d.assetIds) ? d.assetIds : [],
         }))
         .filter((d) => !!d.id && !!d.label);
       setDocuments(docOptions);
@@ -874,7 +879,7 @@ export default function AssetRegisterPanel() {
     setTypeId(nextTypeId);
     setData(normalizeEditData(row, nextTypeId));
     setSelectedPersonIds(Array.from(new Set([row.personId, ...(row.personIds ?? [])].filter(Boolean) as string[])));
-    setSelectedDocumentIds(Array.isArray(row.documentIds) ? row.documentIds : []);
+    setSelectedDocumentIds(documentIdsForRow(row));
     setErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -926,10 +931,44 @@ export default function AssetRegisterPanel() {
   }
 
   function documentNamesForRow(row: Row): string[] {
-    const ids = Array.isArray(row.documentIds) ? row.documentIds : [];
+    const ids = documentIdsForRow(row);
     return ids
       .map((id) => documents.find((document) => document.id === id)?.label)
       .filter(Boolean) as string[];
+  }
+
+  function documentIdsForRow(row: Row): string[] {
+    const directIds = Array.isArray(row.documentIds) ? row.documentIds : [];
+    const reverseIds = documents
+      .filter((document) => Array.isArray(document.assetIds) && document.assetIds.map(String).includes(String(row.id)))
+      .map((document) => document.id);
+    return Array.from(new Set([...directIds, ...reverseIds].filter(Boolean)));
+  }
+
+  function renderDocuments(row: Row) {
+    const names = documentNamesForRow(row);
+    if (!names.length) return <span className="text-gray-400">—</span>;
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, minWidth: 170 }}>
+        {names.slice(0, 2).map((name) => (
+          <span
+            key={name}
+            className="ui-badge"
+            style={{ background: "#F3F1EA", borderColor: "#DEDCD5", color: "#123052" }}
+          >
+            {name}
+          </span>
+        ))}
+        {names.length > 2 && (
+          <span
+            className="ui-badge"
+            style={{ background: "#F0F3EA", borderColor: "#C8D0B8", color: "#687348" }}
+          >
+            +{names.length - 2}
+          </span>
+        )}
+      </div>
+    );
   }
 
   function renderAssetDetails(row: Row) {
@@ -1019,13 +1058,26 @@ export default function AssetRegisterPanel() {
     present.add("typeLabel");
     present.add(PSEUDO_STATUS);
     present.add(PSEUDO_PEOPLE);
+    present.add(PSEUDO_DOCUMENTS);
     present.add(PSEUDO_DETAILS); // altijd samenvatting
     return Array.from(present);
   }, [rows, CANDIDATE_KEYS]);
 
   const colLabel = (key: string) =>
     LABELS_FROM_SCHEMA[key] ||
-    (key === "name" ? "Naam" : key === "typeLabel" ? "Type" : key === PSEUDO_DETAILS ? "Details" : String(key));
+    (key === "name"
+      ? "Naam"
+      : key === "typeLabel"
+        ? "Type"
+        : key === PSEUDO_STATUS
+          ? "Status"
+          : key === PSEUDO_PEOPLE
+            ? "Mensen"
+            : key === PSEUDO_DOCUMENTS
+              ? "Documenten"
+              : key === PSEUDO_DETAILS
+                ? "Details"
+                : String(key));
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -1034,15 +1086,19 @@ export default function AssetRegisterPanel() {
     let out = !needle
       ? rows
       : rows.filter((r) =>
-          SEARCH_KEYS
+          [
+            ...SEARCH_KEYS
             .filter((k) => k !== PSEUDO_DETAILS) // details is afgeleid
             .map((k) => valueFromRow(r, k))
-            .filter(Boolean)
+            .filter(Boolean),
+            ...personNamesForRow(r),
+            ...documentNamesForRow(r),
+          ]
             .some((v) => String(v).toLowerCase().includes(needle))
         );
 
     out = [...out].sort((a, b) => {
-      if (sort.key === PSEUDO_DETAILS) return 0; // niet sorteren op afgeleide kolom
+      if ([PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_DOCUMENTS, PSEUDO_STATUS].includes(sort.key)) return 0; // niet sorteren op afgeleide kolommen
       const A = valueFromRow(a, sort.key);
       const B = valueFromRow(b, sort.key);
       if (sort.key === "priceCents") {
@@ -1054,7 +1110,7 @@ export default function AssetRegisterPanel() {
     });
 
     return out;
-  }, [rows, q, sort, TABLE_KEYS]);
+  }, [rows, q, sort, TABLE_KEYS, people, documents]);
 
   return (
     <div className="ui-page">
@@ -1205,7 +1261,7 @@ export default function AssetRegisterPanel() {
                 <th
                   key={String(k)}
                   onClick={() =>
-                    ![PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_STATUS].includes(k) && toggleSort(k)
+                    ![PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_DOCUMENTS, PSEUDO_STATUS].includes(k) && toggleSort(k)
                   }
                 >
                   {colLabel(k)}
@@ -1230,6 +1286,10 @@ export default function AssetRegisterPanel() {
 
                     if (k === PSEUDO_PEOPLE) {
                       return <td key={k}>{renderPeople(r)}</td>;
+                    }
+
+                    if (k === PSEUDO_DOCUMENTS) {
+                      return <td key={k}>{renderDocuments(r)}</td>;
                     }
 
                     if (k === PSEUDO_DETAILS) {
