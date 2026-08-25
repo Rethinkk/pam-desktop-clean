@@ -1,4 +1,5 @@
 export type PamWorkspaceTab =
+  | "dashboard"
   | "assets"
   | "asset-register"
   | "docs"
@@ -12,6 +13,7 @@ export type PamWorkspaceTab =
 export const PAM_ACTIVE_TAB_STORAGE_KEY = "pam-active-tab";
 
 export const PAM_ALLOWED_TABS: PamWorkspaceTab[] = [
+  "dashboard",
   "assets",
   "asset-register",
   "docs",

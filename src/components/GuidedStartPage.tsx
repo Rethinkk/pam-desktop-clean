@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { assetRepository, documentRepository } from "../storage/repositories";
 
 type TargetTab =
+  | "dashboard"
   | "assets"
   | "asset-register"
   | "docs"
@@ -50,7 +51,7 @@ const actionCards: ActionCard[] = [
     icon: "▥",
     title: "Bekijk je overzicht",
     text: "Zie in één oogopslag wat je al hebt vastgelegd en wat nog aandacht verdient.",
-    tab: "asset-register",
+    tab: "dashboard",
   },
 ];
 
@@ -215,7 +216,7 @@ export default function GuidedStartPage() {
           }}
         >
           <button
-            onClick={() => openTab("asset-register")}
+            onClick={() => openTab("dashboard")}
             style={{
               alignItems: "center",
               background: pamNavy,

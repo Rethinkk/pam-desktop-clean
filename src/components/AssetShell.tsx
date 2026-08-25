@@ -3,6 +3,7 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import AssetsPanel from "./AssetsPanel";
+import DashboardPanel from "./DashboardPanel";
 import DocumentsPanel from "./DocumentsPanel";
 import PeoplePanel from "./PeoplePanel";
 import ReportingPanel from "./ReportingPanel";
@@ -186,7 +187,7 @@ function ReportingLook() {
 }
 
 /** Slaat de actieve tab op in localStorage en herstelt veilig */
-function usePersistedTab(defaultTab: TabKey = "assets") {
+function usePersistedTab(defaultTab: TabKey = "dashboard") {
   const [tab, setTab] = React.useState<TabKey>(() => {
     try {
       const saved = localStorage.getItem(TAB_STORAGE_KEY) as TabKey | null;
@@ -215,7 +216,7 @@ export default function AssetShell() {
   const { user, logout } = useAuth();
   const [profileOpen, setProfileOpen] = React.useState(false);
   const requestedTab = location.state?.tab;
-  const initialTab = ALLOWED_TABS.includes(requestedTab) ? requestedTab : "assets";
+  const initialTab = ALLOWED_TABS.includes(requestedTab) ? requestedTab : "dashboard";
   const [tab, setTab] = usePersistedTab(initialTab);
 
   React.useEffect(() => {
@@ -281,6 +282,9 @@ export default function AssetShell() {
       {/* Tabs */}
       <div className="pam-tabs-shell">
         <div className="tabs">
+          <button className={`tab ${tab === "dashboard" ? "active" : ""}`} onClick={() => setTab("dashboard")}>
+            Dashboard
+          </button>
           <button className={`tab ${tab === "assets" ? "active" : ""}`} onClick={() => setTab("assets")}>
             Assets
           </button>
@@ -313,6 +317,12 @@ export default function AssetShell() {
       </div>
 
       {/* Panels */}
+      {tab === "dashboard" && (
+        <div className="card pam-panel-card">
+          <DashboardPanel />
+        </div>
+      )}
+
       {tab === "assets" && (
         <div className="card pam-panel-card">
           <AssetsPanel />
