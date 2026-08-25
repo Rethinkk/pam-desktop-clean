@@ -733,6 +733,67 @@ export default function AssetRegisterPanel() {
     documentRepository.saveAll(nextDocs as any);
   }
 
+  function inferDocumentType(fieldKey: string, fieldLabel: string) {
+    const text = `${fieldKey} ${fieldLabel}`.toLowerCase();
+    if (text.includes("factuur")) return "Factuur";
+    if (text.includes("garantie")) return "Garantiebewijs";
+    if (text.includes("polis")) return "Polis";
+    if (text.includes("contract")) return "Contract";
+    return "Overig";
+  }
+
+  function syncAssetFileDocuments(asset: any, assetLabel: string): string[] {
+    const fileFields = (typeDef?.fields ?? []).filter((field) => field.type === "file");
+    if (!fileFields.length) return Array.isArray(asset.documentIds) ? asset.documentIds : [];
+
+    const now = new Date().toISOString();
+    const docs = documentRepository.all() as any[];
+    const generatedIds: string[] = [];
+    const fileFieldKeys = new Set(fileFields.map((field) => field.key));
+    const nextDocs = docs.filter((doc: any) => {
+      const isGeneratedForAsset = doc.sourceAssetId === asset.id && fileFieldKeys.has(doc.sourceFieldKey);
+      if (!isGeneratedForAsset) return true;
+      return Boolean(asset.data?.[doc.sourceFieldKey]?.name);
+    });
+
+    for (const field of fileFields) {
+      const file = asset.data?.[field.key];
+      if (!file?.name) continue;
+
+      const existing = docs.find((doc: any) => doc.sourceAssetId === asset.id && doc.sourceFieldKey === field.key);
+      const docId = existing?.id ?? crypto.randomUUID();
+      generatedIds.push(docId);
+
+      const generatedDoc = {
+        ...(existing ?? {}),
+        id: docId,
+        title: `${field.label} - ${assetLabel}`,
+        type: inferDocumentType(field.key, field.label),
+        fileName: file.name,
+        filename: file.name,
+        fileSize: file.size ?? 0,
+        size: file.size ?? 0,
+        mimeType: file.type || "application/octet-stream",
+        mime: file.type || "application/octet-stream",
+        fileDataUrl: file.dataUrl ?? "",
+        dataUrl: file.dataUrl ?? "",
+        assetIds: Array.from(new Set([...(existing?.assetIds ?? []), asset.id])),
+        sourceAssetId: asset.id,
+        sourceFieldKey: field.key,
+        notes: existing?.notes ?? `Automatisch aangemaakt vanuit assetveld '${field.label}'.`,
+        createdAt: existing?.createdAt ?? now,
+        updatedAt: now,
+      };
+
+      const existingIndex = nextDocs.findIndex((doc: any) => doc.id === docId);
+      if (existingIndex >= 0) nextDocs[existingIndex] = generatedDoc;
+      else nextDocs.push(generatedDoc);
+    }
+
+    documentRepository.saveAll(nextDocs as any);
+    return generatedIds;
+  }
+
   function saveAsset() {
     const errs = validateAsset(schema, typeId, data);
     setErrors(errs);
@@ -774,6 +835,10 @@ export default function AssetRegisterPanel() {
       updatedAt: new Date().toISOString(),
     };
 
+    const autoDocumentIds = syncAssetFileDocuments(rec, assetName || (legacyFields as any).name || "Asset");
+    const combinedDocumentIds = Array.from(new Set([...selectedDocumentIds, ...autoDocumentIds]));
+    rec.documentIds = combinedDocumentIds.length ? combinedDocumentIds : undefined;
+
     if (editingId) {
       const reg = assetRepository.load();
       assetRepository.save({
@@ -784,7 +849,7 @@ export default function AssetRegisterPanel() {
       sessionStorage.setItem("pam-last-created", rec.id);
     }
 
-    syncDocumentAssetLinks(rec.id, selectedDocumentIds);
+    syncDocumentAssetLinks(rec.id, combinedDocumentIds);
     load();
     resetForm();
 

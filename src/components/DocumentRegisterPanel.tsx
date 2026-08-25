@@ -2,6 +2,7 @@
 import React from "react";
 import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, documentRepository } from "../storage/repositories";
+import { loadAssetSchema } from "../config/assetSchema";
 import { EmptyState } from "./ui/UI";
 
 type DocRow = {
@@ -10,6 +11,8 @@ type DocRow = {
   type?: string;
   number?: string;
   ownerName?: string;
+  assetIds?: string[];
+  assetNames?: string[];
   issuedAt?: string;  // yyyy-mm-dd
   expiresAt?: string; // yyyy-mm-dd
 };
@@ -38,6 +41,19 @@ function expiryStatus(expiresAt?: string) {
   return { label: "Actief", cls: "ui-badge ok" };
 }
 
+function inferDocumentType(fieldKey: string, fieldLabel: string) {
+  const text = `${fieldKey} ${fieldLabel}`.toLowerCase();
+  if (text.includes("factuur")) return "Factuur";
+  if (text.includes("garantie")) return "Garantiebewijs";
+  if (text.includes("polis")) return "Polis";
+  if (text.includes("contract")) return "Contract";
+  return "Overig";
+}
+
+function isFileValue(value: any) {
+  return value && typeof value === "object" && typeof value.name === "string";
+}
+
 export default function DocumentRegisterPanel() {
   const [rows, setRows] = React.useState<DocRow[]>([]);
   const [q, setQ] = React.useState("");
@@ -52,13 +68,30 @@ export default function DocumentRegisterPanel() {
 
   function load() {
     try {
+      const assets = assetRepository.load().assets as any[];
+      syncExistingAssetFileDocuments(assets);
       const docs: DocRow[] = documentRepository.all() as any;
+      const assetLabelById = new Map(
+        assets.map((asset: any) => [
+          asset.id,
+          [
+            asset.name ?? asset.data?.naam ?? asset.data?.titel ?? asset.assetNumber ?? "Asset",
+            asset.typeLabel ?? asset.type,
+          ].filter(Boolean).join(" — "),
+        ]),
+      );
       const norm = docs.map((d: any) => ({
         id: d.id ?? String(Math.random()),
         title: d.title ?? d.name ?? "",
         type: d.type ?? d.kind ?? "",
         number: d.number ?? d.no ?? "",
         ownerName: d.ownerName ?? d.personName ?? d.owner ?? "",
+        assetIds: Array.isArray(d.assetIds) ? d.assetIds : [],
+        assetNames: Array.isArray(d.assetIds)
+          ? d.assetIds.map((assetId: string) => assetLabelById.get(assetId) ?? assetId)
+          : Array.isArray(d.assetNames)
+            ? d.assetNames
+            : [],
         issuedAt: d.issuedAt ?? d.issueDate ?? "",
         expiresAt: d.expiresAt ?? d.validUntil ?? d.expiryDate ?? "",
       })) as DocRow[];
@@ -66,7 +99,81 @@ export default function DocumentRegisterPanel() {
     } catch {}
   }
 
+  function syncExistingAssetFileDocuments(assets: any[]) {
+    const schema = loadAssetSchema();
+    const docs = documentRepository.all() as any[];
+    const nextDocs = [...docs];
+    let changed = false;
+    const now = new Date().toISOString();
+
+    for (const asset of assets) {
+      if (!asset?.id || !asset?.data) continue;
+      const type = schema.types.find((candidate) =>
+        candidate.id === asset.typeId ||
+        candidate.id === asset.type ||
+        candidate.label === asset.typeLabel ||
+        candidate.label === asset.type,
+      );
+      const fileLabels = new Map(
+        (type?.fields ?? [])
+          .filter((field) => field.type === "file")
+          .map((field) => [field.key, field.label]),
+      );
+      Object.entries(asset.data).forEach(([fieldKey, file]: [string, any]) => {
+        if (!isFileValue(file)) return;
+        const existing = nextDocs.find((doc: any) => doc.sourceAssetId === asset.id && doc.sourceFieldKey === fieldKey);
+        if (existing) return;
+
+        const fieldLabel = fileLabels.get(fieldKey) ?? fieldKey;
+        const assetLabel = asset.name ?? asset.data?.naam ?? asset.data?.titel ?? asset.assetNumber ?? "Asset";
+        nextDocs.push({
+          id: crypto.randomUUID(),
+          title: `${fieldLabel} - ${assetLabel}`,
+          type: inferDocumentType(fieldKey, fieldLabel),
+          fileName: file.name,
+          filename: file.name,
+          fileSize: file.size ?? 0,
+          size: file.size ?? 0,
+          mimeType: file.type || "application/octet-stream",
+          mime: file.type || "application/octet-stream",
+          fileDataUrl: file.dataUrl ?? "",
+          dataUrl: file.dataUrl ?? "",
+          assetIds: [asset.id],
+          sourceAssetId: asset.id,
+          sourceFieldKey: fieldKey,
+          notes: `Automatisch aangemaakt vanuit assetveld '${fieldLabel}'.`,
+          createdAt: now,
+          updatedAt: now,
+        });
+        changed = true;
+      });
+    }
+
+    if (changed) {
+      documentRepository.saveAll(nextDocs as any);
+      const generatedByAsset = new Map<string, string[]>();
+      nextDocs.forEach((doc: any) => {
+        if (!doc.sourceAssetId || !doc.assetIds?.includes(doc.sourceAssetId)) return;
+        const ids = generatedByAsset.get(doc.sourceAssetId) ?? [];
+        ids.push(doc.id);
+        generatedByAsset.set(doc.sourceAssetId, ids);
+      });
+      const nextAssets = assets.map((asset: any) => {
+        const generatedIds = generatedByAsset.get(asset.id);
+        if (!generatedIds?.length) return asset;
+        return {
+          ...asset,
+          documentIds: Array.from(new Set([...(asset.documentIds ?? []), ...generatedIds])),
+          updatedAt: now,
+        };
+      });
+      assetRepository.save({ assets: nextAssets });
+    }
+  }
+
   function persistDelete(docId: string) {
+    const deletedDoc = documentRepository.all().find((doc: any) => doc.id === docId) as any;
+
     // 1) Documenten opschonen
     try {
       documentRepository.saveAll(documentRepository.all().filter((d: any) => d.id !== docId));
@@ -75,8 +182,20 @@ export default function DocumentRegisterPanel() {
     // 2) Document-koppelingen bij assets verwijderen (documentIds[])
     try {
       const nextA = assetRepository.load().assets.map((a: any) => {
+        const nextData = { ...(a.data ?? {}) };
+        if (deletedDoc?.sourceAssetId === a.id && deletedDoc?.sourceFieldKey) {
+          delete nextData[deletedDoc.sourceFieldKey];
+        }
         if (Array.isArray(a.documentIds)) {
-          return { ...a, documentIds: a.documentIds.filter((x: any) => x !== docId) };
+          return {
+            ...a,
+            data: nextData,
+            documentIds: a.documentIds.filter((x: any) => x !== docId),
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        if (deletedDoc?.sourceAssetId === a.id && deletedDoc?.sourceFieldKey) {
+          return { ...a, data: nextData, updatedAt: new Date().toISOString() };
         }
         return a;
       });
@@ -99,7 +218,7 @@ export default function DocumentRegisterPanel() {
     let out = !needle
       ? rows
       : rows.filter((r) =>
-          [r.title, r.type, r.number, r.ownerName].filter(Boolean)
+          [r.title, r.type, r.number, r.ownerName, ...(r.assetNames ?? [])].filter(Boolean)
             .some((v) => String(v).toLowerCase().includes(needle))
         );
 
@@ -151,6 +270,7 @@ export default function DocumentRegisterPanel() {
               <th onClick={() => toggleSort("title")}>Titel</th>
               <th onClick={() => toggleSort("type")}>Type</th>
               <th onClick={() => toggleSort("number")}>Nummer</th>
+              <th onClick={() => toggleSort("assetNames")}>Assets</th>
               <th onClick={() => toggleSort("ownerName")}>Persoon</th>
               <th onClick={() => toggleSort("issuedAt")}>Uitgegeven</th>
               <th onClick={() => toggleSort("expiresAt")}>Geldig tot</th>
@@ -166,6 +286,17 @@ export default function DocumentRegisterPanel() {
                   <td>{r.title}</td>
                   <td>{r.type || ""}</td>
                   <td>{r.number || ""}</td>
+                  <td>
+                    {r.assetNames?.length ? (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {r.assetNames.map((assetName) => (
+                          <span key={assetName} className="ui-badge">{assetName}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={{ color: "#60718A" }}>Geen asset gekoppeld</span>
+                    )}
+                  </td>
                   <td>{r.ownerName || ""}</td>
                   <td>{r.issuedAt || ""}</td>
                   <td>{r.expiresAt || ""}</td>
@@ -180,7 +311,7 @@ export default function DocumentRegisterPanel() {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8}>
+                <td colSpan={9}>
                   <em>
                     {rows.length === 0
                       ? "Nog geen documenten vastgelegd."
