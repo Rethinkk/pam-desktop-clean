@@ -49,6 +49,13 @@ type Row = {
 type AssetOption = {
   id: string;
   label: string;
+  finalized?: boolean;
+};
+
+type DocumentOption = {
+  id: string;
+  label: string;
+  role: string;
 };
 
 function assetLabel(a: any): string {
@@ -66,6 +73,25 @@ function assetLabel(a: any): string {
     .join(" — ");
 }
 
+function isAssetFinalized(asset: any) {
+  return Boolean(
+    asset?.finalizedAt ||
+      asset?.lockedAt ||
+      asset?.isFinalized ||
+      asset?.status === "finalized" ||
+      asset?.status === "vastgelegd",
+  );
+}
+
+function documentLabel(document: any): string {
+  return [
+    document.title ?? document.fileName ?? document.filename ?? "Document",
+    document.type ?? document.kind,
+  ]
+    .filter(Boolean)
+    .join(" — ");
+}
+
 export default function PeoplePanel() {
   const [form, setForm] = React.useState<FormState>({
     fullName: "",
@@ -78,7 +104,9 @@ export default function PeoplePanel() {
 
   const [rows, setRows] = React.useState<Row[]>([]);
   const [assets, setAssets] = React.useState<AssetOption[]>([]);
+  const [documentsByPerson, setDocumentsByPerson] = React.useState<Record<string, DocumentOption[]>>({});
   const [assetLinksByPerson, setAssetLinksByPerson] = React.useState<Record<string, string[]>>({});
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [q, setQ] = React.useState("");
   const [sort, setSort] = React.useState<{ key: keyof Row; dir: "asc" | "desc" }>({
     key: "fullName",
@@ -102,7 +130,7 @@ export default function PeoplePanel() {
       const assetRows = assetRepository.load().assets;
       setAssets(
         assetRows
-          .map((a: any) => ({ id: a.id, label: assetLabel(a) }))
+          .map((a: any) => ({ id: a.id, label: assetLabel(a), finalized: isAssetFinalized(a) }))
           .filter((a: AssetOption) => !!a.id && !!a.label),
       );
 
@@ -119,6 +147,40 @@ export default function PeoplePanel() {
         });
       }
       setAssetLinksByPerson(links);
+    } catch {}
+
+    try {
+      const people = personRepository.all() as any[];
+      const personNameById = new Map(
+        people.map((person: any) => [person.id, (person.fullName ?? person.name ?? "").trim()]),
+      );
+      const docsByPerson: Record<string, DocumentOption[]> = {};
+      for (const document of documentRepository.all() as any[]) {
+        const candidates = [
+          { id: document.ownerId ?? document.personId, role: "Eigenaar" },
+          { id: document.uploadedById ?? document.uploadedBy, role: "Geupload door" },
+          ...((Array.isArray(document.recipientIds) ? document.recipientIds : document.recipients ?? []).map((id: string) => ({
+            id,
+            role: "Ontvanger",
+          }))),
+        ].filter((candidate) => candidate.id);
+
+        if (!candidates.length && document.ownerName) {
+          for (const [personId, personName] of personNameById.entries()) {
+            if (personName && personName === document.ownerName) {
+              candidates.push({ id: personId, role: "Eigenaar" });
+            }
+          }
+        }
+
+        for (const candidate of candidates) {
+          docsByPerson[candidate.id] = [
+            ...(docsByPerson[candidate.id] ?? []),
+            { id: document.id, label: documentLabel(document), role: candidate.role },
+          ];
+        }
+      }
+      setDocumentsByPerson(docsByPerson);
     } catch {}
   }
 
@@ -139,6 +201,7 @@ export default function PeoplePanel() {
   function updatePersonAssetLinks(personId: string, personName: string, selectedAssetIds: string[]) {
     const selected = new Set(selectedAssetIds);
     const nextAssets = assetRepository.load().assets.map((asset: any) => {
+      if (isAssetFinalized(asset)) return asset;
       const currentIds = new Set<string>(Array.isArray(asset.personIds) ? asset.personIds : []);
       if (asset.personId) currentIds.add(asset.personId);
 
@@ -230,7 +293,28 @@ export default function PeoplePanel() {
     try {
       const nextD = documentRepository
         .all()
-        .map((d: any) => (d.ownerId === personId ? { ...d, ownerId: undefined } : d));
+        .map((d: any) => {
+          const next = {
+            ...d,
+            recipientIds: Array.isArray(d.recipientIds)
+              ? d.recipientIds.filter((id: string) => id !== personId)
+              : d.recipientIds,
+            recipients: Array.isArray(d.recipients)
+              ? d.recipients.filter((id: string) => id !== personId)
+              : d.recipients,
+            updatedAt: new Date().toISOString(),
+          };
+          if (d.ownerId === personId || d.personId === personId) {
+            next.ownerId = undefined;
+            next.personId = undefined;
+            next.ownerName = undefined;
+          }
+          if (d.uploadedById === personId || d.uploadedBy === personId) {
+            next.uploadedById = undefined;
+            next.uploadedBy = undefined;
+          }
+          return next;
+        });
       documentRepository.saveAll(nextD as any);
     } catch {}
   }
@@ -252,6 +336,7 @@ export default function PeoplePanel() {
 
     // 3) UI updaten
     setRows((r) => r.filter((x) => x.id !== id));
+    if (selectedId === id) setSelectedId(null);
     load();
 
     // 4) Toast alleen hier en alleen bij succes
@@ -267,6 +352,14 @@ export default function PeoplePanel() {
   }
 
   function toggleExistingPersonAsset(person: Row, assetId: string) {
+    const asset = assets.find((candidate) => candidate.id === assetId);
+    if (asset?.finalized) {
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: "Deze asset is vastgelegd en kan niet meer worden aangepast.", tone: "warn" }
+      }));
+      return;
+    }
+
     const current = assetLinksByPerson[person.id] ?? [];
     const next = toggleId(current, assetId);
     updatePersonAssetLinks(person.id, person.fullName || person.name || "", next);
@@ -294,6 +387,35 @@ export default function PeoplePanel() {
 
     return out;
   }, [rows, q, sort]);
+
+  const selected = React.useMemo(
+    () => rows.find((person) => person.id === selectedId) ?? null,
+    [rows, selectedId],
+  );
+
+  function linkedAssetsForPerson(person: Row): AssetOption[] {
+    const linkedIds = new Set(assetLinksByPerson[person.id] ?? []);
+    return assets.filter((asset) => linkedIds.has(asset.id));
+  }
+
+  function linkedDocumentsForPerson(person: Row): DocumentOption[] {
+    return documentsByPerson[person.id] ?? [];
+  }
+
+  function renderAssetBadges(person: Row) {
+    const linkedAssets = linkedAssetsForPerson(person);
+    if (!linkedAssets.length) return <span className="ui-muted">Geen assets gekoppeld</span>;
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, minWidth: 190 }}>
+        {linkedAssets.slice(0, 2).map((asset) => (
+          <span key={asset.id} className={`ui-badge ${asset.finalized ? "ok" : ""}`}>
+            {asset.label}
+          </span>
+        ))}
+        {linkedAssets.length > 2 && <span className="ui-badge">+{linkedAssets.length - 2}</span>}
+      </div>
+    );
+  }
 
   return (
     <div className="ui-page">
@@ -444,31 +566,26 @@ export default function PeoplePanel() {
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id}>
+                <tr
+                  key={p.id}
+                  onClick={() => setSelectedId((current) => (current === p.id ? null : p.id))}
+                  style={{ cursor: "pointer" }}
+                  title="Klik om de persoon te bekijken"
+                >
                   <td>{p.fullName || p.name}</td>
                   <td>{roleLabel(p.role)}</td>
                   <td>{p.email || ""}</td>
                   <td>{p.phone || ""}</td>
-                  <td>
-                    <div style={{ display: "grid", gap: 6, minWidth: 220 }}>
-                      {assets.map((asset) => (
-                        <label key={asset.id} style={{ display: "flex", gap: 8, alignItems: "center", margin: 0 }}>
-                          <input
-                            type="checkbox"
-                            style={{ width: "auto" }}
-                            checked={(assetLinksByPerson[p.id] ?? []).includes(asset.id)}
-                            onChange={() => toggleExistingPersonAsset(p, asset.id)}
-                          />
-                          <span>{asset.label}</span>
-                        </label>
-                      ))}
-                      {assets.length === 0 && <small>Geen assets beschikbaar.</small>}
+                  <td>{renderAssetBadges(p)}</td>
+                  <td onClick={(event) => event.stopPropagation()}>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button className="ui-btn ui-btn--sm" onClick={() => setSelectedId(p.id)}>
+                        Bekijken
+                      </button>
+                      <button className="ui-btn ui-btn--sm ui-btn--danger" onClick={() => handleDelete(p.id)}>
+                        Verwijderen
+                      </button>
                     </div>
-                  </td>
-                  <td>
-                    <button className="ui-btn ui-btn--sm ui-btn--danger" onClick={() => handleDelete(p.id)}>
-                      Verwijderen
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -486,6 +603,135 @@ export default function PeoplePanel() {
             </tbody>
           </table>
         </div>
+
+        {selected && (
+          <PersonDetail
+            assets={assets}
+            assetLinks={assetLinksByPerson[selected.id] ?? []}
+            documents={linkedDocumentsForPerson(selected)}
+            onClose={() => setSelectedId(null)}
+            onToggleAsset={(assetId) => toggleExistingPersonAsset(selected, assetId)}
+            person={selected}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PersonDetail({
+  assets,
+  assetLinks,
+  documents,
+  onClose,
+  onToggleAsset,
+  person,
+}: {
+  assets: AssetOption[];
+  assetLinks: string[];
+  documents: DocumentOption[];
+  onClose: () => void;
+  onToggleAsset: (assetId: string) => void;
+  person: Row;
+}) {
+  const linkedIds = new Set(assetLinks);
+
+  return (
+    <div className="ui-card" style={{ marginTop: 18 }}>
+      <div style={{ alignItems: "flex-start", display: "flex", gap: 12, justifyContent: "space-between" }}>
+        <div>
+          <div className="ui-section-title" style={{ marginTop: 0 }}>Persoon bekijken</div>
+          <h2 className="ui-h2" style={{ marginBottom: 4 }}>{person.fullName || person.name}</h2>
+          <div className="ui-muted">{roleLabel(person.role) || "Geen rol vastgelegd"}</div>
+        </div>
+        <button className="ui-btn ui-btn--sm" type="button" onClick={onClose}>
+          Sluiten
+        </button>
+      </div>
+
+      <div className="ui-grid cols-4" style={{ marginTop: 16 }}>
+        <Meta label="Naam" value={person.fullName || person.name || "—"} />
+        <Meta label="Rol" value={roleLabel(person.role) || "—"} />
+        <Meta label="E-mail" value={person.email || "—"} />
+        <Meta label="Telefoon" value={person.phone || "—"} />
+      </div>
+
+      {person.notes && (
+        <div style={{ marginTop: 14 }}>
+          <strong style={{ display: "block", marginBottom: 6 }}>Notities</strong>
+          <p className="ui-muted" style={{ margin: 0 }}>{person.notes}</p>
+        </div>
+      )}
+
+      <div className="ui-grid cols-2" style={{ marginTop: 16 }}>
+        <div className="ui-card" style={{ marginBottom: 0 }}>
+          <h3 className="ui-h2">Gekoppelde assets</h3>
+          <p className="ui-muted" style={{ marginTop: -4 }}>
+            Vink concept-assets aan of uit. Vastgelegde assets zijn alleen zichtbaar.
+          </p>
+          <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+            {assets.map((asset) => (
+              <label key={asset.id} style={{ alignItems: "center", display: "flex", gap: 8, margin: 0 }}>
+                <input
+                  checked={linkedIds.has(asset.id)}
+                  disabled={asset.finalized}
+                  onChange={() => onToggleAsset(asset.id)}
+                  style={{ width: "auto" }}
+                  type="checkbox"
+                />
+                <span>
+                  {asset.label}{" "}
+                  {asset.finalized && <span className="ui-badge ok">Vastgelegd</span>}
+                </span>
+              </label>
+            ))}
+            {!assets.length && <small>Geen assets beschikbaar.</small>}
+          </div>
+        </div>
+
+        <div className="ui-card" style={{ marginBottom: 0 }}>
+          <h3 className="ui-h2">Gekoppelde documenten</h3>
+          <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+            {documents.map((document) => (
+              <div
+                key={`${document.id}-${document.role}`}
+                style={{
+                  borderTop: "1px solid #ECEAE3",
+                  display: "grid",
+                  gap: 4,
+                  paddingTop: 10,
+                }}
+              >
+                <strong>{document.label}</strong>
+                <span className="ui-muted">{document.role}</span>
+              </div>
+            ))}
+            {!documents.length && (
+              <div className="ui-empty" style={{ padding: 14 }}>
+                <div className="ui-empty-title">Geen documenten gekoppeld</div>
+                <p className="ui-empty-body">
+                  Documenten worden hier zichtbaar zodra deze persoon als eigenaar, uploader of ontvanger is gekoppeld.
+                </p>
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
+            <button className="ui-btn ui-btn--secondary" type="button" onClick={() => openPamTab("doc-register")}>
+              Naar document register
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Meta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="ui-kpi">
+      <div className="label">{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 720, overflowWrap: "anywhere", marginTop: 4 }}>
+        {value}
       </div>
     </div>
   );
