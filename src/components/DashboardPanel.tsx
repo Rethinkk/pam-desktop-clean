@@ -97,18 +97,20 @@ function loadDashboardSnapshot() {
       ...(documentIdsByAsset.get(String(asset.id)) ?? []),
     ]);
     const finalized = isFinalized(asset);
-    const missing = [
-      !documentIds.length ? "documenten" : null,
-      !personIds.length ? "mensen" : null,
-      !finalized ? "vastleggen" : null,
-    ].filter(Boolean);
+    const missing = finalized
+      ? []
+      : [
+          !documentIds.length ? "documenten" : null,
+          !personIds.length ? "mensen" : null,
+          "vastleggen",
+        ].filter(Boolean);
 
-    let status = "Compleet";
+    let status = finalized ? "Vastgelegd" : "Compleet";
     let tone = "ok";
-    if (missing.length === 1 && missing[0] === "vastleggen") {
+    if (!finalized && missing.length === 1 && missing[0] === "vastleggen") {
       status = "Klaar om vast te leggen";
       tone = "warn";
-    } else if (missing.length) {
+    } else if (!finalized && missing.length) {
       status = `Mist ${missing.join(", ")}`;
       tone = "warn";
     }
@@ -139,6 +141,7 @@ function loadDashboardSnapshot() {
     .sort((a, b) => a.days - b.days);
 
   const activeConsents = consents.filter((consent) => consent.status === "active");
+  const openAssets = assetRows.filter((asset) => !asset.finalized);
   const expiringConsents = activeConsents
     .map((consent) => ({
       id: consent.id,
@@ -160,9 +163,9 @@ function loadDashboardSnapshot() {
     documentsWithoutAssets,
     expiringDocuments,
     expiringConsents,
-    assetsWithoutDocuments: assetRows.filter((asset) => asset.documentCount === 0),
-    assetsWithoutPeople: assetRows.filter((asset) => asset.personCount === 0),
-    conceptAssets: assetRows.filter((asset) => !asset.finalized),
+    assetsWithoutDocuments: openAssets.filter((asset) => asset.documentCount === 0),
+    assetsWithoutPeople: openAssets.filter((asset) => asset.personCount === 0),
+    conceptAssets: openAssets,
   };
 }
 
@@ -241,7 +244,9 @@ export default function DashboardPanel() {
     people,
   } = snapshot;
 
-  const completeAssets = assetRows.filter((asset) => asset.status === "Compleet").length;
+  const completeAssets = assetRows.filter(
+    (asset) => asset.finalized && asset.documentCount > 0 && asset.personCount > 0,
+  ).length;
   const attentionCount =
     assetsWithoutDocuments.length +
     assetsWithoutPeople.length +

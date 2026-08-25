@@ -680,6 +680,14 @@ export default function AssetRegisterPanel() {
   }
 
   function handleDelete(id: string) {
+    const row = rows.find((asset) => asset.id === id);
+    if (row && isFinalized(row)) {
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: "Dit asset is vastgelegd en kan niet meer worden verwijderd.", tone: "warn" },
+      }));
+      return;
+    }
+
     if (!confirm("Weet je zeker dat je dit asset wilt verwijderen?")) return;
 
     try {
@@ -1310,26 +1318,30 @@ export default function AssetRegisterPanel() {
                   })}
                   <td onClick={(event) => event.stopPropagation()}>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minWidth: 220 }}>
-                      <button
-                        className="ui-btn ui-btn--sm"
-                        disabled={isFinalized(r)}
-                        onClick={() => startEdit(r)}
-                      >
-                        Aanpassen
-                      </button>
-                      <button
-                        className="ui-btn ui-btn--sm ui-btn--primary"
-                        disabled={isFinalized(r)}
-                        onClick={() => finalizeAsset(r.id)}
-                      >
-                        {isFinalized(r) ? "Vastgelegd" : "Vastleggen"}
-                      </button>
-                      <button
-                        className="ui-btn ui-btn--sm ui-btn--danger"
-                        onClick={() => handleDelete(r.id)}
-                      >
-                        Verwijderen
-                      </button>
+                      {isFinalized(r) ? (
+                        <span className="ui-badge ok">Geen acties - vastgelegd</span>
+                      ) : (
+                        <>
+                          <button
+                            className="ui-btn ui-btn--sm"
+                            onClick={() => startEdit(r)}
+                          >
+                            Aanpassen
+                          </button>
+                          <button
+                            className="ui-btn ui-btn--sm ui-btn--primary"
+                            onClick={() => finalizeAsset(r.id)}
+                          >
+                            Vastleggen
+                          </button>
+                          <button
+                            className="ui-btn ui-btn--sm ui-btn--danger"
+                            onClick={() => handleDelete(r.id)}
+                          >
+                            Verwijderen
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
