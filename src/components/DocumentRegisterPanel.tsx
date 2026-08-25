@@ -13,6 +13,11 @@ type DocRow = {
   ownerName?: string;
   assetIds?: string[];
   assetNames?: string[];
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  fileDataUrl?: string;
+  notes?: string;
   issuedAt?: string;  // yyyy-mm-dd
   expiresAt?: string; // yyyy-mm-dd
 };
@@ -54,8 +59,16 @@ function isFileValue(value: any) {
   return value && typeof value === "object" && typeof value.name === "string";
 }
 
+function formatFileSize(size?: number) {
+  if (!size) return "—";
+  if (size < 1024) return `${size} bytes`;
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} kB`;
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export default function DocumentRegisterPanel() {
   const [rows, setRows] = React.useState<DocRow[]>([]);
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [q, setQ] = React.useState("");
   const [sort, setSort] = React.useState<{ key: keyof DocRow | "status"; dir: "asc" | "desc" }>({
     key: "title",
@@ -92,10 +105,16 @@ export default function DocumentRegisterPanel() {
           : Array.isArray(d.assetNames)
             ? d.assetNames
             : [],
+        fileName: d.fileName ?? d.filename ?? "",
+        fileSize: d.fileSize ?? d.size ?? 0,
+        mimeType: d.mimeType ?? d.mime ?? "",
+        fileDataUrl: d.fileDataUrl ?? d.dataUrl ?? "",
+        notes: d.notes ?? "",
         issuedAt: d.issuedAt ?? d.issueDate ?? "",
         expiresAt: d.expiresAt ?? d.validUntil ?? d.expiryDate ?? "",
       })) as DocRow[];
       setRows(norm);
+      if (selectedId && !norm.some((row) => row.id === selectedId)) setSelectedId(null);
     } catch {}
   }
 
@@ -207,6 +226,7 @@ export default function DocumentRegisterPanel() {
     if (!confirm("Weet je zeker dat je dit document wilt verwijderen?")) return;
     persistDelete(id);
     setRows((r) => r.filter((x) => x.id !== id));
+    if (selectedId === id) setSelectedId(null);
 
     // ✅ mini-bericht na verwijderen (nul dependencies)
   alert("Document verwijderd");
@@ -235,6 +255,11 @@ export default function DocumentRegisterPanel() {
 
     return out;
   }, [rows, q, sort]);
+
+  const selected = React.useMemo(
+    () => rows.find((row) => row.id === selectedId) ?? null,
+    [rows, selectedId],
+  );
 
   function toggleSort(key: keyof DocRow | "status") {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
@@ -282,7 +307,11 @@ export default function DocumentRegisterPanel() {
             {filtered.map((r) => {
               const st = expiryStatus(r.expiresAt);
               return (
-                <tr key={r.id}>
+                <tr
+                  key={r.id}
+                  onClick={() => setSelectedId(r.id)}
+                  style={{ cursor: "pointer" }}
+                >
                   <td>{r.title}</td>
                   <td>{r.type || ""}</td>
                   <td>{r.number || ""}</td>
@@ -302,9 +331,26 @@ export default function DocumentRegisterPanel() {
                   <td>{r.expiresAt || ""}</td>
                   <td><span className={st.cls}>{st.label}</span></td>
                   <td>
-                    <button className="ui-btn ui-btn--sm ui-btn--danger" onClick={() => handleDelete(r.id)}>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button
+                      className="ui-btn ui-btn--sm"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedId(r.id);
+                      }}
+                    >
+                      Bekijken
+                    </button>
+                    <button
+                      className="ui-btn ui-btn--sm ui-btn--danger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDelete(r.id);
+                      }}
+                    >
                       Verwijderen
                     </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -322,6 +368,117 @@ export default function DocumentRegisterPanel() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {selected && (
+        <DocumentPreview row={selected} onClose={() => setSelectedId(null)} />
+      )}
+    </div>
+  );
+}
+
+function DocumentPreview({ row, onClose }: { row: DocRow; onClose: () => void }) {
+  const isImage = row.mimeType?.startsWith("image/") || /^data:image\//.test(row.fileDataUrl ?? "");
+  const isPdf = row.mimeType === "application/pdf" || /^data:application\/pdf/.test(row.fileDataUrl ?? "");
+  const canPreview = Boolean(row.fileDataUrl && (isImage || isPdf));
+
+  return (
+    <div className="ui-card" style={{ marginTop: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+        <div>
+          <div className="ui-section-title" style={{ marginTop: 0 }}>Document bekijken</div>
+          <h2 className="ui-h2" style={{ marginBottom: 4 }}>{row.title}</h2>
+          <div className="ui-muted">{[row.type, row.fileName].filter(Boolean).join(" — ") || "Document"}</div>
+        </div>
+        <button className="ui-btn ui-btn--sm" onClick={onClose}>Sluiten</button>
+      </div>
+
+      <div className="ui-grid cols-4" style={{ marginTop: 16 }}>
+        <Meta label="Bestand" value={row.fileName || "—"} />
+        <Meta label="Bestandsgrootte" value={formatFileSize(row.fileSize)} />
+        <Meta label="Type" value={row.mimeType || row.type || "—"} />
+        <Meta label="Persoon" value={row.ownerName || "—"} />
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <strong style={{ display: "block", marginBottom: 8 }}>Gekoppelde assets</strong>
+        {row.assetNames?.length ? (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {row.assetNames.map((assetName) => (
+              <span key={assetName} className="ui-badge">{assetName}</span>
+            ))}
+          </div>
+        ) : (
+          <span className="ui-muted">Geen asset gekoppeld</span>
+        )}
+      </div>
+
+      {row.notes && (
+        <div style={{ marginTop: 14 }}>
+          <strong style={{ display: "block", marginBottom: 6 }}>Notities</strong>
+          <p className="ui-muted" style={{ margin: 0 }}>{row.notes}</p>
+        </div>
+      )}
+
+      <div
+        style={{
+          background: "#F3F1EA",
+          border: "1px solid #DEDCD5",
+          borderRadius: 14,
+          marginTop: 18,
+          minHeight: 260,
+          overflow: "hidden",
+          padding: canPreview ? 0 : 18,
+        }}
+      >
+        {isImage && row.fileDataUrl && (
+          <img
+            alt={row.title}
+            src={row.fileDataUrl}
+            style={{ display: "block", maxHeight: 520, objectFit: "contain", width: "100%" }}
+          />
+        )}
+        {isPdf && row.fileDataUrl && (
+          <iframe
+            src={row.fileDataUrl}
+            title={row.title}
+            style={{ border: 0, display: "block", height: 520, width: "100%" }}
+          />
+        )}
+        {!canPreview && (
+          <div>
+            <strong>Geen inline preview beschikbaar</strong>
+            <p className="ui-muted" style={{ margin: "8px 0 0" }}>
+              PAM heeft de documentgegevens opgeslagen, maar dit bestandstype kan hier niet direct worden getoond.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {row.fileDataUrl && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
+          <a
+            className="ui-btn ui-btn--primary"
+            download={row.fileName || row.title}
+            href={row.fileDataUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ textDecoration: "none" }}
+          >
+            Openen / downloaden
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Meta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="ui-kpi">
+      <div className="label">{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 720, overflowWrap: "anywhere", marginTop: 4 }}>
+        {value}
       </div>
     </div>
   );
