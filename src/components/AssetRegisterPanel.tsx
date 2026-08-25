@@ -54,6 +54,7 @@ type OptionRow = {
 const PSEUDO_DETAILS = "__details__";
 const PSEUDO_PEOPLE = "__people__";
 const PSEUDO_DOCUMENTS = "__documents__";
+const PSEUDO_COMPLETENESS = "__completeness__";
 const PSEUDO_STATUS = "__status__";
 
 const LEGACY_TYPE_ALIASES: Record<string, string> = {
@@ -245,6 +246,8 @@ function buildLabelMap(schema: AssetSchema): Record<string, string> {
   map["purchaseDate"] = map["purchaseDate"] || "Aankoopdatum";
   map[PSEUDO_DETAILS] = "Details";
   map[PSEUDO_PEOPLE] = "Mensen";
+  map[PSEUDO_DOCUMENTS] = "Documenten";
+  map[PSEUDO_COMPLETENESS] = "Compleetheid";
   map[PSEUDO_STATUS] = "Status";
   return map;
 }
@@ -471,6 +474,7 @@ function detailEntriesForRow(schema: AssetSchema, row: Row, labelMap: Record<str
     "personIds",
     "documentIds",
     PSEUDO_DOCUMENTS,
+    PSEUDO_COMPLETENESS,
     "status",
     "finalizedAt",
     "createdAt",
@@ -558,6 +562,7 @@ function summarizeRow(schema: AssetSchema, row: Row, labelMap: Record<string, st
       "personName",
       "documentIds",
       PSEUDO_DOCUMENTS,
+      PSEUDO_COMPLETENESS,
       "status",
       "finalizedAt",
       "createdAt",
@@ -979,11 +984,61 @@ export default function AssetRegisterPanel() {
     );
   }
 
+  function completenessForRow(row: Row) {
+    const documentCount = documentIdsForRow(row).length;
+    const personCount = personNamesForRow(row).length;
+    const finalized = isFinalized(row);
+    const missing = [
+      !documentCount ? "documenten" : null,
+      !personCount ? "mensen" : null,
+    ].filter(Boolean);
+
+    if (finalized && missing.length === 0) {
+      return {
+        label: "Vastgelegd compleet",
+        tone: "ok",
+        detail: "Dit asset is compleet gekoppeld en daarna vastgelegd.",
+      };
+    }
+
+    if (finalized) {
+      return {
+        label: "Vastgelegd",
+        tone: "ok",
+        detail: "Dit asset is vastgelegd. Verdere acties zijn niet meer mogelijk.",
+      };
+    }
+
+    if (missing.length === 0) {
+      return {
+        label: "Klaar voor vastleggen",
+        tone: "ok",
+        detail: "Mensen en documenten zijn gekoppeld. Controleer de gegevens en leg het asset vast.",
+      };
+    }
+
+    return {
+      label: `Aanvullen: ${missing.join(", ")}`,
+      tone: "warn",
+      detail: `Koppel eerst ${missing.join(" en ")} voordat dit asset dossierwaardig is.`,
+    };
+  }
+
+  function renderCompleteness(row: Row) {
+    const completeness = completenessForRow(row);
+    return (
+      <span className={`ui-badge ${completeness.tone}`} title={completeness.detail}>
+        {completeness.label}
+      </span>
+    );
+  }
+
   function renderAssetDetails(row: Row) {
     const entries = detailEntriesForRow(schema, row, LABELS_FROM_SCHEMA);
     const typeLabel = resolveType(schema, row)?.label || row.typeLabel || row.type || "Onbekend type";
     const peopleNames = personNamesForRow(row);
     const documentNames = documentNamesForRow(row);
+    const completeness = completenessForRow(row);
 
     return (
       <div
@@ -1028,6 +1083,7 @@ export default function AssetRegisterPanel() {
             label="Documenten"
             value={documentNames.length ? documentNames.join(", ") : "Geen documenten gekoppeld"}
           />
+          <DetailBlock label="Compleetheid" value={`${completeness.label}. ${completeness.detail}`} />
           {row.createdAt && <DetailBlock label="Aangemaakt" value={formatMetaDate(row.createdAt)} />}
           {row.updatedAt && <DetailBlock label="Laatst aangepast" value={formatMetaDate(row.updatedAt)} />}
           {row.finalizedAt && <DetailBlock label="Vastgelegd op" value={formatMetaDate(row.finalizedAt)} />}
@@ -1065,6 +1121,7 @@ export default function AssetRegisterPanel() {
     present.add("name");
     present.add("typeLabel");
     present.add(PSEUDO_STATUS);
+    present.add(PSEUDO_COMPLETENESS);
     present.add(PSEUDO_PEOPLE);
     present.add(PSEUDO_DOCUMENTS);
     present.add(PSEUDO_DETAILS); // altijd samenvatting
@@ -1079,13 +1136,15 @@ export default function AssetRegisterPanel() {
         ? "Type"
         : key === PSEUDO_STATUS
           ? "Status"
-          : key === PSEUDO_PEOPLE
-            ? "Mensen"
-            : key === PSEUDO_DOCUMENTS
-              ? "Documenten"
-              : key === PSEUDO_DETAILS
-                ? "Details"
-                : String(key));
+          : key === PSEUDO_COMPLETENESS
+            ? "Compleetheid"
+            : key === PSEUDO_PEOPLE
+              ? "Mensen"
+              : key === PSEUDO_DOCUMENTS
+                ? "Documenten"
+                : key === PSEUDO_DETAILS
+                  ? "Details"
+                  : String(key));
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -1101,12 +1160,14 @@ export default function AssetRegisterPanel() {
             .filter(Boolean),
             ...personNamesForRow(r),
             ...documentNamesForRow(r),
+            completenessForRow(r).label,
+            completenessForRow(r).detail,
           ]
             .some((v) => String(v).toLowerCase().includes(needle))
         );
 
     out = [...out].sort((a, b) => {
-      if ([PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_DOCUMENTS, PSEUDO_STATUS].includes(sort.key)) return 0; // niet sorteren op afgeleide kolommen
+      if ([PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_DOCUMENTS, PSEUDO_COMPLETENESS, PSEUDO_STATUS].includes(sort.key)) return 0; // niet sorteren op afgeleide kolommen
       const A = valueFromRow(a, sort.key);
       const B = valueFromRow(b, sort.key);
       if (sort.key === "priceCents") {
@@ -1269,7 +1330,7 @@ export default function AssetRegisterPanel() {
                 <th
                   key={String(k)}
                   onClick={() =>
-                    ![PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_DOCUMENTS, PSEUDO_STATUS].includes(k) && toggleSort(k)
+                    ![PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_DOCUMENTS, PSEUDO_COMPLETENESS, PSEUDO_STATUS].includes(k) && toggleSort(k)
                   }
                 >
                   {colLabel(k)}
@@ -1294,6 +1355,10 @@ export default function AssetRegisterPanel() {
 
                     if (k === PSEUDO_PEOPLE) {
                       return <td key={k}>{renderPeople(r)}</td>;
+                    }
+
+                    if (k === PSEUDO_COMPLETENESS) {
+                      return <td key={k}>{renderCompleteness(r)}</td>;
                     }
 
                     if (k === PSEUDO_DOCUMENTS) {

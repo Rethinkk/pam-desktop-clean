@@ -97,22 +97,25 @@ function loadDashboardSnapshot() {
       ...(documentIdsByAsset.get(String(asset.id)) ?? []),
     ]);
     const finalized = isFinalized(asset);
-    const missing = finalized
-      ? []
-      : [
-          !documentIds.length ? "documenten" : null,
-          !personIds.length ? "mensen" : null,
-          "vastleggen",
-        ].filter(Boolean);
+    const missingLinks = [
+      !documentIds.length ? "documenten" : null,
+      !personIds.length ? "mensen" : null,
+    ].filter(Boolean);
+    const missing = finalized ? [] : [...missingLinks, "vastleggen"];
 
-    let status = finalized ? "Vastgelegd" : "Compleet";
+    let status = finalized && missingLinks.length === 0 ? "Vastgelegd compleet" : "Vastgelegd";
     let tone = "ok";
-    if (!finalized && missing.length === 1 && missing[0] === "vastleggen") {
-      status = "Klaar om vast te leggen";
+    let detail = finalized
+      ? "Dit asset is vastgelegd. Verdere acties zijn niet meer mogelijk."
+      : "Mensen en documenten zijn gekoppeld. Controleer de gegevens en leg het asset vast.";
+    if (finalized && missingLinks.length === 0) {
+      detail = "Dit asset is compleet gekoppeld en daarna vastgelegd.";
+    } else if (!finalized && missingLinks.length === 0) {
+      status = "Klaar voor vastleggen";
+    } else if (!finalized && missingLinks.length) {
+      status = `Aanvullen: ${missingLinks.join(", ")}`;
       tone = "warn";
-    } else if (!finalized && missing.length) {
-      status = `Mist ${missing.join(", ")}`;
-      tone = "warn";
+      detail = `Koppel eerst ${missingLinks.join(" en ")} voordat dit asset dossierwaardig is.`;
     }
 
     return {
@@ -124,6 +127,7 @@ function loadDashboardSnapshot() {
       personCount: personIds.length,
       status,
       tone,
+      detail,
       missing,
     };
   });
@@ -244,9 +248,7 @@ export default function DashboardPanel() {
     people,
   } = snapshot;
 
-  const completeAssets = assetRows.filter(
-    (asset) => asset.finalized && asset.documentCount > 0 && asset.personCount > 0,
-  ).length;
+  const completeAssets = assetRows.filter((asset) => asset.status === "Vastgelegd compleet").length;
   const attentionCount =
     assetsWithoutDocuments.length +
     assetsWithoutPeople.length +
@@ -307,7 +309,7 @@ export default function DashboardPanel() {
                 : documentsWithoutAssets.length
                   ? "Er staan documenten klaar die nog geen asset hebben. Koppel ze zodat je dossier logisch blijft."
                   : conceptAssets.length
-                    ? "Er zijn assets die klaarstaan als concept. Leg ze vast wanneer de gegevens kloppen."
+                    ? "Er zijn concept-assets die klaar zijn voor controle. Leg ze vast wanneer de gegevens kloppen."
                     : "Je basis staat stevig. De volgende stap is periodiek controleren of documenten en toestemmingen actueel blijven."}
           </p>
         </div>
@@ -360,7 +362,7 @@ export default function DashboardPanel() {
           <div>
             <h2 className="ui-h2">Compleetheidsstatus per asset</h2>
             <p className="ui-muted">
-              {completeAssets} van {assetRows.length} assets zijn volledig gekoppeld en vastgelegd.
+              {completeAssets} van {assetRows.length} assets hebben de status vastgelegd compleet.
             </p>
           </div>
           <button className="ui-btn ui-btn--secondary" type="button" onClick={() => openPamTab("asset-register")}>
@@ -374,6 +376,7 @@ export default function DashboardPanel() {
                 <th>Asset</th>
                 <th>Type</th>
                 <th>Status</th>
+                <th>Uitleg</th>
                 <th>Documenten</th>
                 <th>Mensen</th>
               </tr>
@@ -381,12 +384,13 @@ export default function DashboardPanel() {
             <tbody>
               {assetRows
                 .slice()
-                .sort((a, b) => Number(a.status === "Compleet") - Number(b.status === "Compleet"))
+                .sort((a, b) => Number(a.status === "Vastgelegd compleet") - Number(b.status === "Vastgelegd compleet"))
                 .map((asset) => (
                   <tr key={asset.id}>
                     <td><strong>{asset.title}</strong></td>
                     <td>{asset.type}</td>
                     <td><span className={`ui-badge ${asset.tone}`}>{asset.status}</span></td>
+                    <td>{asset.detail}</td>
                     <td>{asset.documentCount}</td>
                     <td>{asset.personCount}</td>
                   </tr>
