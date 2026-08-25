@@ -22,6 +22,11 @@ type DocRow = {
   expiresAt?: string; // yyyy-mm-dd
 };
 
+type AssetOption = {
+  id: string;
+  label: string;
+};
+
 function parseYMD(s?: string) {
   if (!s) return null;
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
@@ -64,6 +69,42 @@ function formatFileSize(size?: number) {
   if (size < 1024) return `${size} bytes`;
   if (size < 1024 * 1024) return `${Math.round(size / 1024)} kB`;
   return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function fileKind(row: DocRow) {
+  const mime = row.mimeType || "";
+  const dataUrl = row.fileDataUrl || "";
+  if (mime.startsWith("image/") || /^data:image\//.test(dataUrl)) return "image";
+  if (mime === "application/pdf" || /^data:application\/pdf/.test(dataUrl)) return "pdf";
+  if (
+    mime.startsWith("text/") ||
+    ["application/json", "application/xml"].includes(mime) ||
+    /^data:text\//.test(dataUrl) ||
+    /^data:application\/json/.test(dataUrl)
+  ) {
+    return "text";
+  }
+  return row.fileDataUrl ? "download" : "none";
+}
+
+function decodeTextDataUrl(dataUrl?: string) {
+  if (!dataUrl) return "";
+  const comma = dataUrl.indexOf(",");
+  if (comma < 0) return "";
+  const meta = dataUrl.slice(0, comma);
+  const payload = dataUrl.slice(comma + 1);
+  try {
+    if (meta.includes(";base64")) {
+      return decodeURIComponent(
+        Array.from(atob(payload))
+          .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
+          .join(""),
+      );
+    }
+    return decodeURIComponent(payload);
+  } catch {
+    return "";
+  }
 }
 
 export default function DocumentRegisterPanel() {
@@ -371,16 +412,86 @@ export default function DocumentRegisterPanel() {
       </div>
 
       {selected && (
-        <DocumentPreview row={selected} onClose={() => setSelectedId(null)} />
+        <DocumentPreview row={selected} onClose={() => setSelectedId(null)} onUpdated={load} />
       )}
     </div>
   );
 }
 
-function DocumentPreview({ row, onClose }: { row: DocRow; onClose: () => void }) {
-  const isImage = row.mimeType?.startsWith("image/") || /^data:image\//.test(row.fileDataUrl ?? "");
-  const isPdf = row.mimeType === "application/pdf" || /^data:application\/pdf/.test(row.fileDataUrl ?? "");
-  const canPreview = Boolean(row.fileDataUrl && (isImage || isPdf));
+function DocumentPreview({
+  row,
+  onClose,
+  onUpdated,
+}: {
+  row: DocRow;
+  onClose: () => void;
+  onUpdated: () => void;
+}) {
+  const kind = fileKind(row);
+  const isImage = kind === "image";
+  const isPdf = kind === "pdf";
+  const isText = kind === "text";
+  const canPreview = Boolean(row.fileDataUrl && (isImage || isPdf || isText));
+  const textPreview = isText ? decodeTextDataUrl(row.fileDataUrl).slice(0, 8000) : "";
+  const status = expiryStatus(row.expiresAt);
+  const [assetOptions, setAssetOptions] = React.useState<AssetOption[]>([]);
+  const [selectedAssetIds, setSelectedAssetIds] = React.useState<string[]>(row.assetIds ?? []);
+
+  React.useEffect(() => {
+    const assets = assetRepository.load().assets as any[];
+    setAssetOptions(
+      assets
+        .map((asset) => ({
+          id: asset.id,
+          label: [
+            asset.name ?? asset.data?.naam ?? asset.data?.titel ?? asset.assetNumber ?? "Asset",
+            asset.typeLabel ?? asset.type,
+          ].filter(Boolean).join(" — "),
+        }))
+        .filter((asset) => asset.id && asset.label),
+    );
+  }, []);
+
+  React.useEffect(() => {
+    setSelectedAssetIds(row.assetIds ?? []);
+  }, [row.id, row.assetIds]);
+
+  function toggleAsset(assetId: string) {
+    setSelectedAssetIds((ids) =>
+      ids.includes(assetId) ? ids.filter((id) => id !== assetId) : [...ids, assetId],
+    );
+  }
+
+  function saveAssetLinks() {
+    const now = new Date().toISOString();
+    const selected = new Set(selectedAssetIds);
+    const nextDocs = documentRepository.all().map((document: any) =>
+      document.id === row.id
+        ? {
+            ...document,
+            assetIds: selectedAssetIds,
+            updatedAt: now,
+          }
+        : document,
+    );
+    documentRepository.saveAll(nextDocs as any);
+
+    const nextAssets = assetRepository.load().assets.map((asset: any) => {
+      const documentIds = new Set(Array.isArray(asset.documentIds) ? asset.documentIds : []);
+      if (selected.has(asset.id)) documentIds.add(row.id);
+      else documentIds.delete(row.id);
+      return {
+        ...asset,
+        documentIds: Array.from(documentIds),
+        updatedAt: now,
+      };
+    });
+    assetRepository.save({ assets: nextAssets });
+    onUpdated();
+    window.dispatchEvent(new CustomEvent("pam:toast", {
+      detail: { message: "Documentkoppeling bijgewerkt", tone: "success" },
+    }));
+  }
 
   return (
     <div className="ui-card" style={{ marginTop: 18 }}>
@@ -397,11 +508,18 @@ function DocumentPreview({ row, onClose }: { row: DocRow; onClose: () => void })
         <Meta label="Bestand" value={row.fileName || "—"} />
         <Meta label="Bestandsgrootte" value={formatFileSize(row.fileSize)} />
         <Meta label="Type" value={row.mimeType || row.type || "—"} />
+        <Meta label="Status" value={status.label} />
+      </div>
+
+      <div className="ui-grid cols-4" style={{ marginTop: 12 }}>
         <Meta label="Persoon" value={row.ownerName || "—"} />
+        <Meta label="Documentnummer" value={row.number || "—"} />
+        <Meta label="Uitgegeven" value={row.issuedAt || "—"} />
+        <Meta label="Geldig tot" value={row.expiresAt || "—"} />
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <strong style={{ display: "block", marginBottom: 8 }}>Gekoppelde assets</strong>
+        <strong style={{ display: "block", marginBottom: 8 }}>Koppeling met assets</strong>
         {row.assetNames?.length ? (
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {row.assetNames.map((assetName) => (
@@ -409,8 +527,47 @@ function DocumentPreview({ row, onClose }: { row: DocRow; onClose: () => void })
             ))}
           </div>
         ) : (
-          <span className="ui-muted">Geen asset gekoppeld</span>
+          <div className="ui-empty" style={{ padding: 14 }}>
+            <div className="ui-empty-title">Geen asset gekoppeld</div>
+            <p className="ui-empty-body">
+              Dit document staat nog los. Koppel het aan een asset om het dossier compleet te maken.
+            </p>
+          </div>
         )}
+      </div>
+
+      <div className="ui-field" style={{ marginTop: 14 }}>
+        <label>Asset-koppeling aanpassen</label>
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #DEDCD5",
+            borderRadius: 12,
+            display: "grid",
+            gap: 8,
+            maxHeight: 150,
+            overflow: "auto",
+            padding: 10,
+          }}
+        >
+          {assetOptions.map((asset) => (
+            <label key={asset.id} style={{ alignItems: "center", display: "flex", gap: 8, margin: 0 }}>
+              <input
+                checked={selectedAssetIds.includes(asset.id)}
+                onChange={() => toggleAsset(asset.id)}
+                style={{ width: "auto" }}
+                type="checkbox"
+              />
+              <span>{asset.label}</span>
+            </label>
+          ))}
+          {!assetOptions.length && <small>Er zijn nog geen assets beschikbaar.</small>}
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+          <button className="ui-btn ui-btn--primary" type="button" onClick={saveAssetLinks}>
+            Koppeling opslaan
+          </button>
+        </div>
       </div>
 
       {row.notes && (
@@ -445,18 +602,37 @@ function DocumentPreview({ row, onClose }: { row: DocRow; onClose: () => void })
             style={{ border: 0, display: "block", height: 520, width: "100%" }}
           />
         )}
+        {isText && row.fileDataUrl && (
+          <pre
+            style={{
+              color: "#123052",
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+              fontSize: 13,
+              lineHeight: 1.55,
+              margin: 0,
+              maxHeight: 520,
+              overflow: "auto",
+              padding: 18,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {textPreview || "Tekstpreview kon niet worden gelezen."}
+          </pre>
+        )}
         {!canPreview && (
           <div>
-            <strong>Geen inline preview beschikbaar</strong>
+            <strong>{row.fileDataUrl ? "Geen inline preview beschikbaar" : "Geen bestand opgeslagen"}</strong>
             <p className="ui-muted" style={{ margin: "8px 0 0" }}>
-              PAM heeft de documentgegevens opgeslagen, maar dit bestandstype kan hier niet direct worden getoond.
+              {row.fileDataUrl
+                ? "PAM heeft het bestand opgeslagen, maar dit bestandstype kan hier niet direct worden getoond. U kunt het bestand wel openen of downloaden."
+                : "PAM heeft de documentgegevens opgeslagen. Voeg via Documenten een bestand toe als u hier ook de inhoud wilt bekijken."}
             </p>
           </div>
         )}
       </div>
 
       {row.fileDataUrl && (
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 14, flexWrap: "wrap" }}>
           <a
             className="ui-btn ui-btn--primary"
             download={row.fileName || row.title}
@@ -467,6 +643,13 @@ function DocumentPreview({ row, onClose }: { row: DocRow; onClose: () => void })
           >
             Openen / downloaden
           </a>
+        </div>
+      )}
+      {!row.fileDataUrl && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
+          <button className="ui-btn ui-btn--primary" type="button" onClick={() => openPamTab("docs")}>
+            Nieuw document toevoegen
+          </button>
         </div>
       )}
     </div>

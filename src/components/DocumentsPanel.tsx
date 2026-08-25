@@ -14,6 +14,10 @@ type FormState = {
   issuedAt: string;   // yyyy-mm-dd
   expiresAt: string;  // yyyy-mm-dd
   notes: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  fileDataUrl: string;
 };
 
 type PersonLite = { id: string; display: string };
@@ -29,6 +33,10 @@ export default function DocumentsPanel() {
     issuedAt: "",
     expiresAt: "",
     notes: "",
+    fileName: "",
+    fileSize: 0,
+    mimeType: "",
+    fileDataUrl: "",
   });
 
   const [people, setPeople] = React.useState<PersonLite[]>([]);
@@ -58,6 +66,36 @@ export default function DocumentsPanel() {
     setForm((s) => ({ ...s, [key]: val }));
   }
 
+  function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setForm((s) => ({ ...s, fileName: "", fileSize: 0, mimeType: "", fileDataUrl: "" }));
+      return;
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      window.dispatchEvent(
+        new CustomEvent("pam:toast", {
+          detail: { message: "Bestand is groter dan 4MB.", tone: "warn" },
+        }),
+      );
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((s) => ({
+        ...s,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type || "application/octet-stream",
+        fileDataUrl: String(reader.result || ""),
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+
   const requiredOK =
     form.title.trim().length > 1 &&
     !!form.type;
@@ -78,6 +116,14 @@ export default function DocumentsPanel() {
       number: form.number.trim() || undefined,
       ownerId: form.personId || undefined,
       ownerName: owner?.display || undefined,
+      fileName: form.fileName || undefined,
+      filename: form.fileName || undefined,
+      fileSize: form.fileSize || undefined,
+      size: form.fileSize || undefined,
+      mimeType: form.mimeType || undefined,
+      mime: form.mimeType || undefined,
+      fileDataUrl: form.fileDataUrl || undefined,
+      dataUrl: form.fileDataUrl || undefined,
       issuedAt: form.issuedAt || undefined,
       expiresAt: form.expiresAt || undefined,
       notes: form.notes?.trim() || undefined,
@@ -116,6 +162,10 @@ export default function DocumentsPanel() {
       issuedAt: "",
       expiresAt: "",
       notes: "",
+      fileName: "",
+      fileSize: 0,
+      mimeType: "",
+      fileDataUrl: "",
     });
   }
 
@@ -210,6 +260,21 @@ export default function DocumentsPanel() {
           />
         </div>
 
+        <div className="span-2 ui-field">
+          <label htmlFor="doc-file">Bestand toevoegen (optie)</label>
+          <input
+            id="doc-file"
+            type="file"
+            accept="image/*,application/pdf,text/plain,text/csv,application/json"
+            onChange={onFileChange}
+          />
+          <small>
+            {form.fileName
+              ? `Gekozen: ${form.fileName} · ${Math.round(form.fileSize / 1024)} kB · ${form.mimeType || "onbekend type"}`
+              : "Voeg een pdf, afbeelding of tekstbestand toe als u het document ook direct wilt kunnen bekijken."}
+          </small>
+        </div>
+
         {/* Linkerkolom */}
         <div className="ui-field">
           <div className="ui-section-title">Datums</div>
@@ -266,5 +331,4 @@ export default function DocumentsPanel() {
     </div>
   );
 }
-
 
