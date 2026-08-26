@@ -2,17 +2,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import AssetsPanel from "./AssetsPanel";
-import DashboardPanel from "./DashboardPanel";
-import DocumentsPanel from "./DocumentsPanel";
-import PeoplePanel from "./PeoplePanel";
-import ReportingPanel from "./ReportingPanel";
-import AssetRegisterPanel from "./AssetRegisterPanel";
-import DocumentRegisterPanel from "./DocumentRegisterPanel";
-import ConsentPanel from "./ConsentPanel";
-import SecurityPanel from "./SecurityPanel";
-import AboutPanel from "./AboutPanel"; // ✅ About terug
-import AuditTrailPanel from "./AuditTrailPanel";
 import { Style as UIStyle, ToastHost } from "./ui/UI";
 import { useAuth } from "../auth/AuthContext";
 import {
@@ -23,8 +12,28 @@ import {
 
 type TabKey = PamWorkspaceTab;
 
+const AssetsPanel = React.lazy(() => import("./AssetsPanel"));
+const DashboardPanel = React.lazy(() => import("./DashboardPanel"));
+const DocumentsPanel = React.lazy(() => import("./DocumentsPanel"));
+const PeoplePanel = React.lazy(() => import("./PeoplePanel"));
+const ReportingPanel = React.lazy(() => import("./ReportingPanel"));
+const AssetRegisterPanel = React.lazy(() => import("./AssetRegisterPanel"));
+const DocumentRegisterPanel = React.lazy(() => import("./DocumentRegisterPanel"));
+const ConsentPanel = React.lazy(() => import("./ConsentPanel"));
+const SecurityPanel = React.lazy(() => import("./SecurityPanel"));
+const AboutPanel = React.lazy(() => import("./AboutPanel"));
+const AuditTrailPanel = React.lazy(() => import("./AuditTrailPanel"));
+
 const TAB_STORAGE_KEY = PAM_ACTIVE_TAB_STORAGE_KEY;
 const ALLOWED_TABS: TabKey[] = PAM_ALLOWED_TABS;
+
+function PanelFallback() {
+  return (
+    <div className="card pam-panel-card" style={{ display: "grid", placeItems: "center" }}>
+      <p style={{ color: "#60718A", margin: 0 }}>PAM opent dit onderdeel...</p>
+    </div>
+  );
+}
 
 /** Injecteer de 'Reporting-look' als algemene UI-stijl (scoped onder .rp) */
 function ReportingLook() {
@@ -321,71 +330,73 @@ export default function AssetShell() {
       </div>
 
       {/* Panels */}
-      {tab === "dashboard" && (
-        <div className="card pam-panel-card">
-          <DashboardPanel />
-        </div>
-      )}
+      <React.Suspense fallback={<PanelFallback />}>
+        {tab === "dashboard" && (
+          <div className="card pam-panel-card">
+            <DashboardPanel />
+          </div>
+        )}
 
-      {tab === "assets" && (
-        <div className="card pam-panel-card">
-          <AssetsPanel />
-        </div>
-      )}
+        {tab === "assets" && (
+          <div className="card pam-panel-card">
+            <AssetsPanel />
+          </div>
+        )}
 
-      {tab === "asset-register" && (
-        <div className="card pam-panel-card">
-          <AssetRegisterPanel />
-        </div>
-      )}
+        {tab === "asset-register" && (
+          <div className="card pam-panel-card">
+            <AssetRegisterPanel />
+          </div>
+        )}
 
-      {tab === "docs" && (
-        <div className="card pam-panel-card">
-          <DocumentsPanel />
-        </div>
-      )}
+        {tab === "docs" && (
+          <div className="card pam-panel-card">
+            <DocumentsPanel />
+          </div>
+        )}
 
-      {tab === "doc-register" && (
-        <div className="card pam-panel-card">
-          <DocumentRegisterPanel />
-        </div>
-      )}
+        {tab === "doc-register" && (
+          <div className="card pam-panel-card">
+            <DocumentRegisterPanel />
+          </div>
+        )}
 
-      {tab === "people" && (
-        <div className="card pam-panel-card">
-          <PeoplePanel />
-        </div>
-      )}
+        {tab === "people" && (
+          <div className="card pam-panel-card">
+            <PeoplePanel />
+          </div>
+        )}
 
-      {tab === "consents" && (
-        <div className="card pam-panel-card">
-          <ConsentPanel />
-        </div>
-      )}
+        {tab === "consents" && (
+          <div className="card pam-panel-card">
+            <ConsentPanel />
+          </div>
+        )}
 
-      {tab === "audit" && (
-        <div className="card pam-panel-card">
-          <AuditTrailPanel />
-        </div>
-      )}
+        {tab === "audit" && (
+          <div className="card pam-panel-card">
+            <AuditTrailPanel />
+          </div>
+        )}
 
-      {tab === "reporting" && (
-        <div className="card pam-panel-card">
-          <ReportingPanel />
-        </div>
-      )}
+        {tab === "reporting" && (
+          <div className="card pam-panel-card">
+            <ReportingPanel />
+          </div>
+        )}
 
-      {tab === "about" && (
-        <div className="card pam-panel-card">
-          <AboutPanel />
-        </div>
-      )}
+        {tab === "about" && (
+          <div className="card pam-panel-card">
+            <AboutPanel />
+          </div>
+        )}
 
-      {tab === "security" && (
-        <div className="card pam-panel-card">
-          <SecurityPanel />
-        </div>
-      )}
+        {tab === "security" && (
+          <div className="card pam-panel-card">
+            <SecurityPanel />
+          </div>
+        )}
+      </React.Suspense>
     </div>
   );
 }

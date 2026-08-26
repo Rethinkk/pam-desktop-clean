@@ -17,10 +17,19 @@ import GuidedStartPage from "./components/GuidedStartPage";
 import AuthGate from "./components/AuthGate";
 import AuthPage from "./components/AuthPage";
 import PublicInfoPage from "./components/PublicInfoPage";
-import AssetRegisterPanel from "./components/AssetRegisterPanel";
-import AssetsPanel from "./components/AssetsPanel";
-import DocumentsPanel from "./components/DocumentsPanel";
-import PeoplePanel from "./components/PeoplePanel";
+
+const LegacyAssetRegisterPanel = React.lazy(() => import("./components/AssetRegisterPanel"));
+const LegacyAssetsPanel = React.lazy(() => import("./components/AssetsPanel"));
+const LegacyDocumentsPanel = React.lazy(() => import("./components/DocumentsPanel"));
+const LegacyPeoplePanel = React.lazy(() => import("./components/PeoplePanel"));
+
+function RouteFallback() {
+  return (
+    <main style={{ color: "#123052", padding: 24 }}>
+      PAM opent dit onderdeel...
+    </main>
+  );
+}
 
 /**
  * ✅ BELANGRIJK:
@@ -44,7 +53,9 @@ function LegacyAssetShell() {
         <section className="stack">
           <h1>Assets</h1>
           {/* Navigeer na aanmaken naar het register */}
-          <AssetsPanel />
+          <React.Suspense fallback={<RouteFallback />}>
+            <LegacyAssetsPanel />
+          </React.Suspense>
         </section>
       )}
 
@@ -53,7 +64,9 @@ function LegacyAssetShell() {
           <h1>Asset register</h1>
           {/* >>> scope zodat alleen dit scherm gestyled wordt <<< */}
           <div className="asset-form-scope">
-            <AssetRegisterPanel />
+            <React.Suspense fallback={<RouteFallback />}>
+              <LegacyAssetRegisterPanel />
+            </React.Suspense>
           </div>
         </section>
       )}
@@ -61,11 +74,17 @@ function LegacyAssetShell() {
       {tab === 'docs' && (
         <section className="stack">
           <h1>Documenten</h1>
-          <DocumentsPanel />
+          <React.Suspense fallback={<RouteFallback />}>
+            <LegacyDocumentsPanel />
+          </React.Suspense>
         </section>
       )}
 
-      {tab === "people" && <PeoplePanel />}
+      {tab === "people" && (
+        <React.Suspense fallback={<RouteFallback />}>
+          <LegacyPeoplePanel />
+        </React.Suspense>
+      )}
 
       {tab === 'about' && (
         <section className="stack">
@@ -161,7 +180,14 @@ export default function App() {
             )}
           />
           {import.meta.env.DEV && (
-            <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
+            <Route
+              path="/debug-asset-register"
+              element={(
+                <React.Suspense fallback={<RouteFallback />}>
+                  <LegacyAssetRegisterPanel />
+                </React.Suspense>
+              )}
+            />
           )}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
