@@ -22,6 +22,7 @@ const ACTION_LABELS: Record<string, string> = {
   consent_receipt_downloaded: "Toestemmingsbewijs gedownload",
   report_downloaded: "Rapportage gedownload",
   export_downloaded: "Export gedownload",
+  backup_restored: "Backup hersteld",
 };
 
 function formatDateTime(value: string) {

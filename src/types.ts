@@ -166,7 +166,8 @@ export type AuditAction =
   | "consent_revoked"
   | "consent_receipt_downloaded"
   | "report_downloaded"
-  | "export_downloaded";
+  | "export_downloaded"
+  | "backup_restored";
 
 export type AuditEvent = {
   id: string;

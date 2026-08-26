@@ -14,6 +14,12 @@ import {
   type SecureMigrationVerification,
   verifyEncryptedMigration,
 } from "../storage/secureMigration";
+import {
+  parsePamBackup,
+  restorePamBackup,
+  summarizePamBackup,
+  type BackupSummary,
+} from "../lib/backupRestore";
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -28,8 +34,12 @@ export default function SecurityPanel() {
   );
   const [message, setMessage] = React.useState("");
   const [cloudMessage, setCloudMessage] = React.useState("");
+  const [restoreFile, setRestoreFile] = React.useState<File | null>(null);
+  const [restoreMessage, setRestoreMessage] = React.useState("");
+  const [restoreSummary, setRestoreSummary] = React.useState<BackupSummary | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [cloudBusy, setCloudBusy] = React.useState(false);
+  const [restoreBusy, setRestoreBusy] = React.useState(false);
 
   const refreshStatus = React.useCallback(async () => {
     const nextStatus = await getSecureMigrationStatus();
@@ -111,6 +121,52 @@ export default function SecurityPanel() {
     }
   }, []);
 
+  const inspectRestoreFile = React.useCallback(async (file: File | null) => {
+    setRestoreFile(file);
+    setRestoreMessage("");
+    setRestoreSummary(null);
+    if (!file) return;
+
+    try {
+      const payload = parsePamBackup(await file.text());
+      const summary = summarizePamBackup(payload);
+      setRestoreSummary(summary);
+      setRestoreMessage(
+        `Backup gelezen: ${summary.assets} assets, ${summary.documents} documenten, ${summary.people} personen, ${summary.consents} toestemmingen.`,
+      );
+    } catch (error: unknown) {
+      setRestoreFile(null);
+      setRestoreMessage(`Backup kan niet worden gelezen: ${getErrorMessage(error)}`);
+    }
+  }, []);
+
+  const runRestore = React.useCallback(async () => {
+    if (!restoreFile) return;
+    const ok = confirm(
+      "Weet je zeker dat je deze backup wilt herstellen? De huidige lokale PAM-data op dit apparaat wordt vervangen.",
+    );
+    if (!ok) return;
+
+    setRestoreBusy(true);
+    setRestoreMessage("");
+    try {
+      const payload = parsePamBackup(await restoreFile.text());
+      const summary = restorePamBackup(payload);
+      setRestoreSummary(summary);
+      setRestoreMessage(
+        `Backup hersteld: ${summary.assets} assets, ${summary.documents} documenten, ${summary.people} personen en ${summary.consents} toestemmingen.`,
+      );
+      await refreshStatus();
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: "PAM-backup hersteld", tone: "success" },
+      }));
+    } catch (error: unknown) {
+      setRestoreMessage(`Herstellen mislukt: ${getErrorMessage(error)}`);
+    } finally {
+      setRestoreBusy(false);
+    }
+  }, [refreshStatus, restoreFile]);
+
   const encryptedCount = status?.encryptedKeys?.length ?? 0;
   const sourceKeys = status?.sourceKeys ?? [];
   const sourceCount = sourceKeys.length;
@@ -189,6 +245,55 @@ export default function SecurityPanel() {
           digitale kluis of op een versleutelde schijf.
         </p>
         <ExportButton className="ui-btn" />
+      </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
+          Back-up herstellen
+        </h2>
+        <p style={{ marginBottom: 12, lineHeight: 1.6 }}>
+          Herstel alleen een PAM-backup die je vertrouwt. Bij herstel worden de
+          huidige lokale assets, documenten, personen, toestemmingen en auditregels
+          op dit apparaat vervangen door de inhoud van het bestand.
+        </p>
+        <div style={{ display: "grid", gap: 10, maxWidth: 620 }}>
+          <input
+            accept="application/json,.json"
+            className="ui-input"
+            onChange={(event) => inspectRestoreFile(event.target.files?.[0] ?? null)}
+            type="file"
+          />
+          {restoreSummary && (
+            <div
+              style={{
+                background: "#F8F5EE",
+                border: "1px solid #DEDCD5",
+                borderRadius: 12,
+                color: "#123052",
+                padding: 12,
+              }}
+            >
+              {restoreSummary.assets} assets · {restoreSummary.documents} documenten ·{" "}
+              {restoreSummary.people} personen · {restoreSummary.consents} toestemmingen ·{" "}
+              {restoreSummary.auditEvents} auditregels
+            </div>
+          )}
+          <div>
+            <button
+              className="ui-btn ui-btn--secondary"
+              disabled={!restoreFile || restoreBusy}
+              onClick={runRestore}
+              type="button"
+            >
+              Backup herstellen
+            </button>
+          </div>
+          {restoreMessage && (
+            <p style={{ color: restoreMessage.includes("mislukt") || restoreMessage.includes("niet") ? "#991b1b" : "#166534", margin: 0 }}>
+              {restoreMessage}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>

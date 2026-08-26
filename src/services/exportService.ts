@@ -5,6 +5,7 @@ import {
   personRepository,
   schemaRepository,
 } from "../storage/repositories";
+import { allAuditEvents } from "../lib/auditTrail";
 
 export type PamExport = {
   app: "PersonalAssetManager";
@@ -15,6 +16,7 @@ export type PamExport = {
   docs: unknown[];
   people: unknown[];
   consents: unknown[];
+  auditTrail: unknown[];
   meta?: Record<string, unknown>;
 };
 
@@ -28,9 +30,11 @@ export function buildPamExport(): PamExport {
     docs: documentRepository.all(),
     people: personRepository.all(),
     consents: consentRepository.all(),
+    auditTrail: allAuditEvents(),
     meta: {
       locale: navigator.language,
       userAgent: navigator.userAgent,
+      exportedBy: "pam-backup",
     },
   };
 }
