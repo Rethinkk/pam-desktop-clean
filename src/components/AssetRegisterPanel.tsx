@@ -405,6 +405,10 @@ function assetNameFromData(data?: Record<string, any>) {
   );
 }
 
+function assetTypeFields(typeDef?: AssetTypeDefinition) {
+  return (typeDef?.fields ?? []).filter((field) => field.key !== "naam" && field.key !== "name");
+}
+
 function isFinalized(row: Row) {
   return row.status === "finalized" || !!row.finalizedAt;
 }
@@ -836,7 +840,17 @@ export default function AssetRegisterPanel() {
   }
 
   function saveAsset() {
-    const errs = validateAsset(schema, typeId, data);
+    const assetNameValue = String(data.naam ?? "").trim();
+    if (!assetNameValue) {
+      setErrors({ naam: "Assetnaam / benaming is verplicht." });
+      window.dispatchEvent(new CustomEvent("pam:toast", {
+        detail: { message: "Vul de assetnaam / benaming in voordat u opslaat.", tone: "warn" },
+      }));
+      return;
+    }
+
+    const normalizedData = { ...data, naam: assetNameValue };
+    const errs = validateAsset(schema, typeId, normalizedData);
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
       window.dispatchEvent(new CustomEvent("pam:toast", {
@@ -857,8 +871,8 @@ export default function AssetRegisterPanel() {
     }
 
     const primaryPerson = people.find((person) => person.id === selectedPersonIds[0]);
-    const assetName = assetNameFromData(data);
-    const legacyFields = legacyFieldsFromData(typeId, data);
+    const assetName = assetNameFromData(normalizedData);
+    const legacyFields = legacyFieldsFromData(typeId, normalizedData);
     const wasEditing = !!editingId;
     const rec = {
       ...(existing ?? {}),
@@ -871,7 +885,7 @@ export default function AssetRegisterPanel() {
       personName: primaryPerson?.label,
       personIds: selectedPersonIds.length ? selectedPersonIds : undefined,
       documentIds: selectedDocumentIds.length ? selectedDocumentIds : undefined,
-      data,
+      data: normalizedData,
       createdAt: existing?.createdAt ?? Date.now(),
       updatedAt: new Date().toISOString(),
     };
@@ -1209,7 +1223,26 @@ export default function AssetRegisterPanel() {
               <div className="text-sm text-gray-600 mb-2">
                 {editingId ? "Asset aanpassen" : "Velden voor"}: <strong>{typeDef.label}</strong>
               </div>
-              <DynamicFieldsFormInline fields={typeDef.fields} value={data} errors={errors} onChange={setData} />
+              <div className={`ui-card p-4 rounded-2xl border shadow-sm ${errors.naam ? "border-red-300" : ""}`}>
+                <label className="block text-sm font-medium mb-1">
+                  Assetnaam / benaming <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="ui-input w-full"
+                  placeholder='Bijv. "MacBook Pro", "Aansprakelijkheidspolis" of "Huurovereenkomst kantoor"'
+                  value={data.naam ?? ""}
+                  onChange={(event) => {
+                    setData((current) => ({ ...current, naam: event.target.value }));
+                    if (errors.naam) setErrors((current) => ({ ...current, naam: "" }));
+                  }}
+                />
+                {errors.naam && <div className="text-red-600 text-sm mt-1">{errors.naam}</div>}
+                <small className="ui-tip">
+                  Geef ieder asset een herkenbare naam. Dit is de naam die terugkomt in het overzicht.
+                </small>
+              </div>
+
+              <DynamicFieldsFormInline fields={assetTypeFields(typeDef)} value={data} errors={errors} onChange={setData} />
 
               <div className="ui-form-grid" style={{ marginTop: 16 }}>
                 <div className="span-2 ui-field" aria-describedby="asset-register-people-tip">

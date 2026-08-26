@@ -183,6 +183,7 @@ export default function AssetsPanel() {
 
       // mirror (nieuw)
       data: {
+        naam: form.name.trim(),
         serial: form.serial.trim() || undefined,
         brand: form.brand.trim() || undefined,
         model: form.model.trim() || undefined,
