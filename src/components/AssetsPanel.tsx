@@ -2,6 +2,7 @@
 import React from "react";
 import { ASSET_TYPES, ASSET_SCHEMAS } from "../config/assetTypes";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
+import { logAuditEvent } from "../lib/auditTrail";
 import { openPamTab } from "../lib/workspaceTabs";
 import { EmptyState } from "./ui/UI";
 
@@ -212,6 +213,19 @@ export default function AssetsPanel() {
         });
         documentRepository.saveAll(nextDocs as any);
       }
+
+      logAuditEvent({
+        action: "asset_created",
+        entityType: "asset",
+        entityId: id,
+        entityLabel: asset.name,
+        summary: `Asset '${asset.name}' aangemaakt via eenvoudige invoer.`,
+        metadata: {
+          type: asset.typeLabel ?? null,
+          peopleCount: form.personIds.length,
+          documentCount: form.documentIds.length,
+        },
+      });
 
       try {
         window.dispatchEvent(new CustomEvent("pam:toast", { detail: { message: "Asset opgeslagen", type: "success" } }));

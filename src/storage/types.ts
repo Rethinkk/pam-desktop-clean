@@ -15,6 +15,7 @@ export type StorageEventName =
   | "pam-docs-updated"
   | "pam-schema-updated"
   | "pam-consents-updated"
+  | "pam-audit-updated"
   | "pam-sync-updated";
 
 export type LocalStoragePort = {

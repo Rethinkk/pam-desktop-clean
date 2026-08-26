@@ -150,3 +150,34 @@ export type ConsentRecord = {
   updatedAt: string;
 };
 
+export type AuditAction =
+  | "asset_created"
+  | "asset_updated"
+  | "asset_finalized"
+  | "asset_deleted"
+  | "document_created"
+  | "document_viewed"
+  | "document_linked"
+  | "document_deleted"
+  | "person_created"
+  | "person_updated"
+  | "person_deleted"
+  | "consent_created"
+  | "consent_revoked"
+  | "consent_receipt_downloaded"
+  | "report_downloaded"
+  | "export_downloaded";
+
+export type AuditEvent = {
+  id: string;
+  action: AuditAction;
+  actorId?: string;
+  actorName?: string;
+  actorEmail?: string;
+  entityType: "asset" | "document" | "person" | "consent" | "report" | "export" | "system";
+  entityId?: string;
+  entityLabel?: string;
+  summary: string;
+  metadata?: Record<string, string | number | boolean | null | string[]>;
+  createdAt: string;
+};

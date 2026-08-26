@@ -12,6 +12,7 @@ import DocumentRegisterPanel from "./DocumentRegisterPanel";
 import ConsentPanel from "./ConsentPanel";
 import SecurityPanel from "./SecurityPanel";
 import AboutPanel from "./AboutPanel"; // ✅ About terug
+import AuditTrailPanel from "./AuditTrailPanel";
 import { Style as UIStyle, ToastHost } from "./ui/UI";
 import { useAuth } from "../auth/AuthContext";
 import {
@@ -303,6 +304,9 @@ export default function AssetShell() {
           <button className={`tab ${tab === "consents" ? "active" : ""}`} onClick={() => setTab("consents")}>
             Toestemming
           </button>
+          <button className={`tab ${tab === "audit" ? "active" : ""}`} onClick={() => setTab("audit")}>
+            Audit trail
+          </button>
           <button className={`tab ${tab === "reporting" ? "active" : ""}`} onClick={() => setTab("reporting")}>
             Rapportage
           </button>
@@ -356,6 +360,12 @@ export default function AssetShell() {
       {tab === "consents" && (
         <div className="card pam-panel-card">
           <ConsentPanel />
+        </div>
+      )}
+
+      {tab === "audit" && (
+        <div className="card pam-panel-card">
+          <AuditTrailPanel />
         </div>
       )}
 

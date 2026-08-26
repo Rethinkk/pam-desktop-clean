@@ -6,6 +6,7 @@ export type PamWorkspaceTab =
   | "doc-register"
   | "people"
   | "consents"
+  | "audit"
   | "reporting"
   | "about"
   | "security";
@@ -20,6 +21,7 @@ export const PAM_ALLOWED_TABS: PamWorkspaceTab[] = [
   "doc-register",
   "people",
   "consents",
+  "audit",
   "reporting",
   "about",
   "security",

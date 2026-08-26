@@ -2,6 +2,7 @@
 import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { logAuditEvent } from "../lib/auditTrail";
 import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 import { EmptyState } from "./ui/UI";
@@ -343,6 +344,7 @@ export default function ReportingPanel() {
     URL.revokeObjectURL(url);
   };
   const exportCsv = () => {
+    const filename = `reporting_${typeof days === "number" ? days + "d" : "all"}${typeFilter !== "all" ? "_" + typeFilter : ""}.csv`;
     const csv = toCsv(
       sorted.map((a) => ({
         id: a.id,
@@ -354,10 +356,14 @@ export default function ReportingPanel() {
         updatedAt: a.updatedAt,
       }))
     );
-    downloadText(
-      `reporting_${typeof days === "number" ? days + "d" : "all"}${typeFilter !== "all" ? "_" + typeFilter : ""}.csv`,
-      csv
-    );
+    downloadText(filename, csv);
+    logAuditEvent({
+      action: "export_downloaded",
+      entityType: "export",
+      entityLabel: filename,
+      summary: `CSV-export '${filename}' gedownload.`,
+      metadata: { rowCount: sorted.length },
+    });
   };
 
   // PDF + mail
@@ -373,8 +379,16 @@ export default function ReportingPanel() {
   };
   const makeTypePdf = () => {
     const t = typeFilter === "all" ? (allTypes[0] ?? "UNKNOWN") : typeFilter;
+    const filename = `rapport_type_${t}.pdf`;
     const blob = buildAssetTypeReport(assets, docs, t);
-    downloadBlob(blob, `rapport_type_${t}.pdf`);
+    downloadBlob(blob, filename);
+    logAuditEvent({
+      action: "report_downloaded",
+      entityType: "report",
+      entityLabel: filename,
+      summary: `Rapportage '${filename}' gedownload.`,
+      metadata: { reportType: "type", type: t },
+    });
   };
   const sendTypePdf = async () => {
     const t = typeFilter === "all" ? (allTypes[0] ?? "UNKNOWN") : typeFilter;
@@ -383,8 +397,16 @@ export default function ReportingPanel() {
     alert(res.ok ? "Verzonden." : `Niet verzonden: ${res.reason || "onbekende fout"}`);
   };
   const makeSelectedPdf = () => {
+    const filename = `rapport_geselecteerd_${selectedIds.length}.pdf`;
     const blob = buildSelectedAssetsReport(assets, docs, selectedIds);
-    downloadBlob(blob, `rapport_geselecteerd_${selectedIds.length}.pdf`);
+    downloadBlob(blob, filename);
+    logAuditEvent({
+      action: "report_downloaded",
+      entityType: "report",
+      entityLabel: filename,
+      summary: `Rapportage '${filename}' gedownload.`,
+      metadata: { reportType: "selected", selectedCount: selectedIds.length },
+    });
   };
   const sendSelectedPdf = async () => {
     const blob = buildSelectedAssetsReport(assets, docs, selectedIds);
@@ -392,8 +414,16 @@ export default function ReportingPanel() {
     alert(res.ok ? "Verzonden." : `Niet verzonden: ${res.reason || "onbekende fout"}`);
   };
   const makeTotalPdf = () => {
+    const filename = `rapport_totaal.pdf`;
     const blob = buildTotalReport(assets, docs, people);
-    downloadBlob(blob, `rapport_totaal.pdf`);
+    downloadBlob(blob, filename);
+    logAuditEvent({
+      action: "report_downloaded",
+      entityType: "report",
+      entityLabel: filename,
+      summary: "Totaalrapport gedownload.",
+      metadata: { reportType: "total", assetCount: assets.length, documentCount: docs.length, peopleCount: people.length },
+    });
   };
   const sendTotalPdf = async () => {
     const blob = buildTotalReport(assets, docs, people);

@@ -1,6 +1,7 @@
 import React from "react";
 
 import { downloadJson } from "../lib/downloadJson";
+import { logAuditEvent } from "../lib/auditTrail";
 import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, consentRepository, documentRepository } from "../storage/repositories";
 import { EmptyState } from "./ui/UI";
@@ -246,6 +247,21 @@ export default function ConsentPanel() {
     };
 
     consentRepository.upsert(consent);
+    logAuditEvent({
+      action: "consent_created",
+      entityType: "consent",
+      entityId: consent.id,
+      entityLabel: consent.professionalName,
+      summary: `Toestemming voor '${consent.professionalName}' vastgelegd.`,
+      metadata: {
+        role: consent.role,
+        rights: consent.accessRights,
+        assetScope: consent.assetScope,
+        assetCount: consent.assetIds.length,
+        documentScope: consent.documentScope,
+        documentCount: consent.documentIds.length,
+      },
+    });
     setForm(EMPTY_FORM);
     refresh();
     window.dispatchEvent(
@@ -258,6 +274,13 @@ export default function ConsentPanel() {
   function revokeConsent(id: string) {
     const revoked = consentRepository.revoke(id);
     if (revoked) {
+      logAuditEvent({
+        action: "consent_revoked",
+        entityType: "consent",
+        entityId: revoked.id,
+        entityLabel: revoked.professionalName,
+        summary: `Toestemming voor '${revoked.professionalName}' ingetrokken.`,
+      });
       refresh();
       window.dispatchEvent(
         new CustomEvent("pam:toast", {
@@ -269,6 +292,13 @@ export default function ConsentPanel() {
 
   function downloadConsentReceipt(consent: ConsentRecord) {
     const date = new Date().toISOString().slice(0, 10);
+    logAuditEvent({
+      action: "consent_receipt_downloaded",
+      entityType: "consent",
+      entityId: consent.id,
+      entityLabel: consent.professionalName,
+      summary: `Toestemmingsbewijs voor '${consent.professionalName}' gedownload.`,
+    });
     downloadJson(`pam-toestemming-${date}-${consent.id}.json`, {
       type: "pam.consent.receipt.v1",
       exportedAt: new Date().toISOString(),

@@ -1,6 +1,7 @@
 /* @ts-nocheck */
 import React from "react";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
+import { logAuditEvent } from "../lib/auditTrail";
 import { openPamTab } from "../lib/workspaceTabs";
 import { EmptyState } from "./ui/UI";
 
@@ -256,6 +257,17 @@ export default function PeoplePanel() {
     if (form.assetIds.length) {
       updatePersonAssetLinks(person.id, person.fullName, form.assetIds);
     }
+    logAuditEvent({
+      action: "person_created",
+      entityType: "person",
+      entityId: person.id,
+      entityLabel: person.fullName,
+      summary: `Persoon '${person.fullName}' aangemaakt.`,
+      metadata: {
+        role: person.role,
+        assetCount: form.assetIds.length,
+      },
+    });
 
     // ✅ bevestiging alleen hier bij opslaan
     window.dispatchEvent(new CustomEvent("pam:toast", {
@@ -320,6 +332,7 @@ export default function PeoplePanel() {
   }
 
   function handleDelete(id: string) {
+    const row = rows.find((person) => person.id === id);
     if (!confirm("Weet je zeker dat je deze persoon wilt verwijderen?")) return;
 
     let removed = false;
@@ -341,6 +354,13 @@ export default function PeoplePanel() {
 
     // 4) Toast alleen hier en alleen bij succes
     if (removed) {
+      logAuditEvent({
+        action: "person_deleted",
+        entityType: "person",
+        entityId: id,
+        entityLabel: row?.fullName || row?.name,
+        summary: `Persoon '${row?.fullName || row?.name || id}' verwijderd.`,
+      });
       window.dispatchEvent(new CustomEvent("pam:toast", {
         detail: { message: "Persoon verwijderd", tone: "info" }
       }));
@@ -363,6 +383,16 @@ export default function PeoplePanel() {
     const current = assetLinksByPerson[person.id] ?? [];
     const next = toggleId(current, assetId);
     updatePersonAssetLinks(person.id, person.fullName || person.name || "", next);
+    logAuditEvent({
+      action: "person_updated",
+      entityType: "person",
+      entityId: person.id,
+      entityLabel: person.fullName || person.name,
+      summary: `Asset-koppeling voor persoon '${person.fullName || person.name}' bijgewerkt.`,
+      metadata: {
+        assetCount: next.length,
+      },
+    });
 
     window.dispatchEvent(new CustomEvent("pam:toast", {
       detail: { message: "Assetkoppeling bijgewerkt", tone: "success" }

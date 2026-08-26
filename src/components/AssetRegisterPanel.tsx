@@ -6,6 +6,7 @@ import {
   type AssetSchema,
   type AssetTypeDefinition,
 } from "../config/assetSchema";
+import { logAuditEvent } from "../lib/auditTrail";
 import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 import { EmptyState } from "./ui/UI";
@@ -725,6 +726,13 @@ export default function AssetRegisterPanel() {
     try {
       const next = assetRepository.load().assets.filter((a: any) => a.id !== id);
       assetRepository.save({ assets: next });
+      logAuditEvent({
+        action: "asset_deleted",
+        entityType: "asset",
+        entityId: id,
+        entityLabel: row ? registerAssetName(row) : undefined,
+        summary: `Asset '${row ? registerAssetName(row) : id}' verwijderd.`,
+      });
     } catch {}
 
     setRows((r) => r.filter((x) => x.id !== id));
@@ -905,6 +913,18 @@ export default function AssetRegisterPanel() {
     }
 
     syncDocumentAssetLinks(rec.id, combinedDocumentIds);
+    logAuditEvent({
+      action: wasEditing ? "asset_updated" : "asset_created",
+      entityType: "asset",
+      entityId: rec.id,
+      entityLabel: rec.name,
+      summary: `Asset '${rec.name}' ${wasEditing ? "aangepast" : "aangemaakt"}.`,
+      metadata: {
+        type: rec.typeLabel ?? rec.typeId ?? null,
+        peopleCount: selectedPersonIds.length,
+        documentCount: combinedDocumentIds.length,
+      },
+    });
     load();
     resetForm();
 
@@ -946,6 +966,13 @@ export default function AssetRegisterPanel() {
         : asset,
     );
     assetRepository.save({ assets: next });
+    logAuditEvent({
+      action: "asset_finalized",
+      entityType: "asset",
+      entityId: id,
+      entityLabel: row.name ?? row.data?.naam ?? row.assetNumber,
+      summary: `Asset '${row.name ?? row.data?.naam ?? row.assetNumber ?? id}' vastgelegd.`,
+    });
     if (editingId === id) resetForm();
     load();
     window.dispatchEvent(new CustomEvent("pam:toast", {

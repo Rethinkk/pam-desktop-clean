@@ -1,5 +1,6 @@
 /* @ts-nocheck */
 import React from "react";
+import { logAuditEvent } from "../lib/auditTrail";
 import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, documentRepository } from "../storage/repositories";
 import { loadAssetSchema } from "../config/assetSchema";
@@ -264,8 +265,16 @@ export default function DocumentRegisterPanel() {
   }
 
   function handleDelete(id: string) {
+    const row = rows.find((document) => document.id === id);
     if (!confirm("Weet je zeker dat je dit document wilt verwijderen?")) return;
     persistDelete(id);
+    logAuditEvent({
+      action: "document_deleted",
+      entityType: "document",
+      entityId: id,
+      entityLabel: row?.title,
+      summary: `Document '${row?.title ?? id}' verwijderd.`,
+    });
     setRows((r) => r.filter((x) => x.id !== id));
     if (selectedId === id) setSelectedId(null);
 
@@ -304,6 +313,17 @@ export default function DocumentRegisterPanel() {
 
   function toggleSort(key: keyof DocRow | "status") {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
+  }
+
+  function selectDocument(row: DocRow) {
+    setSelectedId(row.id);
+    logAuditEvent({
+      action: "document_viewed",
+      entityType: "document",
+      entityId: row.id,
+      entityLabel: row.title,
+      summary: `Document '${row.title}' bekeken.`,
+    });
   }
 
   return (
@@ -350,7 +370,7 @@ export default function DocumentRegisterPanel() {
               return (
                 <tr
                   key={r.id}
-                  onClick={() => setSelectedId(r.id)}
+                  onClick={() => selectDocument(r)}
                   style={{ cursor: "pointer" }}
                 >
                   <td>{r.title}</td>
@@ -377,7 +397,7 @@ export default function DocumentRegisterPanel() {
                       className="ui-btn ui-btn--sm"
                       onClick={(event) => {
                         event.stopPropagation();
-                        setSelectedId(r.id);
+                        selectDocument(r);
                       }}
                     >
                       Bekijken
@@ -487,6 +507,16 @@ function DocumentPreview({
       };
     });
     assetRepository.save({ assets: nextAssets });
+    logAuditEvent({
+      action: "document_linked",
+      entityType: "document",
+      entityId: row.id,
+      entityLabel: row.title,
+      summary: `Asset-koppeling voor document '${row.title}' bijgewerkt.`,
+      metadata: {
+        assetCount: selectedAssetIds.length,
+      },
+    });
     onUpdated();
     window.dispatchEvent(new CustomEvent("pam:toast", {
       detail: { message: "Documentkoppeling bijgewerkt", tone: "success" },

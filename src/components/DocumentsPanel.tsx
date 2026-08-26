@@ -1,5 +1,6 @@
 import React from "react";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
+import { logAuditEvent } from "../lib/auditTrail";
 import { openPamTab } from "../lib/workspaceTabs";
 import { EmptyState } from "./ui/UI";
 
@@ -143,6 +144,19 @@ export default function DocumentsPanel() {
       });
       assetRepository.save({ assets: nextAssets });
     }
+    logAuditEvent({
+      action: "document_created",
+      entityType: "document",
+      entityId: id,
+      entityLabel: doc.title,
+      summary: `Document '${doc.title}' aangemaakt.`,
+      metadata: {
+        type: doc.type,
+        hasFile: Boolean(doc.fileDataUrl),
+        assetCount: doc.assetIds.length,
+        personLinked: Boolean(doc.ownerId),
+      },
+    });
     setDocCount((current) => current + 1);
 
     window.dispatchEvent(
@@ -331,4 +345,3 @@ export default function DocumentsPanel() {
     </div>
   );
 }
-
