@@ -1,6 +1,6 @@
 /* @ts-nocheck */
 import React, { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // 👇 UI-kit centraal activeren (let op het pad vanaf src/)
 import { Style } from "./components/ui/UI";
@@ -152,8 +152,18 @@ export default function App() {
               </AuthGate>
             )}
           />
-          <Route path="/legacy" element={<LegacyAssetShell />} />
-          <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
+          <Route
+            path="/legacy"
+            element={(
+              <AuthGate>
+                <LegacyAssetShell />
+              </AuthGate>
+            )}
+          />
+          {import.meta.env.DEV && (
+            <Route path="/debug-asset-register" element={<AssetRegisterPanel />} />
+          )}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
         {/* Badge alleen in DEV */}
