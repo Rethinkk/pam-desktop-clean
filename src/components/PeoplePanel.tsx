@@ -2,6 +2,8 @@
 import React from "react";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 import { logAuditEvent } from "../lib/auditTrail";
+import { buildPersonContextExport, contextExportFilename } from "../lib/contextExport";
+import { downloadJson } from "../lib/downloadJson";
 import { openPamTab } from "../lib/workspaceTabs";
 import { EmptyState } from "./ui/UI";
 
@@ -432,6 +434,25 @@ export default function PeoplePanel() {
     return documentsByPerson[person.id] ?? [];
   }
 
+  function exportPersonContext(person: Row) {
+    const label = person.fullName || person.name || "persoon";
+    const payload = buildPersonContextExport(person.id);
+    if (!payload) return;
+    downloadJson(contextExportFilename("persoon", label), payload);
+    logAuditEvent({
+      action: "export_downloaded",
+      entityType: "person",
+      entityId: person.id,
+      entityLabel: label,
+      summary: `Context-export voor persoon '${label}' gedownload.`,
+      metadata: {
+        context: "person",
+        assetCount: payload.counts.assets,
+        documentCount: payload.counts.documents,
+      },
+    });
+  }
+
   function renderAssetBadges(person: Row) {
     const linkedAssets = linkedAssetsForPerson(person);
     if (!linkedAssets.length) return <span className="ui-muted">Geen assets gekoppeld</span>;
@@ -640,6 +661,7 @@ export default function PeoplePanel() {
             assetLinks={assetLinksByPerson[selected.id] ?? []}
             documents={linkedDocumentsForPerson(selected)}
             onClose={() => setSelectedId(null)}
+            onExport={() => exportPersonContext(selected)}
             onToggleAsset={(assetId) => toggleExistingPersonAsset(selected, assetId)}
             person={selected}
           />
@@ -654,6 +676,7 @@ function PersonDetail({
   assetLinks,
   documents,
   onClose,
+  onExport,
   onToggleAsset,
   person,
 }: {
@@ -661,6 +684,7 @@ function PersonDetail({
   assetLinks: string[];
   documents: DocumentOption[];
   onClose: () => void;
+  onExport: () => void;
   onToggleAsset: (assetId: string) => void;
   person: Row;
 }) {
@@ -674,9 +698,14 @@ function PersonDetail({
           <h2 className="ui-h2" style={{ marginBottom: 4 }}>{person.fullName || person.name}</h2>
           <div className="ui-muted">{roleLabel(person.role) || "Geen rol vastgelegd"}</div>
         </div>
-        <button className="ui-btn ui-btn--sm" type="button" onClick={onClose}>
-          Sluiten
-        </button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
+          <button className="ui-btn ui-btn--secondary ui-btn--sm" type="button" onClick={onExport}>
+            Context exporteren
+          </button>
+          <button className="ui-btn ui-btn--sm" type="button" onClick={onClose}>
+            Sluiten
+          </button>
+        </div>
       </div>
 
       <div className="ui-grid cols-4" style={{ marginTop: 16 }}>

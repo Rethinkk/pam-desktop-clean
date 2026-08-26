@@ -1,6 +1,8 @@
 /* @ts-nocheck */
 import React from "react";
 import { logAuditEvent } from "../lib/auditTrail";
+import { buildDocumentContextExport, contextExportFilename } from "../lib/contextExport";
+import { downloadJson } from "../lib/downloadJson";
 import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, documentRepository } from "../storage/repositories";
 import { loadAssetSchema } from "../config/assetSchema";
@@ -523,6 +525,25 @@ function DocumentPreview({
     }));
   }
 
+  function exportDocumentContext() {
+    const label = row.title || row.fileName || "document";
+    const payload = buildDocumentContextExport(row.id);
+    if (!payload) return;
+    downloadJson(contextExportFilename("document", label), payload);
+    logAuditEvent({
+      action: "export_downloaded",
+      entityType: "document",
+      entityId: row.id,
+      entityLabel: label,
+      summary: `Context-export voor document '${label}' gedownload.`,
+      metadata: {
+        context: "document",
+        assetCount: payload.counts.assets,
+        personCount: payload.counts.people,
+      },
+    });
+  }
+
   return (
     <div className="ui-card" style={{ marginTop: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
@@ -531,7 +552,12 @@ function DocumentPreview({
           <h2 className="ui-h2" style={{ marginBottom: 4 }}>{row.title}</h2>
           <div className="ui-muted">{[row.type, row.fileName].filter(Boolean).join(" — ") || "Document"}</div>
         </div>
-        <button className="ui-btn ui-btn--sm" onClick={onClose}>Sluiten</button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
+          <button className="ui-btn ui-btn--secondary ui-btn--sm" type="button" onClick={exportDocumentContext}>
+            Context exporteren
+          </button>
+          <button className="ui-btn ui-btn--sm" onClick={onClose}>Sluiten</button>
+        </div>
       </div>
 
       <div className="ui-grid cols-4" style={{ marginTop: 16 }}>

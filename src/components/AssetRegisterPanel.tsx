@@ -7,6 +7,8 @@ import {
   type AssetTypeDefinition,
 } from "../config/assetSchema";
 import { logAuditEvent } from "../lib/auditTrail";
+import { buildAssetContextExport, contextExportFilename } from "../lib/contextExport";
+import { downloadJson } from "../lib/downloadJson";
 import { openPamTab } from "../lib/workspaceTabs";
 import { assetRepository, documentRepository, personRepository } from "../storage/repositories";
 import { EmptyState } from "./ui/UI";
@@ -1097,6 +1099,25 @@ export default function AssetRegisterPanel() {
     );
   }
 
+  function exportAssetContext(row: Row) {
+    const label = row.name || row.data?.naam || row.data?.titel || row.assetNumber || "asset";
+    const payload = buildAssetContextExport(row.id);
+    if (!payload) return;
+    downloadJson(contextExportFilename("asset", label), payload);
+    logAuditEvent({
+      action: "export_downloaded",
+      entityType: "asset",
+      entityId: row.id,
+      entityLabel: label,
+      summary: `Context-export voor asset '${label}' gedownload.`,
+      metadata: {
+        context: "asset",
+        documentCount: payload.counts.documents,
+        personCount: payload.counts.people,
+      },
+    });
+  }
+
   function renderAssetDetails(row: Row) {
     const entries = detailEntriesForRow(schema, row, LABELS_FROM_SCHEMA);
     const typeLabel = resolveType(schema, row)?.label || row.typeLabel || row.type || "Onbekend type";
@@ -1130,9 +1151,14 @@ export default function AssetRegisterPanel() {
               {typeLabel} · {isFinalized(row) ? "Vastgelegd" : "Concept"}
             </span>
           </div>
-          <button className="ui-btn ui-btn--sm" onClick={() => setExpandedId(null)}>
-            Sluiten
-          </button>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
+            <button className="ui-btn ui-btn--secondary ui-btn--sm" type="button" onClick={() => exportAssetContext(row)}>
+              Context exporteren
+            </button>
+            <button className="ui-btn ui-btn--sm" onClick={() => setExpandedId(null)}>
+              Sluiten
+            </button>
+          </div>
         </div>
 
         <div
