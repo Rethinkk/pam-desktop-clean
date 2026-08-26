@@ -15,3 +15,5 @@ backups/
 .env.*.local
 server/data/*.json
 server/data/*.jsonl
+playwright-report/
+test-results/
