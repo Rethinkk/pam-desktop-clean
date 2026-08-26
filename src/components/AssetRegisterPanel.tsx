@@ -319,6 +319,22 @@ function valueFromRow(row: Row, key: string) {
   return "";
 }
 
+function registerAssetName(row: Row) {
+  return (
+    row.name ||
+    row.data?.naam ||
+    row.data?.titel ||
+    row.data?.omschrijving ||
+    row.data?.object ||
+    row.assetNumber ||
+    "Asset zonder naam"
+  );
+}
+
+function registerAssetType(schema: AssetSchema, row: Row) {
+  return resolveType(schema, row)?.label || row.typeLabel || row.type || "Onbekend type";
+}
+
 function fieldTypeForKey(schema: AssetSchema, key: string) {
   for (const type of schema.types) {
     const field = type.fields.find((item) => item.key === key);
@@ -458,6 +474,13 @@ function formatMetaDate(value: any) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+}
+
+function formatRegisterDate(value: any) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(date);
 }
 
 function detailEntriesForRow(schema: AssetSchema, row: Row, labelMap: Record<string, string>) {
@@ -1109,55 +1132,22 @@ export default function AssetRegisterPanel() {
     );
   }
 
-  // Kolommen: toon kandidaten die voorkomen + altijd name/type + altijd Details
-  const TABLE_KEYS: string[] = React.useMemo(() => {
-    const present = new Set<string>();
-    for (const r of rows) {
-      for (const k of CANDIDATE_KEYS) {
-        const val = valueFromRow(r, k);
-        if (val !== "" && val !== undefined && val !== null) present.add(k);
-      }
-    }
-    present.add("name");
-    present.add("typeLabel");
-    present.add(PSEUDO_STATUS);
-    present.add(PSEUDO_COMPLETENESS);
-    present.add(PSEUDO_PEOPLE);
-    present.add(PSEUDO_DOCUMENTS);
-    present.add(PSEUDO_DETAILS); // altijd samenvatting
-    return Array.from(present);
-  }, [rows, CANDIDATE_KEYS]);
-
-  const colLabel = (key: string) =>
-    LABELS_FROM_SCHEMA[key] ||
-    (key === "name"
-      ? "Naam"
-      : key === "typeLabel"
-        ? "Type"
-        : key === PSEUDO_STATUS
-          ? "Status"
-          : key === PSEUDO_COMPLETENESS
-            ? "Compleetheid"
-            : key === PSEUDO_PEOPLE
-              ? "Mensen"
-              : key === PSEUDO_DOCUMENTS
-                ? "Documenten"
-                : key === PSEUDO_DETAILS
-                  ? "Details"
-                  : String(key));
+  const REGISTER_COL_SPAN = 7;
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
-    const SEARCH_KEYS = Array.from(new Set([...TABLE_KEYS, "type", "notes", "brand", "model", "serial"]));
+    const SEARCH_KEYS = Array.from(new Set([...CANDIDATE_KEYS, "type", "typeLabel", "name", "notes", "brand", "model", "serial"]));
 
     let out = !needle
       ? rows
       : rows.filter((r) =>
           [
             ...SEARCH_KEYS
-            .filter((k) => k !== PSEUDO_DETAILS) // details is afgeleid
             .map((k) => valueFromRow(r, k))
             .filter(Boolean),
+            registerAssetName(r),
+            registerAssetType(schema, r),
+            formatRegisterDate(r.createdAt),
             ...personNamesForRow(r),
             ...documentNamesForRow(r),
             completenessForRow(r).label,
@@ -1167,6 +1157,9 @@ export default function AssetRegisterPanel() {
         );
 
     out = [...out].sort((a, b) => {
+      if (sort.key === "createdAt") return cmp(a.createdAt, b.createdAt, sort.dir);
+      if (sort.key === "name") return cmp(registerAssetName(a), registerAssetName(b), sort.dir);
+      if (sort.key === "typeLabel") return cmp(registerAssetType(schema, a), registerAssetType(schema, b), sort.dir);
       if ([PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_DOCUMENTS, PSEUDO_COMPLETENESS, PSEUDO_STATUS].includes(sort.key)) return 0; // niet sorteren op afgeleide kolommen
       const A = valueFromRow(a, sort.key);
       const B = valueFromRow(b, sort.key);
@@ -1179,7 +1172,7 @@ export default function AssetRegisterPanel() {
     });
 
     return out;
-  }, [rows, q, sort, TABLE_KEYS, people, documents]);
+  }, [rows, q, sort, CANDIDATE_KEYS, people, documents, schema]);
 
   return (
     <div className="ui-page">
@@ -1326,16 +1319,12 @@ export default function AssetRegisterPanel() {
         <table className="ui-table">
           <thead>
             <tr>
-              {TABLE_KEYS.map((k) => (
-                <th
-                  key={String(k)}
-                  onClick={() =>
-                    ![PSEUDO_DETAILS, PSEUDO_PEOPLE, PSEUDO_DOCUMENTS, PSEUDO_COMPLETENESS, PSEUDO_STATUS].includes(k) && toggleSort(k)
-                  }
-                >
-                  {colLabel(k)}
-                </th>
-              ))}
+              <th onClick={() => toggleSort("typeLabel")}>Type asset</th>
+              <th onClick={() => toggleSort("name")}>Naam</th>
+              <th onClick={() => toggleSort("createdAt")}>Invoerdatum</th>
+              <th>Status</th>
+              <th>Mensen</th>
+              <th>Documenten</th>
               <th>Acties</th>
             </tr>
           </thead>
@@ -1348,39 +1337,12 @@ export default function AssetRegisterPanel() {
                   style={{ cursor: "pointer" }}
                   title="Klik om alle gegevens te bekijken"
                 >
-                  {TABLE_KEYS.map((k) => {
-                    if (k === PSEUDO_STATUS) {
-                      return <td key={k}>{renderStatus(r)}</td>;
-                    }
-
-                    if (k === PSEUDO_PEOPLE) {
-                      return <td key={k}>{renderPeople(r)}</td>;
-                    }
-
-                    if (k === PSEUDO_COMPLETENESS) {
-                      return <td key={k}>{renderCompleteness(r)}</td>;
-                    }
-
-                    if (k === PSEUDO_DOCUMENTS) {
-                      return <td key={k}>{renderDocuments(r)}</td>;
-                    }
-
-                    if (k === PSEUDO_DETAILS) {
-                      return <td key={k}>{summarizeRow(schema, r, LABELS_FROM_SCHEMA)}</td>;
-                    }
-
-                    const rawVal = valueFromRow(r, k);
-                    let cell = rawVal ?? "";
-                    const fieldType = fieldTypeForKey(schema, k);
-
-                    if (k === "priceCents") cell = formatPrice(rawVal);
-                    if (fieldType === "currency") cell = formatDetailValue(rawVal, fieldType, k);
-                    if (rawVal && typeof rawVal === "object" && rawVal.name && rawVal.size) {
-                      cell = `${rawVal.name} (${Math.round(rawVal.size / 1024)} kB)`;
-                    }
-
-                    return <td key={String(k)}>{cell}</td>;
-                  })}
+                  <td>{registerAssetType(schema, r)}</td>
+                  <td><strong>{registerAssetName(r)}</strong></td>
+                  <td>{formatRegisterDate(r.createdAt)}</td>
+                  <td>{renderStatus(r)}</td>
+                  <td>{renderPeople(r)}</td>
+                  <td>{renderDocuments(r)}</td>
                   <td onClick={(event) => event.stopPropagation()}>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minWidth: 220 }}>
                       {isFinalized(r) ? (
@@ -1412,7 +1374,7 @@ export default function AssetRegisterPanel() {
                 </tr>
                 {expandedId === r.id && (
                   <tr>
-                    <td colSpan={TABLE_KEYS.length + 1} style={{ background: "#FCFBF8", padding: 14 }}>
+                    <td colSpan={REGISTER_COL_SPAN} style={{ background: "#FCFBF8", padding: 14 }}>
                       {renderAssetDetails(r)}
                     </td>
                   </tr>
@@ -1421,7 +1383,7 @@ export default function AssetRegisterPanel() {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={TABLE_KEYS.length + 1}>
+                <td colSpan={REGISTER_COL_SPAN}>
                   <em>
                     {rows.length === 0
                       ? "Nog geen assets vastgelegd."
