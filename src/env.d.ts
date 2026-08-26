@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
   readonly VITE_STORAGE_KEY?: string;
   readonly VITE_SECURE_LOCAL_STORAGE?: string;
+  readonly VITE_PAM_DATA_RESIDENCY?: string;
   readonly VITE_CLOUD_SYNC_ENABLED?: string;
   readonly VITE_CLOUD_PROVIDER?: string;
   readonly VITE_CLOUD_SYNC_ENDPOINT?: string;

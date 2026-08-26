@@ -85,6 +85,9 @@ try {
   assert.equal(registered.response.status, 200);
   assert.equal(registered.body.ok, true);
   assert.equal(registered.body.user.email, "pam.tester@example.nl");
+  assert.equal(registered.body.user.dataResidency, "eu");
+  assert.equal(registered.body.user.cloudProvider, "scaleway-eu");
+  assert.equal(registered.body.user.regionPolicy, "eu-only");
   assert.match(registered.setCookie ?? "", /pam_session=/);
   assert.match(registered.setCookie ?? "", /HttpOnly/);
 
@@ -162,13 +165,41 @@ try {
     body: JSON.stringify({ records: [] }),
   });
   assert.equal(blockedRegion.response.status, 400);
-  assert.equal(blockedRegion.body.error, "PAM requires eu-only region policy.");
+  assert.equal(blockedRegion.body.error, "Cloud provider does not match region policy.");
+
+  const wrongWorkspaceRoute = await request(baseUrl, "/api/pam/sync/push", {
+    headers: {
+      Cookie: passwordLogin.setCookie?.split(";")[0] ?? "",
+      "Content-Type": "application/json",
+      "X-PAM-Cloud-Provider": "exoscale-ch",
+      "X-PAM-Region-Policy": "ch-only",
+    },
+    body: JSON.stringify({ records: [] }),
+  });
+  assert.equal(wrongWorkspaceRoute.response.status, 403);
+  assert.equal(wrongWorkspaceRoute.body.error, "Cloud route does not match this workspace.");
+
+  const swissRegistered = await request(baseUrl, "/api/pam/auth/register", {
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "Swiss Pam Tester",
+      email: "pam.swiss@example.ch",
+      password: "veilig-wachtwoord-123",
+      dataResidency: "ch",
+      cloudProvider: "exoscale-ch",
+      regionPolicy: "ch-only",
+    }),
+  });
+  assert.equal(swissRegistered.response.status, 200);
+  assert.equal(swissRegistered.body.user.dataResidency, "ch");
+  assert.equal(swissRegistered.body.user.cloudProvider, "exoscale-ch");
+  assert.equal(swissRegistered.body.user.regionPolicy, "ch-only");
 
   const invalidShape = await request(baseUrl, "/api/pam/sync/push", {
     headers: {
       Cookie: cookie,
       "Content-Type": "application/json",
-      "X-PAM-Cloud-Provider": "ovhcloud-eu",
+      "X-PAM-Cloud-Provider": "scaleway-eu",
       "X-PAM-Region-Policy": "eu-only",
     },
     body: JSON.stringify({ records: [{ id: "bad" }] }),

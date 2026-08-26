@@ -15,8 +15,20 @@ const COOKIE_NAME = "pam_session";
 const USERS_FILE = join(DATA_DIR, "users.json");
 const RECORDS_FILE = join(DATA_DIR, "encrypted-records.json");
 const EVENTS_FILE = join(DATA_DIR, "sync-events.jsonl");
-const ALLOWED_PROVIDERS = new Set(["ovhcloud-eu", "scaleway-eu", "custom-eu"]);
+const ALLOWED_PROVIDERS = new Set(["ovhcloud-eu", "scaleway-eu", "custom-eu", "exoscale-ch", "custom-ch"]);
 const PASSWORD_KEY_LENGTH = 64;
+const RESIDENCY_PROFILES = {
+  eu: {
+    dataResidency: "eu",
+    cloudProvider: "scaleway-eu",
+    regionPolicy: "eu-only",
+  },
+  ch: {
+    dataResidency: "ch",
+    cloudProvider: "exoscale-ch",
+    regionPolicy: "ch-only",
+  },
+};
 
 function assertConfigured() {
   if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
@@ -180,6 +192,24 @@ function hashPassword(password, salt = randomBytes(16).toString("base64url")) {
   return { salt, hash };
 }
 
+function normalizeDataResidency(value) {
+  return value === "ch" ? "ch" : "eu";
+}
+
+function profileForResidency(value) {
+  return RESIDENCY_PROFILES[normalizeDataResidency(value)];
+}
+
+function isProviderAllowedForPolicy(provider, regionPolicy) {
+  if (regionPolicy === "eu-only") {
+    return ["ovhcloud-eu", "scaleway-eu", "custom-eu"].includes(provider);
+  }
+  if (regionPolicy === "ch-only") {
+    return ["exoscale-ch", "custom-ch"].includes(provider);
+  }
+  return false;
+}
+
 function isPasswordMatch(password, user) {
   const { hash } = hashPassword(password, user.passwordSalt);
   const expected = Buffer.from(user.passwordHash);
@@ -188,11 +218,16 @@ function isPasswordMatch(password, user) {
 }
 
 function publicUser(user) {
+  const profile = profileForResidency(user.dataResidency);
   return {
     id: user.id,
+    workspaceId: user.workspaceId ?? user.vaultId,
     vaultId: user.vaultId,
     name: user.name,
     email: user.email,
+    dataResidency: user.dataResidency ?? profile.dataResidency,
+    cloudProvider: user.cloudProvider ?? profile.cloudProvider,
+    regionPolicy: user.regionPolicy ?? profile.regionPolicy,
     createdAt: user.createdAt,
   };
 }
@@ -216,7 +251,9 @@ async function handleDevLogin(request, response, headers) {
   const now = Date.now();
   const session = {
     userId: "dev-user",
+    workspaceId: "dev-workspace",
     vaultId: "dev-vault",
+    dataResidency: "eu",
     exp: now + 1000 * 60 * 60 * 8,
   };
 
@@ -235,7 +272,9 @@ async function createAuthSession(user, response, headers) {
   const now = Date.now();
   const session = {
     userId: user.id,
+    workspaceId: user.workspaceId ?? user.vaultId,
     vaultId: user.vaultId,
+    dataResidency: normalizeDataResidency(user.dataResidency),
     exp: now + 1000 * 60 * 60 * 8,
   };
 
@@ -255,10 +294,17 @@ async function handleRegister(request, response, headers) {
   const name = String(body.name ?? "").trim();
   const email = normalizeEmail(body.email);
   const password = String(body.password ?? "");
+  const profile = profileForResidency(body.dataResidency);
+  const cloudProvider = String(body.cloudProvider ?? profile.cloudProvider);
+  const regionPolicy = String(body.regionPolicy ?? profile.regionPolicy);
 
   if (!name) return reject(response, 400, "Name is required.", headers);
   if (!email.includes("@")) return reject(response, 400, "Valid email is required.", headers);
   if (password.length < 10) return reject(response, 400, "Password must be at least 10 characters.", headers);
+  if (!ALLOWED_PROVIDERS.has(cloudProvider)) return reject(response, 400, "Unsupported cloud provider.", headers);
+  if (!isProviderAllowedForPolicy(cloudProvider, regionPolicy)) {
+    return reject(response, 400, "Cloud provider does not match the selected data residency.", headers);
+  }
 
   const store = await readUserStore();
   if (store.users.some((user) => user.email === email)) {
@@ -269,9 +315,13 @@ async function handleRegister(request, response, headers) {
   const now = new Date().toISOString();
   const user = {
     id: randomUUID(),
+    workspaceId: randomUUID(),
     vaultId: randomUUID(),
     name,
     email,
+    dataResidency: profile.dataResidency,
+    cloudProvider,
+    regionPolicy,
     createdAt: now,
     passwordSalt: passwordResult.salt,
     passwordHash: passwordResult.hash,
@@ -284,6 +334,9 @@ async function handleRegister(request, response, headers) {
     vaultId: user.vaultId,
     userId: user.id,
     type: "auth.register",
+    dataResidency: user.dataResidency,
+    cloudProvider: user.cloudProvider,
+    regionPolicy: user.regionPolicy,
     createdAt: now,
   });
   await createAuthSession(user, response, headers);
@@ -324,9 +377,13 @@ async function handleSession(request, response, headers) {
       authenticated: true,
       user: {
         id: session.userId,
+        workspaceId: session.workspaceId ?? session.vaultId,
         vaultId: session.vaultId,
         name: "PAM Dev User",
         email: "dev@pam.local",
+        dataResidency: "eu",
+        cloudProvider: "scaleway-eu",
+        regionPolicy: "eu-only",
         createdAt: new Date().toISOString(),
       },
     }, headers);
@@ -359,13 +416,22 @@ async function handleSyncPush(request, response, headers) {
   if (!ALLOWED_PROVIDERS.has(String(provider))) {
     return reject(response, 400, "Unsupported cloud provider.", headers);
   }
-  if (regionPolicy !== "eu-only") {
-    return reject(response, 400, "PAM requires eu-only region policy.", headers);
+  if (!isProviderAllowedForPolicy(String(provider), String(regionPolicy))) {
+    return reject(response, 400, "Cloud provider does not match region policy.", headers);
   }
 
   const session = getSession(request);
   if (!session) {
     return reject(response, 401, "Authentication required.", headers);
+  }
+
+  const users = await readUserStore();
+  const user = users.users.find((candidate) => candidate.id === session.userId);
+  if (user) {
+    const publicSessionUser = publicUser(user);
+    if (provider !== publicSessionUser.cloudProvider || regionPolicy !== publicSessionUser.regionPolicy) {
+      return reject(response, 403, "Cloud route does not match this workspace.", headers);
+    }
   }
 
   const body = await readJsonBody(request);
@@ -406,6 +472,7 @@ async function handleSyncPush(request, response, headers) {
     uploadedCount: body.records.length,
     provider,
     regionPolicy,
+    dataResidency: user ? publicUser(user).dataResidency : session.dataResidency,
     createdAt: now,
   });
 

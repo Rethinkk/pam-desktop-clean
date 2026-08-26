@@ -2,17 +2,29 @@
 
 Status: implementation checklist
 
-PAM's production web app should be local-first, encrypted by default and backed by European cloud infrastructure.
+PAM's production web app should be local-first, encrypted by default and backed by a selected data-residency profile.
 
 ## Current Production Direction
 
-- Primary cloud target: OVHcloud EU.
-- Secondary cloud target: Scaleway EU.
+- Standard cloud target: PAM Europe on Scaleway EU.
+- Prepared premium target: PAM Switzerland on Exoscale CH.
 - Policy: no AWS/Amazon production dependency for core PAM vault storage.
 - Browser app: React/Vite web app.
 - Secure local storage: encrypted IndexedDB behind `VITE_SECURE_LOCAL_STORAGE=true`.
-- Cloud sync: encrypted records posted to a European backend endpoint.
+- Cloud sync: encrypted records posted to the backend endpoint that belongs to the workspace residency profile.
 - Consent model: explicit professional access consent before shared login/roles.
+
+## Data Residency Profiles
+
+PAM keeps the app experience the same, but stores cloud data according to the
+workspace profile:
+
+- `eu`: PAM Europe, default profile, `scaleway-eu`, `eu-only`.
+- `ch`: PAM Switzerland, premium profile, `exoscale-ch`, `ch-only`.
+
+The account/workspace model stores `dataResidency`, `cloudProvider` and
+`regionPolicy`. This keeps the product ready for a customer choice between
+Europe and Switzerland without building two separate apps.
 
 ## Runtime Flags
 
@@ -24,8 +36,9 @@ Required production stance:
 VITE_ENV=production
 VITE_DEBUG=false
 VITE_SECURE_LOCAL_STORAGE=true
+VITE_PAM_DATA_RESIDENCY=eu
 VITE_CLOUD_SYNC_ENABLED=true
-VITE_CLOUD_PROVIDER=ovhcloud-eu
+VITE_CLOUD_PROVIDER=scaleway-eu
 VITE_CLOUD_REGION_POLICY=eu-only
 ```
 
@@ -50,7 +63,8 @@ Backend responsibilities:
 
 - Reject unauthenticated requests.
 - Verify session and vault membership.
-- Enforce EU-only storage, backups, logs and subprocessors.
+- Enforce the selected workspace residency profile for storage, backups, logs
+  and subprocessors.
 - Store encrypted payloads as opaque data.
 - Keep audit logs free of sensitive payloads.
 - Return `{ "uploadedCount": number, "cursor"?: string }`.
@@ -61,6 +75,7 @@ Start with these backend concepts:
 
 - `users`: auth identity.
 - `vaults`: one default vault per user.
+- `workspaces`: profile, subscription and residency boundary.
 - `vault_members`: access control, initially owner-only.
 - `consent_records`: user-granted professional access purpose, scope, validity and revocation.
 - `encrypted_records`: encrypted PAM record groups.
@@ -91,18 +106,19 @@ Before PAM can be trusted as a real cloud app:
 - Implement encrypted cloud record persistence.
 - Add restore/export tests.
 - Add privacy, data processing and account deletion flows.
-- Confirm EU-only hosting, backups, logs, monitoring and support access.
+- Confirm hosting, backups, logs, monitoring and support access for each
+  offered residency profile.
 
 ## Next Engineering Step
 
-Replace the file-backed skeleton in `server/pam-sync-server.mjs` with a production database adapter on the selected European platform.
+Replace the file-backed skeleton in `server/pam-sync-server.mjs` with a production database adapter on the selected PAM Europe platform first. Keep the adapter boundary portable for PAM Switzerland.
 
 Current backend skeleton:
 
 - `server/pam-sync-server.mjs`
 - `POST /api/pam/sync/push`
 - signed HttpOnly `pam_session` cookie validation
-- EU provider and region-policy checks
+- provider and region-policy checks for PAM Europe and PAM Switzerland
 - encrypted-record shape validation
 - file-backed encrypted record persistence for development
 

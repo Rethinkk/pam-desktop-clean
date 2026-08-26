@@ -13,8 +13,9 @@ Accepts encrypted PAM record groups from the browser.
 Security rules:
 
 - Requires a signed `pam_session` HttpOnly cookie.
-- Requires `X-PAM-Cloud-Provider` to be `ovhcloud-eu`, `scaleway-eu` or `custom-eu`.
-- Requires `X-PAM-Region-Policy: eu-only`.
+- Requires `X-PAM-Cloud-Provider` to match the workspace data residency.
+- Supports `ovhcloud-eu`, `scaleway-eu` and `custom-eu` for `eu-only`.
+- Supports `exoscale-ch` and `custom-ch` for `ch-only`.
 - Stores only encrypted payloads.
 - Does not receive, derive or store raw vault keys.
 
@@ -29,9 +30,13 @@ Body:
 {
   "name": "Pam de Vries",
   "email": "pam@example.nl",
-  "password": "minimum-10-characters"
+  "password": "minimum-10-characters",
+  "dataResidency": "eu"
 }
 ```
+
+`dataResidency` defaults to `eu`. `ch` prepares a PAM Switzerland workspace
+with `exoscale-ch` and `ch-only`.
 
 ### `POST /api/pam/auth/login`
 
@@ -70,8 +75,9 @@ Frontend env for local testing:
 
 ```bash
 VITE_SECURE_LOCAL_STORAGE=true
+VITE_PAM_DATA_RESIDENCY=eu
 VITE_CLOUD_SYNC_ENABLED=true
-VITE_CLOUD_PROVIDER=ovhcloud-eu
+VITE_CLOUD_PROVIDER=scaleway-eu
 VITE_CLOUD_REGION_POLICY=eu-only
 VITE_AUTH_API_URL=http://127.0.0.1:8787
 VITE_CLOUD_SYNC_ENDPOINT=http://127.0.0.1:8787/api/pam/sync/push
@@ -87,15 +93,17 @@ This starts the server on a random local port and verifies:
 
 - unauthenticated sync is rejected
 - dev-login sets a signed HttpOnly cookie
-- non-European provider values are rejected
-- non-`eu-only` region policy is rejected
+- unsupported provider values are rejected
+- mismatched provider and region-policy values are rejected
+- workspace cloud routes are enforced
 - invalid encrypted record shapes are rejected
-- `ovhcloud-eu` encrypted record sync succeeds
+- `scaleway-eu` and `exoscale-ch` workspace profiles are accepted
+- encrypted record sync succeeds
 - temporary test data is cleaned up
 
 ## Production Direction
 
-For OVHcloud/Scaleway production, replace the JSON file store with a database table for encrypted records.
+For Scaleway or Exoscale production, replace the JSON file store with a database table for encrypted records.
 
 Keep these rules:
 
@@ -104,4 +112,5 @@ Keep these rules:
 - Backend enforces vault membership.
 - Encrypted payloads remain opaque to the backend.
 - Logs and sync events must not contain decrypted user data.
-- Storage, backups, logs and support access remain EU-only.
+- Storage, backups, logs and support access must remain inside the selected
+  workspace residency profile: PAM Europe or PAM Switzerland.

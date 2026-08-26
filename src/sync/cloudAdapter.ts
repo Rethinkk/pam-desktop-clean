@@ -1,5 +1,7 @@
 import {
   CLOUD_PROVIDER,
+  CLOUD_PROVIDER_MATCHES_REGION,
+  CLOUD_PROVIDER_SUPPORTED,
   CLOUD_REGION_POLICY,
   CLOUD_SYNC_ENABLED,
   CLOUD_SYNC_ENDPOINT,
@@ -77,25 +79,32 @@ class PendingProviderCloudAdapter extends HttpCloudAdapter {
   }
 }
 
-function isSupportedEuropeanProvider(provider: string): boolean {
-  return ["ovhcloud-eu", "scaleway-eu", "custom-eu"].includes(provider);
-}
-
 class UnsupportedProviderCloudAdapter extends DisabledCloudAdapter {
   override provider = CLOUD_PROVIDER;
 
   override async pushEncryptedRecords(): Promise<CloudPushResult> {
     throw new Error(
-      `Cloud provider '${CLOUD_PROVIDER}' is niet toegestaan voor PAM production. Gebruik ovhcloud-eu, scaleway-eu of custom-eu.`,
+      `Cloud provider '${CLOUD_PROVIDER}' is niet toegestaan voor PAM production. Gebruik scaleway-eu voor PAM Europe of exoscale-ch voor PAM Switzerland.`,
+    );
+  }
+}
+
+class RegionMismatchCloudAdapter extends DisabledCloudAdapter {
+  override provider = CLOUD_PROVIDER;
+
+  override async pushEncryptedRecords(): Promise<CloudPushResult> {
+    throw new Error(
+      `Cloud provider '${CLOUD_PROVIDER}' past niet bij regio-policy '${CLOUD_REGION_POLICY}'.`,
     );
   }
 }
 
 export function createCloudAdapter(): CloudAdapter {
   if (!CLOUD_SYNC_ENABLED) return new DisabledCloudAdapter();
-  if (!isSupportedEuropeanProvider(CLOUD_PROVIDER)) {
+  if (!CLOUD_PROVIDER_SUPPORTED) {
     return new UnsupportedProviderCloudAdapter();
   }
+  if (!CLOUD_PROVIDER_MATCHES_REGION) return new RegionMismatchCloudAdapter();
   return new PendingProviderCloudAdapter();
 }
 

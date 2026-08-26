@@ -1,10 +1,21 @@
 import { AUTH_API_URL } from "../lib/config";
+import {
+  DEFAULT_DATA_RESIDENCY,
+  profileForResidency,
+  type PamCloudProvider,
+  type PamDataResidency,
+  type PamRegionPolicy,
+} from "../lib/dataResidency";
 
 export type PamUser = {
   id: string;
+  workspaceId: string;
   name: string;
   email: string;
   vaultId: string;
+  dataResidency: PamDataResidency;
+  cloudProvider: PamCloudProvider;
+  regionPolicy: PamRegionPolicy;
   createdAt: string;
 };
 
@@ -35,13 +46,20 @@ async function remoteRegister(input: {
   name: string;
   email: string;
   password: string;
+  dataResidency?: PamDataResidency;
 }): Promise<PamUser> {
   try {
+    const profile = profileForResidency(input.dataResidency);
     const response = await fetch(authApiPath("/api/pam/auth/register"), {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        ...input,
+        dataResidency: profile.dataResidency,
+        cloudProvider: profile.cloudProvider,
+        regionPolicy: profile.regionPolicy,
+      }),
     });
     return readAuthResponse(response);
   } catch (error) {
@@ -151,7 +169,14 @@ function publicUser(user: StoredUser): PamUser {
   void passwordHash;
   void passwordSalt;
   void passwordIterations;
-  return safeUser;
+  const profile = profileForResidency(safeUser.dataResidency);
+  return {
+    ...safeUser,
+    workspaceId: safeUser.workspaceId ?? safeUser.vaultId,
+    dataResidency: safeUser.dataResidency ?? DEFAULT_DATA_RESIDENCY,
+    cloudProvider: safeUser.cloudProvider ?? profile.cloudProvider,
+    regionPolicy: safeUser.regionPolicy ?? profile.regionPolicy,
+  };
 }
 
 export async function getCurrentUser(): Promise<PamUser | null> {
@@ -167,8 +192,10 @@ export async function registerUser(input: {
   name: string;
   email: string;
   password: string;
+  dataResidency?: PamDataResidency;
 }): Promise<PamUser> {
-  if (AUTH_API_URL) return remoteRegister(input);
+  const profile = profileForResidency(input.dataResidency);
+  if (AUTH_API_URL) return remoteRegister({ ...input, dataResidency: profile.dataResidency });
 
   const name = input.name.trim();
   const email = normalizeEmail(input.email);
@@ -187,9 +214,13 @@ export async function registerUser(input: {
   const now = new Date().toISOString();
   const user: StoredUser = {
     id: crypto.randomUUID(),
+    workspaceId: crypto.randomUUID(),
     vaultId: crypto.randomUUID(),
     name,
     email,
+    dataResidency: profile.dataResidency,
+    cloudProvider: profile.cloudProvider,
+    regionPolicy: profile.regionPolicy,
     createdAt: now,
     passwordSalt: bytesToBase64(salt),
     passwordIterations: HASH_ITERATIONS,
