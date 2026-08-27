@@ -22,17 +22,17 @@ export function createDatabaseSslOptions(env = process.env) {
   const servername = env.PAM_DATABASE_TLS_SERVERNAME;
   const servernameOption = servername ? { servername } : {};
 
-  if (env.PAM_DATABASE_CA_CERT) {
+  if (env.PAM_DATABASE_CA_CERT_BASE64) {
     return {
-      ca: normalizeCertificate(env.PAM_DATABASE_CA_CERT),
+      ca: normalizeCertificate(env.PAM_DATABASE_CA_CERT_BASE64),
       rejectUnauthorized: true,
       ...servernameOption,
     };
   }
 
-  if (env.PAM_DATABASE_CA_CERT_BASE64) {
+  if (env.PAM_DATABASE_CA_CERT) {
     return {
-      ca: normalizeCertificate(env.PAM_DATABASE_CA_CERT_BASE64),
+      ca: normalizeCertificate(env.PAM_DATABASE_CA_CERT),
       rejectUnauthorized: true,
       ...servernameOption,
     };
