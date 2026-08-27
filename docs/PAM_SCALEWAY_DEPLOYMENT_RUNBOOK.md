@@ -104,9 +104,9 @@ variables. Replace the placeholder backend URL with the deployed Scaleway URL.
 Required frontend values:
 
 ```text
-VITE_AUTH_API_URL=https://<scaleway-container-url>
-VITE_API_URL=https://<scaleway-container-url>
-VITE_CLOUD_SYNC_ENDPOINT=https://<scaleway-container-url>/api/pam/sync/push
+VITE_AUTH_API_URL=https://pameuropestagingapie8be34a0-pam-sync-server.functions.fnc.nl-ams.scw.cloud
+VITE_API_URL=https://pameuropestagingapie8be34a0-pam-sync-server.functions.fnc.nl-ams.scw.cloud
+VITE_CLOUD_SYNC_ENDPOINT=https://pameuropestagingapie8be34a0-pam-sync-server.functions.fnc.nl-ams.scw.cloud/api/pam/sync/push
 VITE_CLOUD_SYNC_ENABLED=true
 VITE_CLOUD_PROVIDER=scaleway-eu
 VITE_CLOUD_REGION_POLICY=eu-only
