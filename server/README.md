@@ -107,6 +107,18 @@ This starts the server on a random local port and verifies:
 
 For Scaleway or Exoscale production, replace the JSON file store with a database table for encrypted records.
 
+Initial PostgreSQL schema:
+
+```text
+server/migrations/001_initial_postgres_schema.sql
+```
+
+Backend replacement plan:
+
+```text
+docs/PAM_POSTGRESQL_BACKEND.md
+```
+
 Keep these rules:
 
 - Sessions are HttpOnly cookies.

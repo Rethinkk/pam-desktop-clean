@@ -99,6 +99,18 @@ deleted_at
 client_updated_at
 ```
 
+Initial production database schema:
+
+```text
+server/migrations/001_initial_postgres_schema.sql
+```
+
+Backend replacement plan:
+
+```text
+docs/PAM_POSTGRESQL_BACKEND.md
+```
+
 ## Go-Live Blockers
 
 Before PAM can be trusted as a real cloud app:

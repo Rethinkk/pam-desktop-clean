@@ -1,8 +1,8 @@
 import { createHmac, randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createFilePamStore } from "./pam-file-store.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -12,9 +12,7 @@ const ALLOWED_ORIGIN = process.env.PAM_ALLOWED_ORIGIN ?? "http://127.0.0.1:5174"
 const DATA_DIR = process.env.PAM_DATA_DIR ?? join(__dirname, "data");
 const ALLOW_DEV_LOGIN = process.env.PAM_ALLOW_DEV_LOGIN === "true";
 const COOKIE_NAME = "pam_session";
-const USERS_FILE = join(DATA_DIR, "users.json");
-const RECORDS_FILE = join(DATA_DIR, "encrypted-records.json");
-const EVENTS_FILE = join(DATA_DIR, "sync-events.jsonl");
+const pamStore = createFilePamStore(DATA_DIR);
 const ALLOWED_PROVIDERS = new Set(["ovhcloud-eu", "scaleway-eu", "custom-eu", "exoscale-ch", "custom-ch", "custom-us"]);
 const PASSWORD_KEY_LENGTH = 64;
 const RESIDENCY_PROFILES = {
@@ -167,27 +165,6 @@ function isValidEncryptedRecord(record) {
   );
 }
 
-async function readRecordStore() {
-  try {
-    return JSON.parse(await readFile(RECORDS_FILE, "utf8"));
-  } catch {
-    return { records: {} };
-  }
-}
-
-async function readUserStore() {
-  try {
-    return JSON.parse(await readFile(USERS_FILE, "utf8"));
-  } catch {
-    return { users: [] };
-  }
-}
-
-async function saveUserStore(store) {
-  await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(USERS_FILE, `${JSON.stringify(store, null, 2)}\n`);
-}
-
 function normalizeEmail(email) {
   return String(email ?? "").trim().toLowerCase();
 }
@@ -239,17 +216,6 @@ function publicUser(user) {
     regionPolicy: user.regionPolicy ?? profile.regionPolicy,
     createdAt: user.createdAt,
   };
-}
-
-async function saveRecordStore(store) {
-  await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(RECORDS_FILE, `${JSON.stringify(store, null, 2)}\n`);
-}
-
-async function appendSyncEvent(event) {
-  await mkdir(DATA_DIR, { recursive: true });
-  const existing = await readFile(EVENTS_FILE, "utf8").catch(() => "");
-  await writeFile(EVENTS_FILE, `${existing}${JSON.stringify(event)}\n`);
 }
 
 async function handleDevLogin(request, response, headers) {
@@ -315,7 +281,7 @@ async function handleRegister(request, response, headers) {
     return reject(response, 400, "Cloud provider does not match the selected data residency.", headers);
   }
 
-  const store = await readUserStore();
+  const store = await pamStore.readUserStore();
   if (store.users.some((user) => user.email === email)) {
     return reject(response, 409, "A user with this email already exists.", headers);
   }
@@ -337,8 +303,8 @@ async function handleRegister(request, response, headers) {
   };
 
   store.users.push(user);
-  await saveUserStore(store);
-  await appendSyncEvent({
+  await pamStore.saveUserStore(store);
+  await pamStore.appendSyncEvent({
     id: randomUUID(),
     vaultId: user.vaultId,
     userId: user.id,
@@ -355,14 +321,14 @@ async function handleLogin(request, response, headers) {
   const body = await readJsonBody(request, 50_000);
   const email = normalizeEmail(body.email);
   const password = String(body.password ?? "");
-  const store = await readUserStore();
+  const store = await pamStore.readUserStore();
   const user = store.users.find((candidate) => candidate.email === email);
 
   if (!user || !isPasswordMatch(password, user)) {
     return reject(response, 401, "Invalid email or password.", headers);
   }
 
-  await appendSyncEvent({
+  await pamStore.appendSyncEvent({
     id: randomUUID(),
     vaultId: user.vaultId,
     userId: user.id,
@@ -379,7 +345,7 @@ async function handleSession(request, response, headers) {
     return;
   }
 
-  const store = await readUserStore();
+  const store = await pamStore.readUserStore();
   const user = store.users.find((candidate) => candidate.id === session.userId);
   if (!user && session.userId === "dev-user") {
     jsonResponse(response, 200, {
@@ -434,7 +400,7 @@ async function handleSyncPush(request, response, headers) {
     return reject(response, 401, "Authentication required.", headers);
   }
 
-  const users = await readUserStore();
+  const users = await pamStore.readUserStore();
   const user = users.users.find((candidate) => candidate.id === session.userId);
   if (user) {
     const publicSessionUser = publicUser(user);
@@ -453,7 +419,7 @@ async function handleSyncPush(request, response, headers) {
     return reject(response, 400, "Invalid encrypted record shape.", headers);
   }
 
-  const store = await readRecordStore();
+  const store = await pamStore.readRecordStore();
   const vaultRecords = store.records[session.vaultId] ?? {};
   const now = new Date().toISOString();
 
@@ -472,8 +438,8 @@ async function handleSyncPush(request, response, headers) {
   }
 
   store.records[session.vaultId] = vaultRecords;
-  await saveRecordStore(store);
-  await appendSyncEvent({
+  await pamStore.saveRecordStore(store);
+  await pamStore.appendSyncEvent({
     id: randomUUID(),
     vaultId: session.vaultId,
     userId: session.userId,
