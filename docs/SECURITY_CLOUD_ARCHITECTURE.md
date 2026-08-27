@@ -142,13 +142,16 @@ A consent record captures:
 
 Production authorization should later enforce these records server-side and client-side. A notary, fiscal advisor or accountant should only see a vault after the user has granted consent, and every access should be written to an audit log without exposing sensitive payloads in logs.
 
-European backend options:
+Data-residency options:
 
-- OVHcloud EU: preferred production direction for European positioning and core vault storage.
-- Scaleway EU: pragmatic European alternative for faster product development.
-- Custom EU backend: more control, higher build and maintenance cost.
+- PAM Europe: primary release direction on Scaleway EU.
+- PAM Switzerland: prepared premium direction on Exoscale CH.
+- Custom EU/CH backend: more control, higher build and maintenance cost.
 
-Production recommendation: OVHcloud EU as the primary target, with Scaleway EU as the fallback. Avoid AWS/Amazon for core vault storage so PAM can credibly position itself around European data residency and independence.
+Production recommendation: build release 1 on Scaleway EU as PAM Europe, while
+keeping the workspace model portable for a later Exoscale CH premium profile.
+Avoid AWS/Amazon for core vault storage so PAM can credibly position itself
+around European data residency and independence.
 
 Supabase, Firebase, Neon and similar managed developer platforms may still be useful for experiments, but they should not be the production promise if the public position is "European cloud infrastructure, no Amazon dependency for PAM vault storage."
 
@@ -261,7 +264,9 @@ Current implementation:
 
 - `VITE_CLOUD_SYNC_ENABLED=false`: cloud-sync remains disabled and no backend is contacted.
 - `VITE_CLOUD_SYNC_ENABLED=true`: sync status and queue are active, and the HTTP cloud adapter can post encrypted records to `VITE_CLOUD_SYNC_ENDPOINT`.
-- Allowed frontend provider values are `ovhcloud-eu`, `scaleway-eu` and `custom-eu`.
+- Allowed frontend provider values are `ovhcloud-eu`, `scaleway-eu`,
+  `custom-eu`, `exoscale-ch` and `custom-ch`, with provider values bound to
+  the workspace region policy.
 - The sync coordinator collects local record groups, encrypts payloads client-side and passes only encrypted records to the cloud adapter.
 - The cloud adapter contract does not receive raw vault keys.
 - The browser uses `credentials: include`; production auth should use HttpOnly session cookies, not browser-exposed API secrets.
