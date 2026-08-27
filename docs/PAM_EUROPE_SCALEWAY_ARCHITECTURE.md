@@ -16,6 +16,8 @@ PAM release 1 will target **PAM Europe** on Scaleway.
 - Primary regions to evaluate: Paris or Amsterdam
 - Premium profile prepared for later: **PAM Switzerland** on Exoscale, `ch`,
   `exoscale-ch`, `ch-only`
+- Expansion profile prepared for later: **PAM United States**, `us`,
+  `custom-us`, `us-only`
 
 PAM should not become two applications. The app, UI and domain model remain one
 product. The workspace decides which residency profile applies.
@@ -31,8 +33,8 @@ cloud architecture must support this promise:
 - The backend does not need plaintext access to assets, people, documents or
   consent details for normal sync.
 - Professionals only gain access after explicit user consent.
-- Europe and Switzerland are commercial data-residency choices, not separate
-  feature sets.
+- Europe, Switzerland and the United States are commercial data-residency
+  choices, not separate feature sets.
 
 ## Target Runtime
 
@@ -103,9 +105,9 @@ Rules:
 Each workspace has:
 
 ```text
-data_residency: eu | ch
-cloud_provider: scaleway-eu | exoscale-ch | custom-eu | custom-ch
-region_policy: eu-only | ch-only
+data_residency: eu | ch | us
+cloud_provider: scaleway-eu | exoscale-ch | custom-eu | custom-ch | custom-us
+region_policy: eu-only | ch-only | us-only
 ```
 
 For v1:
@@ -280,7 +282,8 @@ First production stack:
 
 Keep the code provider-neutral. The Scaleway implementation should sit behind
 database and object-storage adapters so that Exoscale can reuse the same product
-model later.
+model later. The same boundary also prepares a future PAM United States
+deployment without making release 1 dependent on a US provider choice.
 
 ## Release 1 Build Sequence
 
@@ -300,6 +303,7 @@ model later.
 - Paris or Amsterdam as first Scaleway region.
 - Exact backend runtime: container, serverless container or VM.
 - Auth v1: own password implementation versus managed identity provider.
+- Future US provider and state/region strategy.
 - Vault unlock UX: password-derived, recovery-key based, passkey based, or
   phased hybrid.
 - Whether Vercel remains acceptable for public marketing pages only.

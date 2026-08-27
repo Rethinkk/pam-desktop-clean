@@ -8,6 +8,7 @@ PAM's production web app should be local-first, encrypted by default and backed 
 
 - Standard cloud target: PAM Europe on Scaleway EU.
 - Prepared premium target: PAM Switzerland on Exoscale CH.
+- Prepared expansion target: PAM United States with a future US provider.
 - Policy: no AWS/Amazon production dependency for core PAM vault storage.
 - Browser app: React/Vite web app.
 - Secure local storage: encrypted IndexedDB behind `VITE_SECURE_LOCAL_STORAGE=true`.
@@ -21,10 +22,11 @@ workspace profile:
 
 - `eu`: PAM Europe, default profile, `scaleway-eu`, `eu-only`.
 - `ch`: PAM Switzerland, premium profile, `exoscale-ch`, `ch-only`.
+- `us`: PAM United States, expansion profile, `custom-us`, `us-only`.
 
 The account/workspace model stores `dataResidency`, `cloudProvider` and
 `regionPolicy`. This keeps the product ready for a customer choice between
-Europe and Switzerland without building two separate apps.
+Europe, Switzerland and the United States without building separate apps.
 
 ## Runtime Flags
 
@@ -111,14 +113,14 @@ Before PAM can be trusted as a real cloud app:
 
 ## Next Engineering Step
 
-Replace the file-backed skeleton in `server/pam-sync-server.mjs` with a production database adapter on the selected PAM Europe platform first. Keep the adapter boundary portable for PAM Switzerland.
+Replace the file-backed skeleton in `server/pam-sync-server.mjs` with a production database adapter on the selected PAM Europe platform first. Keep the adapter boundary portable for PAM Switzerland and PAM United States.
 
 Current backend skeleton:
 
 - `server/pam-sync-server.mjs`
 - `POST /api/pam/sync/push`
 - signed HttpOnly `pam_session` cookie validation
-- provider and region-policy checks for PAM Europe and PAM Switzerland
+- provider and region-policy checks for PAM Europe, PAM Switzerland and PAM United States
 - encrypted-record shape validation
 - file-backed encrypted record persistence for development
 

@@ -15,7 +15,7 @@ const COOKIE_NAME = "pam_session";
 const USERS_FILE = join(DATA_DIR, "users.json");
 const RECORDS_FILE = join(DATA_DIR, "encrypted-records.json");
 const EVENTS_FILE = join(DATA_DIR, "sync-events.jsonl");
-const ALLOWED_PROVIDERS = new Set(["ovhcloud-eu", "scaleway-eu", "custom-eu", "exoscale-ch", "custom-ch"]);
+const ALLOWED_PROVIDERS = new Set(["ovhcloud-eu", "scaleway-eu", "custom-eu", "exoscale-ch", "custom-ch", "custom-us"]);
 const PASSWORD_KEY_LENGTH = 64;
 const RESIDENCY_PROFILES = {
   eu: {
@@ -27,6 +27,11 @@ const RESIDENCY_PROFILES = {
     dataResidency: "ch",
     cloudProvider: "exoscale-ch",
     regionPolicy: "ch-only",
+  },
+  us: {
+    dataResidency: "us",
+    cloudProvider: "custom-us",
+    regionPolicy: "us-only",
   },
 };
 
@@ -193,6 +198,7 @@ function hashPassword(password, salt = randomBytes(16).toString("base64url")) {
 }
 
 function normalizeDataResidency(value) {
+  if (value === "us") return "us";
   return value === "ch" ? "ch" : "eu";
 }
 
@@ -206,6 +212,9 @@ function isProviderAllowedForPolicy(provider, regionPolicy) {
   }
   if (regionPolicy === "ch-only") {
     return ["exoscale-ch", "custom-ch"].includes(provider);
+  }
+  if (regionPolicy === "us-only") {
+    return provider === "custom-us";
   }
   return false;
 }

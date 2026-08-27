@@ -396,7 +396,13 @@ export default function SecurityPanel() {
           </div>
           <div>
             <strong>Dataresidentie</strong>
-            <div>{cloudStatus.dataResidency === "ch" ? "PAM Switzerland" : "PAM Europe"}</div>
+            <div>
+              {cloudStatus.dataResidency === "ch"
+                ? "PAM Switzerland"
+                : cloudStatus.dataResidency === "us"
+                  ? "PAM United States"
+                  : "PAM Europe"}
+            </div>
           </div>
           <div>
             <strong>Regiobeleid</strong>

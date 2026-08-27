@@ -146,10 +146,11 @@ Data-residency options:
 
 - PAM Europe: primary release direction on Scaleway EU.
 - PAM Switzerland: prepared premium direction on Exoscale CH.
-- Custom EU/CH backend: more control, higher build and maintenance cost.
+- PAM United States: prepared expansion direction with a future US provider.
+- Custom EU/CH/US backend: more control, higher build and maintenance cost.
 
 Production recommendation: build release 1 on Scaleway EU as PAM Europe, while
-keeping the workspace model portable for a later Exoscale CH premium profile.
+keeping the workspace model portable for later Exoscale CH and US profiles.
 Avoid AWS/Amazon for core vault storage so PAM can credibly position itself
 around European data residency and independence.
 
@@ -265,8 +266,8 @@ Current implementation:
 - `VITE_CLOUD_SYNC_ENABLED=false`: cloud-sync remains disabled and no backend is contacted.
 - `VITE_CLOUD_SYNC_ENABLED=true`: sync status and queue are active, and the HTTP cloud adapter can post encrypted records to `VITE_CLOUD_SYNC_ENDPOINT`.
 - Allowed frontend provider values are `ovhcloud-eu`, `scaleway-eu`,
-  `custom-eu`, `exoscale-ch` and `custom-ch`, with provider values bound to
-  the workspace region policy.
+  `custom-eu`, `exoscale-ch`, `custom-ch` and `custom-us`, with provider values
+  bound to the workspace region policy.
 - The sync coordinator collects local record groups, encrypts payloads client-side and passes only encrypted records to the cloud adapter.
 - The cloud adapter contract does not receive raw vault keys.
 - The browser uses `credentials: include`; production auth should use HttpOnly session cookies, not browser-exposed API secrets.

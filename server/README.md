@@ -16,6 +16,7 @@ Security rules:
 - Requires `X-PAM-Cloud-Provider` to match the workspace data residency.
 - Supports `ovhcloud-eu`, `scaleway-eu` and `custom-eu` for `eu-only`.
 - Supports `exoscale-ch` and `custom-ch` for `ch-only`.
+- Supports `custom-us` for `us-only`.
 - Stores only encrypted payloads.
 - Does not receive, derive or store raw vault keys.
 
@@ -36,7 +37,8 @@ Body:
 ```
 
 `dataResidency` defaults to `eu`. `ch` prepares a PAM Switzerland workspace
-with `exoscale-ch` and `ch-only`.
+with `exoscale-ch` and `ch-only`. `us` prepares a PAM United States workspace
+with `custom-us` and `us-only`.
 
 ### `POST /api/pam/auth/login`
 
@@ -97,7 +99,7 @@ This starts the server on a random local port and verifies:
 - mismatched provider and region-policy values are rejected
 - workspace cloud routes are enforced
 - invalid encrypted record shapes are rejected
-- `scaleway-eu` and `exoscale-ch` workspace profiles are accepted
+- `scaleway-eu`, `exoscale-ch` and `custom-us` workspace profiles are accepted
 - encrypted record sync succeeds
 - temporary test data is cleaned up
 
@@ -113,4 +115,4 @@ Keep these rules:
 - Encrypted payloads remain opaque to the backend.
 - Logs and sync events must not contain decrypted user data.
 - Storage, backups, logs and support access must remain inside the selected
-  workspace residency profile: PAM Europe or PAM Switzerland.
+  workspace residency profile: PAM Europe, PAM Switzerland or PAM United States.

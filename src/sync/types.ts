@@ -7,8 +7,8 @@ export type SyncState = "disabled" | "idle" | "syncing" | "success" | "error";
 export type CloudSyncStatus = {
   enabled: boolean;
   provider: string;
-  dataResidency: "eu" | "ch";
-  regionPolicy: "eu-only" | "ch-only";
+  dataResidency: "eu" | "ch" | "us";
+  regionPolicy: "eu-only" | "ch-only" | "us-only";
   state: SyncState;
   queuedCount: number;
   lastAttemptAt?: string;

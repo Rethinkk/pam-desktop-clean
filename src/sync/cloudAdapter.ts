@@ -84,7 +84,7 @@ class UnsupportedProviderCloudAdapter extends DisabledCloudAdapter {
 
   override async pushEncryptedRecords(): Promise<CloudPushResult> {
     throw new Error(
-      `Cloud provider '${CLOUD_PROVIDER}' is niet toegestaan voor PAM production. Gebruik scaleway-eu voor PAM Europe of exoscale-ch voor PAM Switzerland.`,
+      `Cloud provider '${CLOUD_PROVIDER}' is niet toegestaan voor PAM production. Gebruik scaleway-eu voor PAM Europe, exoscale-ch voor PAM Switzerland of custom-us voor PAM United States.`,
     );
   }
 }

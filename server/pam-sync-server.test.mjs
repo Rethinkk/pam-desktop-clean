@@ -195,6 +195,22 @@ try {
   assert.equal(swissRegistered.body.user.cloudProvider, "exoscale-ch");
   assert.equal(swissRegistered.body.user.regionPolicy, "ch-only");
 
+  const usRegistered = await request(baseUrl, "/api/pam/auth/register", {
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "US Pam Tester",
+      email: "pam.us@example.com",
+      password: "veilig-wachtwoord-123",
+      dataResidency: "us",
+      cloudProvider: "custom-us",
+      regionPolicy: "us-only",
+    }),
+  });
+  assert.equal(usRegistered.response.status, 200);
+  assert.equal(usRegistered.body.user.dataResidency, "us");
+  assert.equal(usRegistered.body.user.cloudProvider, "custom-us");
+  assert.equal(usRegistered.body.user.regionPolicy, "us-only");
+
   const invalidShape = await request(baseUrl, "/api/pam/sync/push", {
     headers: {
       Cookie: cookie,

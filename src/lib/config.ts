@@ -17,7 +17,9 @@ export const SECURE_LOCAL_STORAGE =
 export const CLOUD_SYNC_ENABLED =
   (import.meta.env.VITE_CLOUD_SYNC_ENABLED ?? "false") === "true";
 export const DATA_RESIDENCY =
-  import.meta.env.VITE_PAM_DATA_RESIDENCY === "ch" ? "ch" : DEFAULT_DATA_RESIDENCY;
+  import.meta.env.VITE_PAM_DATA_RESIDENCY === "ch" || import.meta.env.VITE_PAM_DATA_RESIDENCY === "us"
+    ? import.meta.env.VITE_PAM_DATA_RESIDENCY
+    : DEFAULT_DATA_RESIDENCY;
 const DEFAULT_RESIDENCY_PROFILE = profileForResidency(DATA_RESIDENCY);
 export const CLOUD_PROVIDER =
   import.meta.env.VITE_CLOUD_PROVIDER || DEFAULT_RESIDENCY_PROFILE.cloudProvider;
