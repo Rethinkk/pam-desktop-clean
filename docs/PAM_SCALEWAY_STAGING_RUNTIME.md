@@ -86,6 +86,12 @@ or:
 PAM_DATABASE_CA_CERT=<full-pem-certificate-as-secret>
 ```
 
+or, when the cloud UI cannot store multiline PEM values safely:
+
+```text
+PAM_DATABASE_CA_CERT_BASE64=<base64-encoded-pem-certificate-as-secret>
+```
+
 Object Storage:
 
 ```text
