@@ -36,6 +36,9 @@ In GitHub Actions, run:
 Build PAM backend image
 ```
 
+This workflow is manual-only so it will not fail before the Scaleway secrets are
+configured.
+
 The workflow pushes two tags:
 
 ```text
@@ -106,4 +109,3 @@ After changing Vercel variables, redeploy the frontend and run a full user flow:
 - Link document.
 - Confirm document appears in register.
 - Confirm sync push reaches backend.
-
