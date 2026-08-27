@@ -16,11 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Login to Scaleway Container Registry
-        uses: docker/login-action@v3
-        with:
-          username: nologin
-          password: ${{ secrets.SCALEWAY_API_KEY }}
-          registry: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
+        run: echo "${{ secrets.SCALEWAY_API_KEY }}" | docker login "${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}" -u nologin --password-stdin
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6

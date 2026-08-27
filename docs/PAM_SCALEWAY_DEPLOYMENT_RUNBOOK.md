@@ -28,6 +28,13 @@ Only the Scaleway secret key is used for Docker login. Do not store PAM database
 or Object Storage credentials in GitHub unless they are needed for a specific
 GitHub-hosted deployment step.
 
+The registry endpoint must include the namespace because Scaleway's Docker login
+uses this form:
+
+```text
+docker login rg.nl-ams.scw.cloud/<namespace> -u nologin --password-stdin
+```
+
 ## 3. Build Backend Image
 
 In GitHub Actions, run:
