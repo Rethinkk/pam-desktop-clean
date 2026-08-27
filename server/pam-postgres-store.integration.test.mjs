@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import pg from "pg";
+import { createDatabaseConnectionConfig } from "./pam-database-config.mjs";
 import { runMigrations } from "./run-migrations.mjs";
 
 const { Client } = pg;
 
-if (!process.env.PAM_DATABASE_URL) {
-  console.log("PAM PostgreSQL integration test skipped: PAM_DATABASE_URL is not set.");
+if (!process.env.PAM_DATABASE_URL && !process.env.PAM_DATABASE_HOST) {
+  console.log("PAM PostgreSQL integration test skipped: database env is not set.");
   process.exit(0);
 }
 
@@ -21,9 +22,7 @@ process.env.PAM_ALLOW_DEV_LOGIN = "false";
 process.env.PAM_ALLOWED_ORIGIN = "http://127.0.0.1:5174";
 process.env.PAM_FORCE_FILE_STORE = "false";
 
-const databaseSsl = process.env.PAM_DATABASE_SSL === "true"
-  ? { rejectUnauthorized: true }
-  : undefined;
+const databaseConfig = createDatabaseConnectionConfig();
 
 const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const testEmail = `pam.integration+${suffix}@example.test`;
@@ -82,8 +81,7 @@ async function cleanupTestUser() {
   }
 
   const client = new Client({
-    connectionString: process.env.PAM_DATABASE_URL,
-    ssl: databaseSsl,
+    ...databaseConfig,
   });
   await client.connect();
 
@@ -94,7 +92,7 @@ async function cleanupTestUser() {
 
     await client.query("begin");
     await client.query("delete from sync_events where user_id = any($1::uuid[])", [userIds]);
-    await client.query("delete from audit_events where user_id = any($1::uuid[])", [userIds]);
+    await client.query("delete from audit_events where actor_user_id = any($1::uuid[])", [userIds]);
     await client.query("delete from consent_records where user_id = any($1::uuid[])", [userIds]);
     await client.query("delete from document_objects where owner_user_id = any($1::uuid[])", [userIds]);
     await client.query("delete from encrypted_records where owner_user_id = any($1::uuid[])", [userIds]);
@@ -115,8 +113,7 @@ async function cleanupTestUser() {
 
 async function readPersistedState(userId) {
   const client = new Client({
-    connectionString: process.env.PAM_DATABASE_URL,
-    ssl: databaseSsl,
+    ...databaseConfig,
   });
   await client.connect();
 
@@ -131,12 +128,15 @@ async function readPersistedState(userId) {
           workspaces.region_policy,
           vaults.id as vault_id,
           count(distinct encrypted_records.id)::int as encrypted_record_count,
-          count(distinct sync_events.id)::int as sync_event_count
+          count(distinct sync_events.id)::int as sync_event_count,
+          count(distinct sync_push_events.id)::int as sync_push_event_count
         from users
         join workspaces on workspaces.owner_user_id = users.id
         join vaults on vaults.workspace_id = workspaces.id and vaults.owner_user_id = users.id
         left join encrypted_records on encrypted_records.owner_user_id = users.id
         left join sync_events on sync_events.user_id = users.id
+        left join sync_events sync_push_events
+          on sync_push_events.user_id = users.id and sync_push_events.type = 'sync.push'
         where users.id = $1
         group by users.email, workspaces.id, vaults.id
       `,
@@ -150,8 +150,7 @@ async function readPersistedState(userId) {
 }
 
 await runMigrations({
-  databaseUrl: process.env.PAM_DATABASE_URL,
-  ssl: databaseSsl,
+  databaseConfig,
 });
 await cleanupTestUser();
 
@@ -211,7 +210,8 @@ try {
   assert.equal(persisted.cloud_provider, "scaleway-eu");
   assert.equal(persisted.region_policy, "eu-only");
   assert.equal(persisted.encrypted_record_count, 2);
-  assert.equal(persisted.sync_event_count, 1);
+  assert.ok(persisted.sync_event_count >= 2);
+  assert.equal(persisted.sync_push_event_count, 1);
 
   console.log("PAM PostgreSQL integration test passed");
 } finally {

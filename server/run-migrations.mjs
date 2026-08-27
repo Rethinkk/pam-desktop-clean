@@ -2,6 +2,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { createDatabaseConnectionConfig } from "./pam-database-config.mjs";
 
 const { Client } = pg;
 
@@ -9,17 +10,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const migrationsDir = join(__dirname, "migrations");
 
 export async function runMigrations({
-  databaseUrl = process.env.PAM_DATABASE_URL,
-  ssl = process.env.PAM_DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined,
+  databaseConfig = createDatabaseConnectionConfig(),
 } = {}) {
-  if (!databaseUrl) {
-    throw new Error("PAM_DATABASE_URL is required to run migrations.");
+  if (!databaseConfig) {
+    throw new Error("PAM_DATABASE_URL or PAM_DATABASE_HOST is required to run migrations.");
   }
 
-  const client = new Client({
-    connectionString: databaseUrl,
-    ssl,
-  });
+  const client = new Client(databaseConfig);
 
   await client.connect();
 

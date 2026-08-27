@@ -36,11 +36,13 @@ function toRecordRow(row) {
   };
 }
 
-export function createPostgresPamStore(connectionString, options = {}) {
+export function createPostgresPamStore(connectionConfig, options = {}) {
   const pool = new Pool({
-    connectionString,
+    ...(typeof connectionConfig === "string"
+      ? { connectionString: connectionConfig }
+      : connectionConfig),
     max: Number(options.max ?? 10),
-    ssl: options.ssl,
+    ssl: options.ssl ?? (typeof connectionConfig === "object" ? connectionConfig.ssl : undefined),
   });
 
   async function withClient(callback) {
