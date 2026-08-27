@@ -265,6 +265,7 @@ Server secrets must live only in the backend environment:
 ```text
 PAM_SESSION_SECRET
 PAM_DATABASE_URL
+PAM_DATABASE_CA_FILE or PAM_DATABASE_CA_CERT
 PAM_OBJECT_STORAGE_ENDPOINT
 PAM_OBJECT_STORAGE_BUCKET
 PAM_OBJECT_STORAGE_ACCESS_KEY
@@ -282,6 +283,9 @@ First production stack:
 - Secrets: provider secret manager or deployment secrets.
 - Networking: private network where available.
 - Monitoring: metrics, uptime checks and structured error logging.
+
+The concrete staging runtime checklist is maintained in
+`docs/PAM_SCALEWAY_STAGING_RUNTIME.md`.
 
 Keep the code provider-neutral. The Scaleway implementation should sit behind
 database and object-storage adapters so that Exoscale can reuse the same product

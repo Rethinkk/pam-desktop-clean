@@ -7,6 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "server:dev": "node server/pam-sync-server.mjs",
+    "server:start": "node server/pam-sync-server.mjs",
     "db:migrate": "node server/run-migrations.mjs",
     "test:server": "node server/pam-sync-server.test.mjs",
     "test:server:postgres": "node server/pam-postgres-store.integration.test.mjs",

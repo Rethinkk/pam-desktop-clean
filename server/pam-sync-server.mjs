@@ -6,7 +6,8 @@ import { createPamStore } from "./pam-store.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const PORT = Number(process.env.PAM_SERVER_PORT ?? 8787);
+const PORT = Number(process.env.PAM_SERVER_PORT ?? process.env.PORT ?? 8787);
+const HOST = process.env.PAM_SERVER_HOST ?? process.env.HOST ?? "127.0.0.1";
 const SESSION_SECRET = process.env.PAM_SESSION_SECRET ?? "";
 const ALLOWED_ORIGIN = process.env.PAM_ALLOWED_ORIGIN ?? "http://127.0.0.1:5174";
 const DATA_DIR = process.env.PAM_DATA_DIR ?? join(__dirname, "data");
@@ -43,6 +44,25 @@ function assertConfigured() {
   if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
     throw new Error("PAM_SESSION_SECRET must be at least 32 characters.");
   }
+}
+
+function isDatabaseConfigured() {
+  return Boolean(
+    DATABASE_URL ||
+      (process.env.PAM_DATABASE_HOST &&
+        process.env.PAM_DATABASE_NAME &&
+        process.env.PAM_DATABASE_USER &&
+        process.env.PAM_DATABASE_PASSWORD),
+  );
+}
+
+function isObjectStorageConfigured() {
+  return Boolean(
+    process.env.PAM_OBJECT_STORAGE_BUCKET &&
+      process.env.PAM_OBJECT_STORAGE_ENDPOINT &&
+      process.env.PAM_OBJECT_STORAGE_ACCESS_KEY &&
+      process.env.PAM_OBJECT_STORAGE_SECRET_KEY,
+  );
 }
 
 function jsonResponse(response, statusCode, body, headers = {}) {
@@ -484,8 +504,27 @@ async function router(request, response) {
   }
 
   try {
-    assertConfigured();
     const url = new URL(request.url ?? "/", `http://${request.headers.host}`);
+
+    if (request.method === "GET" && url.pathname === "/api/pam/health") {
+      const sessionSecretConfigured = Boolean(SESSION_SECRET && SESSION_SECRET.length >= 32);
+      const databaseConfigured = isDatabaseConfigured();
+      const objectStorageConfigured = isObjectStorageConfigured();
+      const ready = sessionSecretConfigured && (databaseConfigured || FORCE_FILE_STORE);
+
+      jsonResponse(response, ready ? 200 : 503, {
+        ok: ready,
+        service: "pam-sync-server",
+        sessionSecretConfigured,
+        databaseConfigured,
+        fileStoreForced: FORCE_FILE_STORE,
+        objectStorageConfigured,
+        uptimeSeconds: Math.round(process.uptime()),
+      }, headers);
+      return;
+    }
+
+    assertConfigured();
 
     if (request.method === "POST" && url.pathname === "/api/pam/auth/dev-login") {
       await handleDevLogin(request, response, headers);
@@ -523,7 +562,7 @@ export function createPamSyncServer() {
   return createServer(router);
 }
 
-export function startPamSyncServer(port = PORT, host = "127.0.0.1") {
+export function startPamSyncServer(port = PORT, host = HOST) {
   const server = createPamSyncServer();
   server.listen(port, host, () => {
     const address = server.address();

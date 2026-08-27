@@ -6,6 +6,7 @@ import { join } from "node:path";
 process.env.PAM_SESSION_SECRET = "test-session-secret-that-is-long-enough-123456";
 process.env.PAM_ALLOW_DEV_LOGIN = "true";
 process.env.PAM_ALLOWED_ORIGIN = "http://127.0.0.1:5174";
+process.env.PAM_FORCE_FILE_STORE = "true";
 
 const dataDir = await mkdtemp(join(tmpdir(), "pam-sync-test-"));
 process.env.PAM_DATA_DIR = dataDir;
@@ -64,6 +65,13 @@ const address = await listen(server);
 const baseUrl = `http://127.0.0.1:${address.port}`;
 
 try {
+  const health = await request(baseUrl, "/api/pam/health", { method: "GET" });
+  assert.equal(health.response.status, 200);
+  assert.equal(health.body.ok, true);
+  assert.equal(health.body.service, "pam-sync-server");
+  assert.equal(health.body.sessionSecretConfigured, true);
+  assert.equal(health.body.fileStoreForced, true);
+
   const noSession = await request(baseUrl, "/api/pam/sync/push", {
     headers: {
       "Content-Type": "application/json",
