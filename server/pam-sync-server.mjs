@@ -6,7 +6,7 @@ import { createPamStore } from "./pam-store.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const PORT = Number(process.env.PAM_SERVER_PORT ?? process.env.PORT ?? 8787);
+const PORT = Number(process.env.PORT ?? process.env.PAM_SERVER_PORT ?? 8787);
 const HOST = process.env.PAM_SERVER_HOST ?? process.env.HOST ?? "127.0.0.1";
 const SESSION_SECRET = process.env.PAM_SESSION_SECRET ?? "";
 const ALLOWED_ORIGIN = process.env.PAM_ALLOWED_ORIGIN ?? "http://127.0.0.1:5174";

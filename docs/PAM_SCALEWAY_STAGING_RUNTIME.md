@@ -17,8 +17,8 @@ The backend image is built from `Dockerfile` and starts:
 npm run server:start
 ```
 
-The container exposes port `8787` by default. Cloud platforms that inject a
-`PORT` variable are also supported.
+The container exposes port `8787` by default. If Scaleway injects a `PORT`
+variable, PAM will use that value first.
 
 ## Health Check
 
@@ -54,6 +54,7 @@ Core runtime:
 ```text
 NODE_ENV=production
 PAM_SERVER_HOST=0.0.0.0
+# Optional fallback. Scaleway can also inject PORT.
 PAM_SERVER_PORT=8787
 PAM_SESSION_SECRET=<backend-secret-minimum-32-characters>
 PAM_ALLOWED_ORIGIN=https://pam-desktop-clean.vercel.app
@@ -101,3 +102,6 @@ PAM_OBJECT_STORAGE_SECRET_KEY=<secret-key>
 - Keep `PAM_ALLOWED_ORIGIN` restricted to the deployed frontend URL.
 - Run migrations before switching the frontend sync endpoint to the backend.
 - After deployment, test `/api/pam/health` before running account or sync tests.
+
+The deployment runbook is maintained in
+`docs/PAM_SCALEWAY_DEPLOYMENT_RUNBOOK.md`.

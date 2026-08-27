@@ -11,7 +11,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PAM_SERVER_HOST=0.0.0.0
-ENV PAM_SERVER_PORT=8787
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
