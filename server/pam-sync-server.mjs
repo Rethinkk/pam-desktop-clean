@@ -2,7 +2,7 @@ import { createHmac, randomBytes, randomUUID, scryptSync, timingSafeEqual } from
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createFilePamStore } from "./pam-file-store.mjs";
+import { createPamStore } from "./pam-store.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -10,9 +10,15 @@ const PORT = Number(process.env.PAM_SERVER_PORT ?? 8787);
 const SESSION_SECRET = process.env.PAM_SESSION_SECRET ?? "";
 const ALLOWED_ORIGIN = process.env.PAM_ALLOWED_ORIGIN ?? "http://127.0.0.1:5174";
 const DATA_DIR = process.env.PAM_DATA_DIR ?? join(__dirname, "data");
+const DATABASE_URL = process.env.PAM_DATABASE_URL ?? "";
+const FORCE_FILE_STORE = process.env.PAM_FORCE_FILE_STORE === "true";
 const ALLOW_DEV_LOGIN = process.env.PAM_ALLOW_DEV_LOGIN === "true";
 const COOKIE_NAME = "pam_session";
-const pamStore = createFilePamStore(DATA_DIR);
+const pamStore = createPamStore({
+  dataDir: DATA_DIR,
+  databaseUrl: DATABASE_URL,
+  forceFileStore: FORCE_FILE_STORE,
+});
 const ALLOWED_PROVIDERS = new Set(["ovhcloud-eu", "scaleway-eu", "custom-eu", "exoscale-ch", "custom-ch", "custom-us"]);
 const PASSWORD_KEY_LENGTH = 64;
 const RESIDENCY_PROFILES = {
@@ -302,10 +308,15 @@ async function handleRegister(request, response, headers) {
     passwordHash: passwordResult.hash,
   };
 
-  store.users.push(user);
-  await pamStore.saveUserStore(store);
+  if (typeof pamStore.createUserWithWorkspace === "function") {
+    await pamStore.createUserWithWorkspace(user);
+  } else {
+    store.users.push(user);
+    await pamStore.saveUserStore(store);
+  }
   await pamStore.appendSyncEvent({
     id: randomUUID(),
+    workspaceId: user.workspaceId,
     vaultId: user.vaultId,
     userId: user.id,
     type: "auth.register",
@@ -419,28 +430,35 @@ async function handleSyncPush(request, response, headers) {
     return reject(response, 400, "Invalid encrypted record shape.", headers);
   }
 
-  const store = await pamStore.readRecordStore();
-  const vaultRecords = store.records[session.vaultId] ?? {};
   const now = new Date().toISOString();
 
-  for (const record of body.records) {
-    vaultRecords[record.id] = {
-      id: record.id,
-      vaultId: session.vaultId,
-      ownerUserId: session.userId,
-      type: record.type,
-      encryptedPayload: record.encryptedPayload,
-      encryptionVersion: record.encryptionVersion,
-      clientUpdatedAt: record.updatedAt,
-      serverUpdatedAt: now,
-      deletedAt: record.deletedAt,
-    };
+  if (typeof pamStore.upsertEncryptedRecords === "function") {
+    await pamStore.upsertEncryptedRecords(session, body.records, now);
+  } else {
+    const store = await pamStore.readRecordStore();
+    const vaultRecords = store.records[session.vaultId] ?? {};
+
+    for (const record of body.records) {
+      vaultRecords[record.id] = {
+        id: record.id,
+        vaultId: session.vaultId,
+        ownerUserId: session.userId,
+        type: record.type,
+        encryptedPayload: record.encryptedPayload,
+        encryptionVersion: record.encryptionVersion,
+        clientUpdatedAt: record.updatedAt,
+        serverUpdatedAt: now,
+        deletedAt: record.deletedAt,
+      };
+    }
+
+    store.records[session.vaultId] = vaultRecords;
+    await pamStore.saveRecordStore(store);
   }
 
-  store.records[session.vaultId] = vaultRecords;
-  await pamStore.saveRecordStore(store);
   await pamStore.appendSyncEvent({
     id: randomUUID(),
+    workspaceId: session.workspaceId,
     vaultId: session.vaultId,
     userId: session.userId,
     type: "sync.push",

@@ -119,6 +119,12 @@ Backend replacement plan:
 docs/PAM_POSTGRESQL_BACKEND.md
 ```
 
+Run database migrations with:
+
+```bash
+PAM_DATABASE_URL="postgres://..." npm run db:migrate
+```
+
 Keep these rules:
 
 - Sessions are HttpOnly cookies.

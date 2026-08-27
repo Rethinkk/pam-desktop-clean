@@ -21,6 +21,12 @@ Initial schema:
 server/migrations/001_initial_postgres_schema.sql
 ```
 
+Run migrations with:
+
+```bash
+PAM_DATABASE_URL="postgres://..." npm run db:migrate
+```
+
 This migration creates:
 
 - `users`
@@ -86,6 +92,9 @@ Current code state:
 - `server/pam-file-store.mjs` contains the file-backed implementation.
 - `server/pam-sync-server.mjs` now calls the store module instead of directly
   reading and writing the JSON files.
+- `server/pam-postgres-store.mjs` contains the PostgreSQL implementation.
+- `server/run-migrations.mjs` applies SQL migrations listed in
+  `server/migrations`.
 
 Production will use a PostgreSQL implementation behind the same interface.
 
@@ -171,10 +180,11 @@ Bad:
 1. Add migration file. Done.
 2. Add a repository boundary around the current server helpers. Done.
 3. Add a file-backed repository implementation for current tests. Done.
-4. Add a PostgreSQL repository implementation.
-5. Add integration tests against PostgreSQL.
-6. Switch production server startup to require `PAM_DATABASE_URL`.
-7. Keep file-backed mode only for local contract tests.
+4. Add a PostgreSQL repository implementation. Done.
+5. Add migration runner. Done.
+6. Add integration tests against PostgreSQL.
+7. Switch production server startup to require `PAM_DATABASE_URL`.
+8. Keep file-backed mode only for local contract tests.
 
 ## Open Decisions
 
