@@ -2,9 +2,12 @@
 
 Status: release architecture v1
 
-This document turns the current PAM proof of concept into a concrete production
-cloud direction. The goal is a secure, calm and maintainable web application
-that keeps the current local-first promise while adding real cloud use.
+This document defines the first implementation path inside the broader
+data-residency strategy. See `docs/PAM_DATA_RESIDENCY_ARCHITECTURE.md` for the
+three-wing model: PAM Europe, PAM Switzerland and PAM United States.
+
+The goal is a secure, calm and maintainable web application that keeps the
+current local-first promise while adding real cloud use.
 
 ## Decision
 

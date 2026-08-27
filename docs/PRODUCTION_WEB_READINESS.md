@@ -4,6 +4,9 @@ Status: implementation checklist
 
 PAM's production web app should be local-first, encrypted by default and backed by a selected data-residency profile.
 
+Strategic residency model: `docs/PAM_DATA_RESIDENCY_ARCHITECTURE.md`.
+First implementation path: `docs/PAM_EUROPE_SCALEWAY_ARCHITECTURE.md`.
+
 ## Current Production Direction
 
 - Standard cloud target: PAM Europe on Scaleway EU.
