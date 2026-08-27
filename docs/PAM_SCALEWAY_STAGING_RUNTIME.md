@@ -14,7 +14,7 @@ bridge between the local proof of concept and a production-ready hosted API.
 The backend image is built from `Dockerfile` and starts:
 
 ```text
-npm run server:start
+node server/pam-sync-server.mjs
 ```
 
 The container exposes port `8787` by default. If Scaleway injects a `PORT`

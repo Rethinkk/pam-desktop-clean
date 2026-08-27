@@ -15,9 +15,9 @@ cat >> README.md <<'MD'
 ## 1) Pre-flight
 ```bash
 git pull
-npm ci
-npm run dev        # smoke test
-npm run build      # check prod (./dist)
+pnpm install --frozen-lockfile
+pnpm run dev        # smoke test
+pnpm run build      # check prod (./dist)
 
 
 Check:
@@ -30,12 +30,12 @@ Check:
 
 2) Versie & changelog
 # kies patch / minor / major
-npm version patch
+pnpm version patch
 # of:
 git tag -a vX.Y.Z -m "Release vX.Y.Z"
 
 3) Web release (GitHub Pages)
-npm run build -- --base=/pam-desktop-clean/
+pnpm run build -- --base=/pam-desktop-clean/
 npx gh-pages -d dist
 
 
@@ -43,8 +43,8 @@ Ga naar Settings → Pages en zet Source op gh-pages.
 Live link: https://rethinkk.github.io/pam-desktop-clean/
 
 4) Desktop build (Tauri)
-npm run tauri:dev     # testen
-npm run tauri:build   # productie build (macOS .app/.dmg, etc.)
+pnpm run tauri:dev     # testen
+pnpm run tauri:build   # productie build (macOS .app/.dmg, etc.)
 
 5) Push + tag
 git push
@@ -66,8 +66,8 @@ Commits klein & duidelijk (bv. feat(assets): import/export JSON)
 Setup
 git clone git@github.com:Rethinkk/pam-desktop-clean.git
 cd pam-desktop-clean
-npm ci
-npm run dev
+pnpm install --frozen-lockfile
+pnpm run dev
 
 Code style
 
@@ -77,7 +77,7 @@ Lichtgewicht (geen zware UI libs), inline styles of kleine helpers
 
 Review checklist
 
- npm run build ok
+ pnpm run build ok
 
  Geen console errors/warnings
 
@@ -103,12 +103,12 @@ Wil je ook handige scripts in `package.json` zetten voor Pages?
 ```bash
 # (optioneel) voegt scripts toe; voer dit alleen uit als je JSON geen conflicten heeft
 node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts['pages:build']='vite build --base=/pam-desktop-clean/';p.scripts['pages:deploy']='gh-pages -d dist';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
-npm i -D gh-pages
+pnpm add -D gh-pages
 
 
 Dan kun je releasen met:
 
-npm run pages:build && npm run pages:deploy
+pnpm run pages:build && pnpm run pages:deploy
 
 
 Roep maar als je wilt dat ik nog een mini “Getting Started” boven in de README zet met je exacte Pages-link.
@@ -132,14 +132,13 @@ git push origin v0.1.0
 
 Dev starten morgen:
 
-npm run dev
+pnpm run dev
 # of desktop:
-npm run tauri:dev
+pnpm run tauri:dev
 
 Workflow:
 - Werk op feature/* branches
-- Voor push: npm run typecheck && npm run build (pre-push hook aanwezig)
+- Voor push: pnpm run typecheck && pnpm run build (pre-push hook aanwezig)
 - ‘Stable’ = laatst geteste staat
 - ‘Golden’ tags: golden-YYYYMMDD-<kort-label>
-
 

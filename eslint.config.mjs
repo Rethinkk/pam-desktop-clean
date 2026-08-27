@@ -1,4 +1,3 @@
-cat > eslint.config.mjs <<'EOF'
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import react from "eslint-plugin-react";
@@ -37,4 +36,3 @@ export default tseslint.config(
     settings: { react: { version: "detect" } }
   }
 );
-EOF

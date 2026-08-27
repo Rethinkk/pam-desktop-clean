@@ -24,13 +24,13 @@ server/migrations/001_initial_postgres_schema.sql
 Run migrations with:
 
 ```bash
-PAM_DATABASE_URL="postgres://..." npm run db:migrate
+PAM_DATABASE_URL="postgres://..." pnpm run db:migrate
 ```
 
 Run the PostgreSQL integration test with:
 
 ```bash
-PAM_DATABASE_URL="postgres://..." PAM_DATABASE_INTEGRATION_TEST=true npm run test:server:postgres
+PAM_DATABASE_URL="postgres://..." PAM_DATABASE_INTEGRATION_TEST=true pnpm run test:server:postgres
 ```
 
 The integration test is intentionally locked behind
