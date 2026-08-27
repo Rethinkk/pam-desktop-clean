@@ -11,7 +11,8 @@ bridge between the local proof of concept and a production-ready hosted API.
 - Documents: Scaleway Object Storage in `nl-ams`, encrypted at rest.
 - Secrets: configured only in the backend runtime environment.
 
-The backend image is built from `Dockerfile` and starts:
+The backend image is built from `Dockerfile`. It installs only the minimal server
+runtime dependencies from `server-runtime-package.json` and starts:
 
 ```text
 node server/pam-sync-server.mjs

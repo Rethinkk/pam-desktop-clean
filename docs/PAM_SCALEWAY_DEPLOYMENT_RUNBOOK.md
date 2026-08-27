@@ -53,6 +53,10 @@ rg.nl-ams.scw.cloud/<namespace>/pam-sync-server:<commit-sha>
 rg.nl-ams.scw.cloud/<namespace>/pam-sync-server:staging
 ```
 
+The backend image deliberately uses `server-runtime-package.json` instead of the
+frontend package manifest. This keeps the runtime container small and limits it
+to the server dependency required for PostgreSQL.
+
 ## 4. Deploy Scaleway Serverless Container
 
 In Scaleway Console:

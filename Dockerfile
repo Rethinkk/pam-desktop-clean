@@ -1,10 +1,3 @@
-FROM node:22-alpine AS deps
-
-WORKDIR /app
-
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm@11.7.0 && pnpm install --prod --frozen-lockfile
-
 FROM node:22-alpine
 
 WORKDIR /app
@@ -12,8 +5,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PAM_SERVER_HOST=0.0.0.0
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json ./
+COPY server-runtime-package.json ./package.json
+RUN npm install --omit=dev --ignore-scripts --no-audit --no-fund
+
 COPY server ./server
 
 EXPOSE 8787
