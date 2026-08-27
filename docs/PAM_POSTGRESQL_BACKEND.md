@@ -27,6 +27,19 @@ Run migrations with:
 PAM_DATABASE_URL="postgres://..." npm run db:migrate
 ```
 
+Run the PostgreSQL integration test with:
+
+```bash
+PAM_DATABASE_URL="postgres://..." PAM_DATABASE_INTEGRATION_TEST=true npm run test:server:postgres
+```
+
+The integration test is intentionally locked behind
+`PAM_DATABASE_INTEGRATION_TEST=true`. Without `PAM_DATABASE_URL` or this flag it
+prints a skipped message and exits successfully. When enabled, it creates a
+unique `pam.integration+...@example.test` user, verifies account creation,
+workspace/vault creation, encrypted record sync and sync event logging, then
+removes only that integration-test user data.
+
 This migration creates:
 
 - `users`
@@ -182,7 +195,7 @@ Bad:
 3. Add a file-backed repository implementation for current tests. Done.
 4. Add a PostgreSQL repository implementation. Done.
 5. Add migration runner. Done.
-6. Add integration tests against PostgreSQL.
+6. Add integration tests against PostgreSQL. Done.
 7. Switch production server startup to require `PAM_DATABASE_URL`.
 8. Keep file-backed mode only for local contract tests.
 

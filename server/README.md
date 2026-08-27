@@ -125,6 +125,16 @@ Run database migrations with:
 PAM_DATABASE_URL="postgres://..." npm run db:migrate
 ```
 
+Run the PostgreSQL integration test after provisioning a test database:
+
+```bash
+PAM_DATABASE_URL="postgres://..." PAM_DATABASE_INTEGRATION_TEST=true npm run test:server:postgres
+```
+
+Without `PAM_DATABASE_URL` or `PAM_DATABASE_INTEGRATION_TEST=true`, this test
+skips safely. When enabled, it creates and removes only a unique
+`pam.integration+...@example.test` test account.
+
 Keep these rules:
 
 - Sessions are HttpOnly cookies.
